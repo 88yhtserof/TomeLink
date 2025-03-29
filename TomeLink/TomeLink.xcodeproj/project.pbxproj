@@ -14,7 +14,7 @@
 		149D75592D97811300A42C7F /* Exceptions for "TomeLink" folder in "TomeLink" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Resources/Info.plist,
 			);
 			target = 149D75432D97811200A42C7F /* TomeLink */;
 		};
@@ -147,7 +147,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZQV4ZDQNW5;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TomeLink/Info.plist;
+				INFOPLIST_FILE = TomeLink/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TomeLink;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -181,7 +181,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZQV4ZDQNW5;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TomeLink/Info.plist;
+				INFOPLIST_FILE = TomeLink/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TomeLink;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
