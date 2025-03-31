@@ -11,7 +11,7 @@ import Kingfisher
 
 final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
     
-    var identifier = String(describing: BookListCollectionViewCell.self)
+    static var identifier = String(describing: BookListCollectionViewCell.self)
     
     // View
     private let thumnailImageView = UIImageView()

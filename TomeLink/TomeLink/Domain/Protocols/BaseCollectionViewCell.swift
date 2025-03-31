@@ -7,11 +7,7 @@
 
 import Foundation
 
-protocol BaseCollectionViewCell: AnyObject {
+protocol BaseCollectionViewCell: AnyObject, ConfigurableView {
     
-    associatedtype Element
-    
-    var identifier: String { get }
-    
-    func configure(with: Element)
+    static var identifier: String { get }
 }
