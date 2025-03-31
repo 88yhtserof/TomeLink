@@ -17,6 +17,7 @@ class SearchViewController: UIViewController {
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
     
     private var dataSource: DataSource!
+    private var snapshot: Snapshot!
     
     private let disposeBag = DisposeBag()
     
@@ -35,6 +36,9 @@ class SearchViewController: UIViewController {
         collectionView.rx.willBeginDragging
             .bind(to: searchController.searchBar.rx.endEditing)
             .disposed(by: disposeBag)
+        
+        updateSnapshotForRecentSearches([])
+//        updateSnapshotForSearchResults([])
     }
 }
 
@@ -83,16 +87,22 @@ private extension SearchViewController {
     func sectionForRecentSearches(_ layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
         let configuration = UICollectionLayoutListConfiguration(appearance: .plain)
         let section = NSCollectionLayoutSection.list(using: configuration, layoutEnvironment: layoutEnvironment)
-        
+        section.boundarySupplementaryItems = [titleSupplementaryItem()]
         return section
     }
     
     func sectionForSearchResults(_ layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
         let configuration = UICollectionLayoutListConfiguration(appearance: .plain)
         let section = NSCollectionLayoutSection.list(using: configuration, layoutEnvironment: layoutEnvironment)
+        section.boundarySupplementaryItems = [titleSupplementaryItem()]
         return section
     }
     
+    func titleSupplementaryItem() -> NSCollectionLayoutBoundarySupplementaryItem {
+        let titleSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                               heightDimension: .absolute(40))
+        return NSCollectionLayoutBoundarySupplementaryItem(layoutSize: titleSize, elementKind: TitleSupplementaryView.elementKind, alignment: .top)
+    }
 }
 
 
@@ -126,7 +136,11 @@ private extension SearchViewController {
             }
         })
         
-        createSnapshot()
+        let headerSupplementaryProvider = UICollectionView.SupplementaryRegistration(elementKind: TitleSupplementaryView.elementKind, handler: headerSupplementaryRegistrationHandler)
+        dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
+            return collectionView.dequeueConfiguredReusableSupplementary(using: headerSupplementaryProvider, for: indexPath)
+        }
+        
         collectionView.dataSource = dataSource
     }
     
@@ -146,14 +160,34 @@ private extension SearchViewController {
         cell.configure(with: book)
     }
     
-    func createSnapshot() {
-        let recentSearchesItems = ["1", "2", "3"].map{ Item.recentSearch($0) }
-        let searchResults = ["1", "2", "3"].map{ Item.searchResult($0) }
+    func headerSupplementaryRegistrationHandler(supplementaryView: TitleSupplementaryView, string: String, indexPath: IndexPath) {
+        guard let section = snapshot.sectionIdentifiers.first else {
+            fatalError("Could not find section")
+        }
         
-        var snapshot = Snapshot()
-        snapshot.appendSections(Section.allCases)
-        snapshot.appendItems(recentSearchesItems, toSection: .recentSearches)
-        snapshot.appendItems([], toSection: .searchResults)
-        dataSource.apply(snapshot)
+        switch section {
+        case .recentSearches:
+            supplementaryView.configure(with: "최근 검색어")
+        case .searchResults:
+            supplementaryView.configure(with: "작품")
+        }
+    }
+    
+    func updateSnapshotForRecentSearches(_ newItems: [String]) {
+        let items = newItems.map{ Item.recentSearch($0) }
+        
+        snapshot = Snapshot()
+        snapshot.appendSections([.recentSearches])
+        snapshot.appendItems(items, toSection: .recentSearches)
+        dataSource.apply(snapshot, animatingDifferences: true)
+    }
+    
+    func updateSnapshotForSearchResults(_ newItems: [String]) {
+        let items = newItems.map{ Item.searchResult($0) }
+        
+        snapshot = Snapshot()
+        snapshot.appendSections([.searchResults])
+        snapshot.appendItems(items, toSection: .searchResults)
+        dataSource.apply(snapshot, animatingDifferences: true)
     }
 }
