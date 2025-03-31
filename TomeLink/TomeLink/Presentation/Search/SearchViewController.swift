@@ -8,13 +8,18 @@
 import UIKit
 
 import SnapKit
+import RxSwift
+import RxCocoa
 
 class SearchViewController: UIViewController {
     
+    private let searchController = UISearchController()
+    private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
+    
     private var dataSource: DataSource!
     
-    private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
-
+    private let disposeBag = DisposeBag()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -22,6 +27,14 @@ class SearchViewController: UIViewController {
         configureConstraints()
         configureView()
         configureDataSource()
+        bind()
+    }
+    
+    private func bind() {
+        
+        collectionView.rx.willBeginDragging
+            .bind(to: searchController.searchBar.rx.endEditing)
+            .disposed(by: disposeBag)
     }
 }
 
@@ -30,6 +43,11 @@ private extension SearchViewController {
     
     func configureView() {
         view.backgroundColor = .white
+        
+        navigationItem.searchController = searchController
+        searchController.searchBar.placeholder = "제목, 저자, 출판사 검색"
+        searchController.searchBar.tintColor = TomeLinkColor.point
+        searchController.automaticallyShowsCancelButton = true
     }
     
     func configureHierarchy() {
