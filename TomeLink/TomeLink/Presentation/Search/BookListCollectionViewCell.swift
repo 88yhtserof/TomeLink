@@ -34,6 +34,12 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        thumnailImageView.image = nil
+    }
+    
     func configure(with value: Book) {
         
         titleLabel.text = value.title
@@ -53,7 +59,9 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
 private extension BookListCollectionViewCell {
     
     func configureView() {
-        thumnailImageView.contentMode = .scaleAspectFit
+        contentView.border(width: 0.5, color: TomeLinkColor.shadow)
+        
+        thumnailImageView.contentMode = .scaleAspectFill
         thumnailImageView.cornerRadius()
         thumnailImageView.backgroundColor = TomeLinkColor.shadow
         
@@ -83,7 +91,6 @@ private extension BookListCollectionViewCell {
         thumnailImageView.snp.makeConstraints { make in
             make.verticalEdges.leading.equalToSuperview().inset(10)
             make.width.equalTo(80)
-            make.height.equalTo(110)
         }
         
         labelStackView.snp.makeConstraints { make in
