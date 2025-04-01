@@ -164,6 +164,8 @@
 /* Begin XCBuildConfiguration section */
 		149D755B2D97811300A42C7F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 149D75462D97811200A42C7F /* TomeLink */;
+			baseConfigurationReferenceRelativePath = Resources/Authorization.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -198,6 +200,8 @@
 		};
 		149D755C2D97811300A42C7F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 149D75462D97811200A42C7F /* TomeLink */;
+			baseConfigurationReferenceRelativePath = Resources/Authorization.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
