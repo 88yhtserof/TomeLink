@@ -53,15 +53,16 @@ class SearchViewController: UIViewController {
             .drive(rx.updateSearchResults)
             .disposed(by: disposeBag)
         
-        Observable
-            .combineLatest(searchController.searchBar.rx.cancelButtonClicked,
-                           searchController.searchBar.rx.searchButtonClicked)
+        searchController.searchBar.rx.searchButtonClicked
             .bind(with: self) { owner, _ in
                 owner.searchController.searchBar.text = nil
             }
             .disposed(by: disposeBag)
         
-        
+        searchController.searchBar.rx.cancelButtonClicked
+            .map{ _ in [] }
+            .bind(to: rx.updateRecentResults)
+            .disposed(by: disposeBag)
     }
 }
 
