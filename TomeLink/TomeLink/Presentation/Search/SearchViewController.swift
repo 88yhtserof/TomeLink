@@ -20,6 +20,7 @@ class SearchViewController: UIViewController {
     private var snapshot: Snapshot!
     
     private let disposeBag = DisposeBag()
+    private let viewMdoel = SearchViewModel()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,12 +34,16 @@ class SearchViewController: UIViewController {
     
     private func bind() {
         
+        let input = SearchViewModel.Input()
+        let output = viewMdoel.transform(input: input)
+        
         collectionView.rx.willBeginDragging
             .bind(to: searchController.searchBar.rx.endEditing)
             .disposed(by: disposeBag)
         
-        updateSnapshotForRecentSearches([])
-//        updateSnapshotForSearchResults([])
+        output.recentResearches
+            .drive(rx.updateRecentResults)
+            .disposed(by: disposeBag)
     }
 }
 
@@ -189,5 +194,14 @@ private extension SearchViewController {
         snapshot.appendSections([.searchResults])
         snapshot.appendItems(items, toSection: .searchResults)
         dataSource.apply(snapshot, animatingDifferences: true)
+    }
+}
+
+extension Reactive where Base: SearchViewController {
+    
+    var updateRecentResults: Binder<[String]> {
+        return Binder(base) { base, list in
+            base.updateSnapshotForRecentSearches(list)
+        }
     }
 }
