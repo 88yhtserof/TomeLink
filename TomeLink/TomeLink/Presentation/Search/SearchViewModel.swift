@@ -15,7 +15,7 @@ final class SearchViewModel: BaseViewModel {
     var disposeBag = DisposeBag()
     
     struct Input {
-        
+        let deleteRecentSearch: PublishRelay<String>
     }
     
     struct Output {
@@ -28,6 +28,11 @@ final class SearchViewModel: BaseViewModel {
         
         RecentResultsManager.elements
             .bind(to: recentResearches)
+            .disposed(by: disposeBag)
+        
+        input.deleteRecentSearch
+            .map { RecentResultsManager.remove(of: $0) }
+            .subscribe()
             .disposed(by: disposeBag)
         
         return Output(recentResearches: recentResearches.asDriver())

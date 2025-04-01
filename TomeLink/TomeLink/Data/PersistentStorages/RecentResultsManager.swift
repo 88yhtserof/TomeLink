@@ -35,8 +35,7 @@ enum RecentResultsManager {
     }
     
     static func remove(of element: String) {
-        let index = RecentResultsManager.recentResults.keys.firstIndex(of: element)!
-        RecentResultsManager.recentResults.remove(at: index)
+        RecentResultsManager.recentResults.removeValue(forKey: element)
     }
     
     static func removeAll() {

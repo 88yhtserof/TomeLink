@@ -22,6 +22,8 @@ class SearchViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewMdoel = SearchViewModel()
     
+    private let recentSearchDeleteRelay = PublishRelay<String>()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -34,7 +36,7 @@ class SearchViewController: UIViewController {
     
     private func bind() {
         
-        let input = SearchViewModel.Input()
+        let input = SearchViewModel.Input(deleteRecentSearch: recentSearchDeleteRelay)
         let output = viewMdoel.transform(input: input)
         
         collectionView.rx.willBeginDragging
@@ -152,10 +154,19 @@ private extension SearchViewController {
     func recentSearchesCellRegistrationHandler(cell: UICollectionViewListCell, indexPath: IndexPath, item: String) {
         var contentConfig = UIListContentConfiguration.cell()
         contentConfig.text = item
+        let backgroundConfiguration = UIBackgroundConfiguration.clear()
         cell.contentConfiguration = contentConfig
+        cell.backgroundConfiguration = backgroundConfiguration
+        
         let deleteButton = UIButton()
         deleteButton.setImage(UIImage(systemName: "xmark"), for: .normal)
         deleteButton.tintColor = TomeLinkColor.subtitle
+        
+        deleteButton.rx.tap
+            .map{ item }
+            .bind(to: recentSearchDeleteRelay)
+            .disposed(by: disposeBag)
+        
         let deleteAccessory = UICellAccessory.CustomViewConfiguration(customView: deleteButton, placement: .trailing(displayed: .always))
         cell.accessories = [.customView(configuration: deleteAccessory)]
     }
