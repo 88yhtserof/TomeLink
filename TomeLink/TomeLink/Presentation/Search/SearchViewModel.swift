@@ -17,6 +17,7 @@ final class SearchViewModel: BaseViewModel {
     struct Input {
         let searchKeyword: ControlProperty<String>
         let tapSearchButton: ControlEvent<Void>
+        let tapSearchCancelButton: ControlEvent<Void>
         let deleteRecentSearch: PublishRelay<String>
     }
     
@@ -30,7 +31,13 @@ final class SearchViewModel: BaseViewModel {
         let recentResearches = BehaviorRelay<[String]>(value: [])
         let searchResults = PublishRelay<[Book]>()
         
+        // update recent researches
         RecentResultsManager.elements
+            .bind(to: recentResearches)
+            .disposed(by: disposeBag)
+        
+        input.tapSearchCancelButton
+            .withLatestFrom(RecentResultsManager.elements)
             .bind(to: recentResearches)
             .disposed(by: disposeBag)
         
@@ -39,7 +46,7 @@ final class SearchViewModel: BaseViewModel {
             .subscribe()
             .disposed(by: disposeBag)
         
-        
+        // update search results
         let bookSearchResponse = input.tapSearchButton
             .withLatestFrom(input.searchKeyword)
             .distinctUntilChanged()
@@ -58,6 +65,13 @@ final class SearchViewModel: BaseViewModel {
             .bind(to: searchResults)
             .disposed(by: disposeBag)
         
+        // save recent research
+        input.tapSearchButton
+            .withLatestFrom(input.searchKeyword)
+            .bind { text in
+                RecentResultsManager.save(text)
+            }
+            .disposed(by: disposeBag)
         
         return Output(recentResearches: recentResearches.asDriver(),
                       bookSearches: searchResults.asDriver(onErrorJustReturn: []))

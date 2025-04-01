@@ -38,6 +38,7 @@ class SearchViewController: UIViewController {
         
         let input = SearchViewModel.Input(searchKeyword: searchController.searchBar.rx.text.orEmpty,
                                           tapSearchButton: searchController.searchBar.rx.searchButtonClicked,
+                                          tapSearchCancelButton: searchController.searchBar.rx.cancelButtonClicked,
                                           deleteRecentSearch: recentSearchDeleteRelay)
         let output = viewMdoel.transform(input: input)
         
@@ -57,11 +58,6 @@ class SearchViewController: UIViewController {
             .bind(with: self) { owner, _ in
                 owner.searchController.searchBar.text = nil
             }
-            .disposed(by: disposeBag)
-        
-        searchController.searchBar.rx.cancelButtonClicked
-            .map{ _ in [] }
-            .bind(to: rx.updateRecentResults)
             .disposed(by: disposeBag)
     }
 }
