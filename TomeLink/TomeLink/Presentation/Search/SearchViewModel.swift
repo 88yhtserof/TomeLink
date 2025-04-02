@@ -16,6 +16,8 @@ final class SearchViewModel: BaseViewModel {
     
     struct Input {
         let willDisplayCell: Observable<IndexPath>
+        let selectRecentSearchesItem: PublishRelay<String>
+        let selectSearchResultItem: PublishRelay<Book>
         
         let searchKeyword: ControlProperty<String>
         let tapSearchButton: ControlEvent<Void>
@@ -45,6 +47,10 @@ final class SearchViewModel: BaseViewModel {
             .disposed(by: disposeBag)
         
         input.tapSearchCancelButton
+            .withUnretained(self)
+            .map { owner, _ in
+                owner.searchResults = []
+            }
             .withLatestFrom(RecentResultsManager.elements)
             .bind(to: recentResearches)
             .disposed(by: disposeBag)
@@ -68,7 +74,7 @@ final class SearchViewModel: BaseViewModel {
                 owner.isEnd = response.meta.isEnd
                 
                 let books = response.toDomain().books
-                owner.searchResults = books
+                owner.searchResults.append(contentsOf: books)
                 
                 return owner.searchResults
             }
@@ -103,13 +109,32 @@ final class SearchViewModel: BaseViewModel {
             .bind(to: paginationBookSearches)
             .disposed(by: disposeBag)
         
-        
         // save recent research
         input.tapSearchButton
             .withLatestFrom(input.searchKeyword)
             .bind { text in
                 RecentResultsManager.save(text)
             }
+            .disposed(by: disposeBag)
+        
+        
+        // select item
+        input.selectRecentSearchesItem
+            .withUnretained(self)
+            .flatMap { owner, keyword in
+                RecentResultsManager.save(keyword)
+                return owner.requestSearch(keyword: keyword)
+            }
+            .withUnretained(self)
+            .map { owner, response in
+                owner.isEnd = response.meta.isEnd
+                
+                let books = response.toDomain().books
+                owner.searchResults.append(contentsOf: books)
+                
+                return owner.searchResults
+            }
+            .bind(to: searchResults)
             .disposed(by: disposeBag)
         
         return Output(recentResearches: recentResearches.asDriver(),

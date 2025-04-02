@@ -36,7 +36,28 @@ class SearchViewController: UIViewController {
     
     private func bind() {
         
+        let selectRecentSearchesItem = PublishRelay<String>()
+        let selectSearchResultsItem = PublishRelay<Book>()
+        
+        collectionView.rx.itemSelected
+            .withUnretained(self)
+            .compactMap{ $0.dataSource.itemIdentifier(for: $1) }
+            .withUnretained(self)
+            .map { owner, item in
+                switch item {
+                case .recentSearch(let keyword):
+                    owner.searchController.searchBar.rx.text.onNext(keyword)
+                    selectRecentSearchesItem.accept(keyword)
+                case .searchResult(let book):
+                    selectSearchResultsItem.accept(book)
+                }
+            }
+            .subscribe()
+            .disposed(by: disposeBag)
+        
         let input = SearchViewModel.Input(willDisplayCell: collectionView.rx.willDisplayCell.map{ $0.at },
+                                          selectRecentSearchesItem: selectRecentSearchesItem,
+                                          selectSearchResultItem: selectSearchResultsItem,
                                           searchKeyword: searchController.searchBar.rx.text.orEmpty,
                                           tapSearchButton: searchController.searchBar.rx.searchButtonClicked,
                                           tapSearchCancelButton: searchController.searchBar.rx.cancelButtonClicked,
@@ -211,7 +232,7 @@ private extension SearchViewController {
         snapshot = Snapshot()
         snapshot.appendSections([.recentSearches])
         snapshot.appendItems(items, toSection: .recentSearches)
-        dataSource.apply(snapshot, animatingDifferences: true)
+        dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
     func createSnapshotForSearchResults(_ newItems: [Book]) {
@@ -220,14 +241,14 @@ private extension SearchViewController {
         snapshot = Snapshot()
         snapshot.appendSections([.searchResults])
         snapshot.appendItems(items, toSection: .searchResults)
-        dataSource.apply(snapshot, animatingDifferences: true)
+        dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
     func updateSnapshotForSearchResults(_ newItems: [Book]) {
         let items = newItems.map{ Item.searchResult($0) }
         
         snapshot.appendItems(items, toSection: .searchResults)
-        dataSource.apply(snapshot, animatingDifferences: true)
+        dataSource.applySnapshotUsingReloadData(snapshot)
     }
 }
 
