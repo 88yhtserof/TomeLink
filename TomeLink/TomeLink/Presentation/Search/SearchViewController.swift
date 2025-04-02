@@ -36,7 +36,8 @@ class SearchViewController: UIViewController {
     
     private func bind() {
         
-        let input = SearchViewModel.Input(searchKeyword: searchController.searchBar.rx.text.orEmpty,
+        let input = SearchViewModel.Input(willDisplayCell: collectionView.rx.willDisplayCell.map{ $0.at },
+                                          searchKeyword: searchController.searchBar.rx.text.orEmpty,
                                           tapSearchButton: searchController.searchBar.rx.searchButtonClicked,
                                           tapSearchCancelButton: searchController.searchBar.rx.cancelButtonClicked,
                                           deleteRecentSearch: recentSearchDeleteRelay)
@@ -47,17 +48,15 @@ class SearchViewController: UIViewController {
             .disposed(by: disposeBag)
         
         output.recentResearches
-            .drive(rx.updateRecentResults)
+            .drive(rx.createRecentResults)
             .disposed(by: disposeBag)
         
         output.bookSearches
-            .drive(rx.updateSearchResults)
+            .drive(rx.createSearchResults)
             .disposed(by: disposeBag)
         
-        searchController.searchBar.rx.searchButtonClicked
-            .bind(with: self) { owner, _ in
-                owner.searchController.searchBar.text = nil
-            }
+        output.paginationBookSearches
+            .drive(rx.updateSearchResults)
             .disposed(by: disposeBag)
     }
 }
@@ -206,7 +205,7 @@ private extension SearchViewController {
         }
     }
     
-    func updateSnapshotForRecentSearches(_ newItems: [String]) {
+    func createSnapshotForRecentSearches(_ newItems: [String]) {
         let items = newItems.map{ Item.recentSearch($0) }
         
         snapshot = Snapshot()
@@ -215,7 +214,7 @@ private extension SearchViewController {
         dataSource.apply(snapshot, animatingDifferences: true)
     }
     
-    func updateSnapshotForSearchResults(_ newItems: [Book]) {
+    func createSnapshotForSearchResults(_ newItems: [Book]) {
         let items = newItems.map{ Item.searchResult($0) }
         
         snapshot = Snapshot()
@@ -223,13 +222,27 @@ private extension SearchViewController {
         snapshot.appendItems(items, toSection: .searchResults)
         dataSource.apply(snapshot, animatingDifferences: true)
     }
+    
+    func updateSnapshotForSearchResults(_ newItems: [Book]) {
+        let items = newItems.map{ Item.searchResult($0) }
+        
+        snapshot.appendItems(items, toSection: .searchResults)
+        dataSource.apply(snapshot, animatingDifferences: true)
+    }
 }
 
+//MARK: - Reactive+
 extension Reactive where Base: SearchViewController {
     
-    var updateRecentResults: Binder<[String]> {
+    var createRecentResults: Binder<[String]> {
         return Binder(base) { base, list in
-            base.updateSnapshotForRecentSearches(list)
+            base.createSnapshotForRecentSearches(list)
+        }
+    }
+    
+    var createSearchResults: Binder<[Book]> {
+        return Binder(base) { base, list in
+            base.createSnapshotForSearchResults(list)
         }
     }
     
