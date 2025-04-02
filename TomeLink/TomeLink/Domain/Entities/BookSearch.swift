@@ -18,7 +18,7 @@ struct Meta {
     let totalCount: Int
 }
 
-struct Book {
+struct Book: Hashable {
     let authors: [String]
     let contents: String
     let publicationDate: Date?

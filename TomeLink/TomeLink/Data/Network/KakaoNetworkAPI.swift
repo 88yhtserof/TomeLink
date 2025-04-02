@@ -8,10 +8,10 @@
 import Foundation
 
 enum KakaoNetworkAPI: NetworkAPI {
-    case searchBook(query: String, sort: String, page: Int, size: Int, target: String)
+    case searchBook(query: String, sort: String?, page: Int, size: Int, target: String?)
     
     var url: URL? {
-        return URL(string: KakaoNetworkAPI.baseURL + endPoint)
+        return urlComponenets?.url
     }
     
     var method: String {
@@ -68,4 +68,10 @@ private extension KakaoNetworkAPI {
         }
     }
     
+    var urlComponenets: URLComponents? {
+        let urlString = KakaoNetworkAPI.baseURL + endPoint
+        var components = URLComponents(string: urlString)
+        components?.queryItems = parameters
+        return components
+    }
 }
