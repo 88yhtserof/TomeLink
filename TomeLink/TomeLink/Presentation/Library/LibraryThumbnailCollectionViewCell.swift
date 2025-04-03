@@ -14,8 +14,7 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
     
     static let identifier = String(describing: LibraryThumbnailCollectionViewCell.self)
     
-    private let thumbnailContainerView = UIView()
-    private let thumbnailImageView = UIImageView()
+    private let thumbnailView = ThumbnailView()
     private let favoriteButton = FavoriteButton()
     
     private var id: String?
@@ -49,7 +48,7 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
     override func prepareForReuse() {
         super.prepareForReuse()
         
-        thumbnailImageView.image = nil
+        thumbnailView.image = nil
     }
 
     
@@ -57,7 +56,7 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
         
 //        self.id = value.id
         if let url = URL(string: value) {
-            thumbnailImageView.kf.setImage(with: url)
+            thumbnailView.setImage(with: url)
         }
         favoriteButton.bind(viewModel: FavoriteButtonViewModel(id: UUID().uuidString)) // 임시
     }
@@ -66,34 +65,19 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
 //MARK: - Configuration
 private extension LibraryThumbnailCollectionViewCell {
     
-    func configureView() {
-        
-        thumbnailContainerView.shadow()
-        
-        thumbnailImageView.backgroundColor = TomeLinkColor.imagePlaceholder
-        thumbnailImageView.border(width: 0.5, color: TomeLinkColor.shadow)
-        thumbnailImageView.clipsToBounds = true
-        thumbnailImageView.contentMode = .scaleAspectFill
-    }
-    
     func configureHierarchy() {
-        thumbnailContainerView.addSubview(thumbnailImageView)
-        contentView.addSubviews(thumbnailContainerView, favoriteButton)
+        contentView.addSubviews(thumbnailView, favoriteButton)
     }
     
     func configureConstraints() {
         
-        thumbnailImageView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        
-        thumbnailContainerView.snp.makeConstraints { make in
+        thumbnailView.snp.makeConstraints { make in
             make.top.horizontalEdges.equalToSuperview().inset(16)
         }
         
         favoriteButton.snp.makeConstraints { make in
-            make.top.equalTo(thumbnailImageView.snp.bottom).offset(6)
-            make.trailing.equalTo(thumbnailImageView)
+            make.top.equalTo(thumbnailView.snp.bottom).offset(6)
+            make.trailing.equalTo(thumbnailView)
             make.size.equalTo(30)
             make.bottom.equalToSuperview().inset(16)
         }
