@@ -39,12 +39,13 @@ final class LibraryContentCollectionViewCell: UICollectionViewCell, BaseCollecti
     }
     
     func configure(with value: [String]) {
-        //        Observable.just(value)
-        //            .asDriver(onErrorJustReturn: [])
-        //            .drive(collectionView.rx.items(cellIdentifier: CoinListCollectionViewCell.identifier, cellType: CoinListCollectionViewCell.self)) { item, element, cell in
-        //                cell.configure(with: element)
-        //            }
-        //            .disposed(by: disposeBag)
+        
+        Observable.just(value)
+            .asDriver(onErrorJustReturn: [])
+            .drive(collectionView.rx.items(cellIdentifier: LibraryThumbnailCollectionViewCell.identifier, cellType: LibraryThumbnailCollectionViewCell.self)) { item, element, cell in
+                cell.configure(with: element)
+            }
+            .disposed(by: disposeBag)
     }
 }
 
@@ -74,15 +75,20 @@ private extension LibraryContentCollectionViewCell {
     
     func layout() -> UICollectionViewCompositionalLayout {
         
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(180))
-        let internalGroupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5), heightDimension: .fractionalHeight(1.0))
-        let externalGroupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
+        let spacing: CGFloat = 16
+        let width: CGFloat = (frame.width - spacing * 3 ) / 2.0
+        let height: CGFloat = width * (4.5 / 3.0)
+        
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height))
         
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let internalGroup = NSCollectionLayoutGroup.horizontal(layoutSize: internalGroupSize, subitems: [item])
-        let externalGroup = NSCollectionLayoutGroup.horizontal(layoutSize: externalGroupSize, subitems: [internalGroup, internalGroup])
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = .fixed(spacing)
         
-        let section = NSCollectionLayoutSection(group: externalGroup)
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = spacing
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
         
         return UICollectionViewCompositionalLayout(section: section)
     }

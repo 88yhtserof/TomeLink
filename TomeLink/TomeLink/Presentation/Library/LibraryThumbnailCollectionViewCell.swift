@@ -14,7 +14,9 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
     
     static let identifier = String(describing: LibraryThumbnailCollectionViewCell.self)
     
+    private let thumbnailContainerView = UIView()
     private let thumbnailImageView = UIImageView()
+    private let favoriteButton = FavoriteButton()
     
     private var id: String?
     
@@ -29,14 +31,14 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
     }
     
     @objc func favoriteButtonDidSave(_ notification: Notification) {
-//        guard let id = notification.userInfo?["id"] as? String,
-//              let result = notification.userInfo?["result"] as? Bool else {
-//            print("Failed to get result")
-//            return
-//        }
-//        if id == (self.id ?? "") {
-//            favoriteButton.isSelected = result
-//        }
+        guard let id = notification.userInfo?["id"] as? String,
+              let result = notification.userInfo?["result"] as? Bool else {
+            print("Failed to get result")
+            return
+        }
+        if id == (self.id ?? "") {
+            favoriteButton.isSelected = result
+        }
     }
     
     @available(*, unavailable)
@@ -47,16 +49,17 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
     override func prepareForReuse() {
         super.prepareForReuse()
         
-        
+        thumbnailImageView.image = nil
     }
+
     
     func configure(with value: String) {
         
 //        self.id = value.id
-        let str = "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5450099%3Ftimestamp%3D20250319144818"
-        if let url = URL(string: str) {
+        if let url = URL(string: value) {
             thumbnailImageView.kf.setImage(with: url)
         }
+        favoriteButton.bind(viewModel: FavoriteButtonViewModel(id: UUID().uuidString)) // 임시
     }
 }
 
@@ -64,22 +67,35 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
 private extension LibraryThumbnailCollectionViewCell {
     
     func configureView() {
+        
+        thumbnailContainerView.shadow()
+        
         thumbnailImageView.backgroundColor = TomeLinkColor.imagePlaceholder
         thumbnailImageView.border(width: 0.5, color: TomeLinkColor.shadow)
-        thumbnailImageView.contentMode = .scaleAspectFit
+        thumbnailImageView.clipsToBounds = true
+        thumbnailImageView.contentMode = .scaleAspectFill
     }
     
     func configureHierarchy() {
-        contentView.addSubviews(thumbnailImageView)
+        thumbnailContainerView.addSubview(thumbnailImageView)
+        contentView.addSubviews(thumbnailContainerView, favoriteButton)
     }
     
     func configureConstraints() {
         
-        print(frame.width, contentView.frame.width, bounds.size.width)
-        
         thumbnailImageView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(16)
-            make.width.equalTo(contentView.snp.width)
+            make.edges.equalToSuperview()
+        }
+        
+        thumbnailContainerView.snp.makeConstraints { make in
+            make.top.horizontalEdges.equalToSuperview().inset(16)
+        }
+        
+        favoriteButton.snp.makeConstraints { make in
+            make.top.equalTo(thumbnailImageView.snp.bottom).offset(6)
+            make.trailing.equalTo(thumbnailImageView)
+            make.size.equalTo(30)
+            make.bottom.equalToSuperview().inset(16)
         }
     }
 }

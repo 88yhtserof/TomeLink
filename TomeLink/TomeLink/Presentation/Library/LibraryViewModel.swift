@@ -42,11 +42,11 @@ final class LibraryViewModel: BaseViewModel {
     
     func transform(input: Input) -> Output {
         
+        let thumbnails = ["https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5450099%3Ftimestamp%3D20250319144818", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6458653%3Ftimestamp%3D20250208152926", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F4751039%3Ftimestamp%3D20190302121725", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540501%3Ftimestamp%3D20241120115010", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6633286%3Ftimestamp%3D20250208153008", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6861926%3Ftimestamp%3D20250401155537", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6062691%3Ftimestamp%3D20240528172936", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045"]
+        
         let titleList = BehaviorRelay(value: titleList)
         let indicatorList = BehaviorRelay(value: indicatorList)
-//        let contentList = PublishRelay<[LibraryViewController.Item]>()
-        let contentList = BehaviorRelay<[LibraryViewController.Item]>(value: [.content(.toRead(["1", "2", "3"])), .content(.read([])), .content(.reading([]))])
-        let searchResultList = BehaviorRelay<LibraryViewController.Item?>(value: nil)
+        let contentList = BehaviorRelay<[LibraryViewController.Item]>(value: [.content(.toRead(thumbnails)), .content(.read([])), .content(.reading([]))])
         
         let itemTuple = BehaviorRelay<([LibraryViewController.Item], [LibraryViewController.Item], [LibraryViewController.Item])>(value: ([], [], []))
         

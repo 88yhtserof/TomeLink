@@ -220,8 +220,6 @@ extension LibraryViewController {
         switch item {
         case .toRead(let list):
             cell.configure(with: list)
-            cell.backgroundColor = .red
-            
         case .reading:
             cell.contentView.backgroundColor = TomeLinkColor.subtitle
         case .read:
