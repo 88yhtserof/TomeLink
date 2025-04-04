@@ -24,7 +24,6 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
         
         configureHierarchy()
         configureConstraints()
-        configureView()
         
         NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonResult"), object: nil)
     }
@@ -53,7 +52,6 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
 
     
     func configure(with value: String) {
-        
 //        self.id = value.id
         if let url = URL(string: value) {
             thumbnailView.setImage(with: url)
