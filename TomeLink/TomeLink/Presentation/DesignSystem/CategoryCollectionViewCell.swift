@@ -15,6 +15,12 @@ class CategoryCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
     // Views
     private let categoryButton = CategoryButton()
     
+    // Properties
+    var isCategorySelected: Bool {
+        get { categoryButton.isSelected }
+        set { categoryButton.isSelected = newValue }
+    }
+    
     // LifeCycle
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -33,7 +39,6 @@ class CategoryCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
     func configure(with value: (title: String, isSelected: Bool)) {
         
         categoryButton.title = value.title
-        categoryButton.isSelected = value.isSelected
     }
 }
 
@@ -43,6 +48,7 @@ private extension CategoryCollectionViewCell {
     func configureView() {
         
         contentView.cornerRadius()
+        categoryButton.isUserInteractionEnabled = false
     }
     
     func configureHierarchy() {
