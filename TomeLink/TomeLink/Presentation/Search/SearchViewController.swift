@@ -86,7 +86,8 @@ class SearchViewController: UIViewController {
 private extension SearchViewController {
     
     func configureView() {
-        view.backgroundColor = .white
+        view.backgroundColor = TomeLinkColor.background
+        collectionView.backgroundColor = .clear
         
         navigationItem.searchController = searchController
         searchController.searchBar.placeholder = "제목, 저자, 출판사 검색"
