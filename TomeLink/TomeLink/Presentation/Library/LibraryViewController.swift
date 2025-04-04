@@ -1,0 +1,276 @@
+//
+//  LibraryViewController.swift
+//  TomeLink
+//
+//  Created by 임윤휘 on 4/4/25.
+//
+
+import UIKit
+
+final class LibraryViewController: UIViewController {
+    
+    // Views
+    private lazy var categoryCollectionView = UICollectionView(frame: .zero, collectionViewLayout: categoryLayout())
+    private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
+    
+    // Properties
+    private var categoryDataSource: CategoryDataSource!
+    private var dataSource: DataSource!
+    private var snapshot: Snapshot!
+    
+    // LifeCycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        configureHierarchy()
+        configureConstraints()
+        configureView()
+        configureCategoryDataSource()
+        configureDataSource()
+    }
+}
+
+//MARK: - Configuration
+private extension LibraryViewController {
+    
+    func configureView() {
+        view.backgroundColor = TomeLinkColor.background
+        categoryCollectionView.backgroundColor = TomeLinkColor.background
+        collectionView.backgroundColor = TomeLinkColor.background
+    }
+    
+    func configureHierarchy() {
+        view.addSubviews(categoryCollectionView, collectionView)
+    }
+    
+    func configureConstraints() {
+        
+        categoryCollectionView.snp.makeConstraints { make in
+            make.top.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
+            make.height.equalTo(60)
+        }
+        
+        collectionView.snp.makeConstraints { make in
+            make.top.equalTo(categoryCollectionView.snp.bottom)
+            make.bottom.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
+        }
+    }
+}
+
+//MARK: - CollectionView Layout
+private extension LibraryViewController {
+    
+    func categoryLayout() -> UICollectionViewLayout {
+        let spacing: CGFloat = 8
+        let height: CGFloat = 40
+        
+        let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = .fixed(spacing)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.orthogonalScrollingBehavior = .continuous
+        section.interGroupSpacing = spacing
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
+        return UICollectionViewCompositionalLayout(section: section)
+    }
+    
+    func layout() -> UICollectionViewLayout {
+        return UICollectionViewCompositionalLayout { [weak self] sectionIndex, layoutEnvironment in
+            guard let self,
+                  let section = self.snapshot.sectionIdentifiers.first else {
+                fatalError("Could not access self")
+            }
+            
+            switch section {
+            case .toRead:
+                return self.sectionForToRead()
+            case .reading:
+                return self.sectionForReading()
+            case .read:
+                return self.sectionForRead()
+            }
+        }
+    }
+    
+    func sectionForCategory() -> NSCollectionLayoutSection {
+        
+        let spacing: CGFloat = 8
+        let height: CGFloat = 40
+        
+        let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = .fixed(spacing)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.orthogonalScrollingBehavior = .continuous
+        section.interGroupSpacing = spacing
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
+        return section
+    }
+    
+    func sectionForToRead() -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 16
+        let width: CGFloat = (view.frame.width - spacing * 3 ) / 2.0
+        let height: CGFloat = width * (4.5 / 3.0)
+        
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = .fixed(spacing)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = spacing
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
+        return section
+    }
+    
+    func sectionForReading() -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 16
+        let height: CGFloat = 200
+        
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = .fixed(spacing)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = spacing
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
+        return section
+    }
+    
+    func sectionForRead() -> NSCollectionLayoutSection {
+        let size = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
+        
+        let item = NSCollectionLayoutItem(layoutSize: size)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: size, subitems: [item])
+        let section = NSCollectionLayoutSection(group: group)
+        
+        return section
+    }
+}
+
+//MARK: - CollectionView DataSource
+private extension LibraryViewController {
+    
+    typealias CategoryDataSource = UICollectionViewDiffableDataSource<Int, String>
+    typealias CategorySnapshot = NSDiffableDataSourceSnapshot<Int, String>
+    
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
+    typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
+    
+    enum Section: Int, CaseIterable {
+        case toRead
+        case reading
+        case read
+    }
+    
+    enum Item: Hashable {
+        case toRead(String)
+        case reading(String)
+        case read(String)
+    }
+    
+    func configureCategoryDataSource() {
+        
+        let categoryCellRegistration = UICollectionView.CellRegistration(handler: catergoryCellRegistrationHandler)
+        
+        categoryDataSource = CategoryDataSource(collectionView: categoryCollectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
+            return collectionView.dequeueConfiguredReusableCell(using: categoryCellRegistration, for: indexPath, item: itemIdentifier)
+        })
+        
+        createSnapshotForCategory(["예정", "진행 중", "완료"])
+        categoryCollectionView.dataSource = categoryDataSource
+    }
+    
+    func configureDataSource() {
+        
+        let toReadCellRegistration = UICollectionView.CellRegistration(handler: toReadCellRegistrationHandler)
+        let readingCellRegistration = UICollectionView.CellRegistration(handler: readingCellRegistrationHandler)
+        let readCellRegistration = UICollectionView.CellRegistration(handler: readCellRegistrationHandler)
+        
+        dataSource = DataSource(collectionView: collectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
+            switch itemIdentifier {
+            case .toRead(let value):
+                return collectionView.dequeueConfiguredReusableCell(using: toReadCellRegistration, for: indexPath, item: value)
+            case .reading(let value):
+                return collectionView.dequeueConfiguredReusableCell(using: readingCellRegistration, for: indexPath, item: value)
+            case .read(let value):
+                return collectionView.dequeueConfiguredReusableCell(using: readCellRegistration, for: indexPath, item: value)
+            }
+        })
+        
+        
+        let thumbnails = ["https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5450099%3Ftimestamp%3D20250319144818", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6458653%3Ftimestamp%3D20250208152926", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F4751039%3Ftimestamp%3D20190302121725", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540501%3Ftimestamp%3D20241120115010", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6633286%3Ftimestamp%3D20250208153008", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6861926%3Ftimestamp%3D20250401155537", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6062691%3Ftimestamp%3D20240528172936", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045"]
+        
+//        createSnapshotForToRead(thumbnails)
+//        createSnapshotForReading(["-title1", "-title2", "-title3", "-title4", "-title5", "-title6", "-title7", "-title8", "-title9", "-title10"])
+        createSnapshotForRead(["`title1"])
+        collectionView.dataSource = dataSource
+    }
+    
+    func catergoryCellRegistrationHandler(cell: CategoryCollectionViewCell, indexPath: IndexPath, item: String) {
+        cell.configure(with: (item, indexPath.item == 0))
+    }
+    
+    func toReadCellRegistrationHandler(cell: LibraryThumbnailCollectionViewCell, indexPath: IndexPath, item: String) {
+        cell.configure(with: item)
+    }
+    
+    func readingCellRegistrationHandler(cell: LibraryProgressCollectionViewCell, indexPath: IndexPath, item: String) {
+        cell.configure(with: item)
+    }
+    
+    func readCellRegistrationHandler(cell: LibraryCalendarCollectionViewCell, indexPath: IndexPath, item: String) {
+        
+    }
+    
+    func createSnapshotForCategory(_ newItems: [String]) {
+        
+        var snapshot = CategorySnapshot()
+        snapshot.appendSections([0])
+        snapshot.appendItems(newItems)
+        categoryDataSource.applySnapshotUsingReloadData(snapshot)
+    }
+    
+    func createSnapshotForToRead(_ newItems: [String]) {
+        let items = newItems.map{ Item.toRead($0) }
+        
+        snapshot = Snapshot()
+        snapshot.deleteSections(Section.allCases.filter{ $0 != .toRead })
+        snapshot.appendSections([.toRead])
+        snapshot.appendItems(items, toSection: .toRead)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
+    
+    func createSnapshotForReading(_ newItems: [String]) {
+        let items = newItems.map{ Item.reading($0) }
+        
+        snapshot = Snapshot()
+        snapshot.deleteSections(Section.allCases.filter{ $0 != .reading })
+        snapshot.appendSections([.reading])
+        snapshot.appendItems(items, toSection: .reading)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
+    
+    func createSnapshotForRead(_ newItems: [String]) {
+        let items = newItems.map{ Item.read($0) }
+        
+        snapshot = Snapshot()
+        snapshot.deleteSections(Section.allCases.filter{ $0 != .read })
+        snapshot.appendSections([.read])
+        snapshot.appendItems(items, toSection: .read)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
+}
