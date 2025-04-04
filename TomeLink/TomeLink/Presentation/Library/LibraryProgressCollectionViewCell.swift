@@ -66,24 +66,29 @@ private extension LibraryProgressCollectionViewCell {
     
     func configureView() {
         
+        backgroungContainerView.backgroundColor = TomeLinkColor.imagePlaceholder
+        backgroungContainerView.border(color: TomeLinkColor.shadow)
+        
         titleLabel.font = .systemFont(ofSize: 15, weight: .bold)
         titleLabel.textColor = TomeLinkColor.title
         
         subtitleLabel.font = .systemFont(ofSize: 15, weight: .regular)
         subtitleLabel.textColor = TomeLinkColor.subtitle
         
-        progressLabel.font = .systemFont(ofSize: 26, weight: .bold)
+        progressLabel.font = .systemFont(ofSize: 30, weight: .bold)
         progressLabel.textColor = TomeLinkColor.title
-        
-        
     }
     
     func configureHierarchy() {
-        backgroungContainerView.addSubviews(titleLabel, subtitleLabel, thumbnailView, progressLabel, progressBar, pageCountLabel)
+        backgroungContainerView.addSubviews(titleLabel, subtitleLabel, thumbnailView, progressLabel, progressBar)
         contentView.addSubviews(backgroungContainerView)
     }
     
     func configureConstraints() {
+        
+        backgroungContainerView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         
         titleLabel.snp.makeConstraints { make in
             make.top.leading.equalToSuperview().offset(16)
@@ -103,17 +108,13 @@ private extension LibraryProgressCollectionViewCell {
         
         progressLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(16)
-            make.bottom.equalTo(progressBar.snp.top).offset(-8)
-        }
-        
-        pageCountLabel.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(16)
-            make.bottom.equalTo(progressBar.snp.top).offset(-8)
+            make.bottom.greaterThanOrEqualTo(thumbnailView)
         }
         
         progressBar.snp.makeConstraints { make in
+            make.top.equalTo(progressLabel.snp.bottom).offset(8)
             make.leading.equalTo(progressLabel)
-            make.trailing.equalTo(pageCountLabel)
+            make.trailing.equalTo(thumbnailView)
             make.bottom.equalToSuperview().inset(16)
             make.height.equalTo(4)
         }
