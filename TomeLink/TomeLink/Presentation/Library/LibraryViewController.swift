@@ -14,6 +14,7 @@ final class LibraryViewController: UIViewController {
     
     // Views
     private let iconBarButtonItem = UIBarButtonItem()
+    private let searchBarButtonItem = UIBarButtonItem()
     private lazy var categoryCollectionView = UICollectionView(frame: .zero, collectionViewLayout: categoryLayout())
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
     
@@ -90,6 +91,9 @@ private extension LibraryViewController {
         iconImageView.sizeThatFits(CGSize(width: 182, height: 29))
         iconBarButtonItem.customView = iconImageView
         navigationItem.leftBarButtonItem = iconBarButtonItem
+        
+        searchBarButtonItem.image = UIImage(systemName: "line.3.horizontal")
+        navigationItem.rightBarButtonItem = searchBarButtonItem
         
         categoryCollectionView.backgroundColor = TomeLinkColor.background
         collectionView.backgroundColor = TomeLinkColor.background

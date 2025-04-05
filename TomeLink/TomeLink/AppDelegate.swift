@@ -12,6 +12,9 @@ import CoreData
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        
+        configureNavigationBarAppearance()
+        
         return true
     }
 
@@ -68,3 +71,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 }
 
+//MARK: - Appearance
+extension  AppDelegate {
+    
+    func configureNavigationBarAppearance() {
+        
+        UINavigationBar.appearance().tintColor = TomeLinkColor.title
+        UINavigationBar.appearance().backIndicatorImage = UIImage(systemName: "arrow.left")
+        UINavigationBar.appearance().backIndicatorTransitionMaskImage = UIImage(systemName: "arrow.left")
+    }
+}
