@@ -218,9 +218,9 @@ private extension LibraryViewController {
     }
     
     enum CategoryItem: String, CaseIterable {
-        case toRead = "예정"
-        case reading = "진행 중"
-        case read = "완료"
+        case toRead = "읽고 싶은 도서"
+        case reading = "독서 진행률 %"
+        case read = "독서 기록"
     }
     
     enum Section: Int, CaseIterable {
