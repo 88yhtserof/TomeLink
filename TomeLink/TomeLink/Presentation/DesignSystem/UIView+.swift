@@ -22,4 +22,11 @@ extension UIView {
         layer.borderWidth = width
         layer.borderColor = color.cgColor
     }
+    
+    func shadow(opacity: Float = 0.6, radius: CGFloat = 2.5, offset: CGSize = CGSize(width: 0, height: 6)) {
+        layer.shadowColor = TomeLinkColor.shadow.cgColor
+        layer.shadowOffset = offset
+        layer.shadowOpacity = opacity
+        layer.shadowRadius = radius
+    }
 }
