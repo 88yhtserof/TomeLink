@@ -111,7 +111,7 @@ private extension SearchViewController {
     func configureConstraints() {
         
         collectionView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.edges.equalTo(view.safeAreaLayoutGuide)
         }
     }
 }
