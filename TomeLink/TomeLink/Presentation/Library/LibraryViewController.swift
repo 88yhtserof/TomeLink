@@ -110,7 +110,7 @@ private extension LibraryViewController {
         
         categoryCollectionView.snp.makeConstraints { make in
             make.top.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
-            make.height.equalTo(53)
+            make.height.equalTo(45)
         }
         
         separatorView.snp.makeConstraints { make in
@@ -131,7 +131,7 @@ private extension LibraryViewController {
     
     func categoryLayout() -> UICollectionViewLayout {
         let spacing: CGFloat = 8
-        let height: CGFloat = 40
+        let height: CGFloat = 34
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .fractionalHeight(1.0))
         let groupSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .absolute(height))
@@ -143,7 +143,7 @@ private extension LibraryViewController {
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .continuous
         section.interGroupSpacing = spacing
-        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: 0, trailing: spacing)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: spacing, bottom: 0, trailing: spacing)
         return UICollectionViewCompositionalLayout(section: section)
     }
     

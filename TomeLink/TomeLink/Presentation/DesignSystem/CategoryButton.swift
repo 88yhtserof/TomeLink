@@ -16,7 +16,7 @@ final class CategoryButton: UIButton {
         get { self.currentTitle }
         set {
             var attributedString = AttributedString(newValue ?? "")
-            attributedString.font = .systemFont(ofSize: 14, weight: .bold)
+            attributedString.font = TomeLinkFont.category
             normalConfiguration.attributedTitle = attributedString
             selectedConfiguration.attributedTitle = attributedString
             configuration?.attributedTitle = attributedString
@@ -59,12 +59,12 @@ private extension CategoryButton {
     func configureView() {
         
         cornerRadius(4)
-        border()
+        border(color: TomeLinkColor.subtitle)
         
         normalConfiguration.baseForegroundColor = TomeLinkColor.title
         normalConfiguration.baseBackgroundColor = TomeLinkColor.point
         
         selectedConfiguration.baseForegroundColor = TomeLinkColor.imagePlaceholder
-        selectedConfiguration.baseBackgroundColor = TomeLinkColor.title
+        selectedConfiguration.baseBackgroundColor = TomeLinkColor.buttonBackground
     }
 }
