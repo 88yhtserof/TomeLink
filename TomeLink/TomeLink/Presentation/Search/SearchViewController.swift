@@ -15,6 +15,7 @@ class SearchViewController: UIViewController {
     
     fileprivate let searchBar = UISearchBar()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
+    fileprivate let loadingView = LoadingView()
     
     private var dataSource: DataSource!
     private var snapshot: Snapshot!
@@ -80,6 +81,11 @@ class SearchViewController: UIViewController {
             .drive(rx.updateSearchResults)
             .disposed(by: disposeBag)
         
+        output.isLoading
+            .drive(loadingView.rx.showLoading)
+            .disposed(by: disposeBag)
+
+        
         searchBar.rx.textDidBeginEditing
             .map{ _ in true }
             .bind(to: rx.showCancelButton)
@@ -102,16 +108,22 @@ private extension SearchViewController {
         searchBar.placeholder = "제목, 저자, 출판사 검색"
         searchBar.tintColor = TomeLinkColor.point
         searchBar.showsCancelButton = false
+        
+        loadingView.isHidden = true
     }
     
     func configureHierarchy() {
-        view.addSubviews(collectionView)
+        view.addSubviews(collectionView, loadingView)
     }
     
     func configureConstraints() {
         
         collectionView.snp.makeConstraints { make in
             make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        loadingView.snp.makeConstraints { make in
+            make.edges.equalTo(collectionView)
         }
     }
 }

@@ -29,8 +29,10 @@ final class SearchViewModel: BaseViewModel {
         let recentResearches: Driver<[String]>
         let bookSearches: Driver<[Book]>
         let paginationBookSearches: Driver<[Book]>
+        let isLoading: Driver<Bool>
     }
     
+    private var searchKeyword: String?
     private var page: Int = 1
     private var isEnd: Bool = true
     private var searchResults: [Book] = []
@@ -40,6 +42,7 @@ final class SearchViewModel: BaseViewModel {
         let recentResearches = BehaviorRelay<[String]>(value: [])
         let searchResults = PublishRelay<[Book]>()
         let paginationBookSearches = PublishRelay<[Book]>()
+        let isLoading = PublishRelay<Bool>()
         
         // update recent researches
         RecentResultsManager.elements
@@ -65,12 +68,15 @@ final class SearchViewModel: BaseViewModel {
             .withLatestFrom(input.searchKeyword)
             .withUnretained(self)
             .flatMap { owner, keyword in
+                owner.searchKeyword = keyword
+                isLoading.accept(true)
                 return owner.requestSearch(keyword: keyword)
             }
         
         bookSearchResponse
             .withUnretained(self)
             .map { owner, response in
+                isLoading.accept(false)
                 owner.isEnd = response.meta.isEnd
                 
                 let books = response.toDomain().books
@@ -92,13 +98,15 @@ final class SearchViewModel: BaseViewModel {
         
         // TODO: - 로직 개선
         pagination
-            .withLatestFrom(input.searchKeyword)
             .withUnretained(self)
-            .flatMap { owner, keyword in
-                return owner.requestSearch(keyword: keyword)
+            .flatMap { owner, _ in
+                isLoading.accept(true)
+                return owner.requestSearch(keyword: owner.searchKeyword ?? "")
             }
+            .filter{ !$0.documents.isEmpty }
             .withUnretained(self)
             .map { owner, response in
+                isLoading.accept(false)
                 owner.isEnd = response.meta.isEnd
                 
                 let books = response.toDomain().books
@@ -122,11 +130,14 @@ final class SearchViewModel: BaseViewModel {
         input.selectRecentSearchesItem
             .withUnretained(self)
             .flatMap { owner, keyword in
+                owner.searchKeyword = keyword
+                isLoading.accept(true)
                 RecentResultsManager.save(keyword)
                 return owner.requestSearch(keyword: keyword)
             }
             .withUnretained(self)
             .map { owner, response in
+                isLoading.accept(false)
                 owner.isEnd = response.meta.isEnd
                 
                 let books = response.toDomain().books
@@ -139,7 +150,8 @@ final class SearchViewModel: BaseViewModel {
         
         return Output(recentResearches: recentResearches.asDriver(),
                       bookSearches: searchResults.asDriver(onErrorJustReturn: []),
-                      paginationBookSearches: paginationBookSearches.asDriver(onErrorJustReturn: []))
+                      paginationBookSearches: paginationBookSearches.asDriver(onErrorJustReturn: []),
+                      isLoading: isLoading.asDriver(onErrorJustReturn: false))
     }
     
     func requestSearch(keyword: String) -> Observable<BookSearchResponseDTO> {
