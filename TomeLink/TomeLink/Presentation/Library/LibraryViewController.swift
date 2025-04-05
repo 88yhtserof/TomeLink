@@ -13,6 +13,7 @@ import RxCocoa
 final class LibraryViewController: UIViewController {
     
     // Views
+    private let iconBarButtonItem = UIBarButtonItem()
     private lazy var categoryCollectionView = UICollectionView(frame: .zero, collectionViewLayout: categoryLayout())
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
     
@@ -84,8 +85,13 @@ private extension LibraryViewController {
     
     func configureView() {
         view.backgroundColor = TomeLinkColor.background
-        categoryCollectionView.backgroundColor = TomeLinkColor.background
         
+        let iconImageView = UIImageView(image: UIImage(named: "TomeLink_Icon_Text"))
+        iconImageView.sizeThatFits(CGSize(width: 182, height: 29))
+        iconBarButtonItem.customView = iconImageView
+        navigationItem.leftBarButtonItem = iconBarButtonItem
+        
+        categoryCollectionView.backgroundColor = TomeLinkColor.background
         collectionView.backgroundColor = TomeLinkColor.background
     }
     
