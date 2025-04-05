@@ -70,14 +70,14 @@ private extension LibraryThumbnailCollectionViewCell {
     func configureConstraints() {
         
         thumbnailView.snp.makeConstraints { make in
-            make.top.horizontalEdges.equalToSuperview().inset(16)
+            make.top.horizontalEdges.equalToSuperview()
         }
         
         favoriteButton.snp.makeConstraints { make in
             make.top.equalTo(thumbnailView.snp.bottom).offset(6)
             make.trailing.equalTo(thumbnailView)
             make.size.equalTo(30)
-            make.bottom.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview()
         }
     }
 }

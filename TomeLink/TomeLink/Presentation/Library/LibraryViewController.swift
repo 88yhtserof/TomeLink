@@ -108,7 +108,8 @@ private extension LibraryViewController {
         
         collectionView.snp.makeConstraints { make in
             make.top.equalTo(categoryCollectionView.snp.bottom)
-            make.bottom.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalToSuperview()
         }
     }
 }
@@ -154,8 +155,8 @@ private extension LibraryViewController {
     
     func sectionForCategory() -> NSCollectionLayoutSection {
         
-        let spacing: CGFloat = 8
-        let height: CGFloat = 40
+        let spacing: CGFloat = 16
+        let height: CGFloat = 80
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .fractionalHeight(1.0))
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height))
@@ -165,14 +166,14 @@ private extension LibraryViewController {
         group.interItemSpacing = .fixed(spacing)
         
         let section = NSCollectionLayoutSection(group: group)
-        section.orthogonalScrollingBehavior = .continuous
         section.interGroupSpacing = spacing
-        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
+        section.orthogonalScrollingBehavior = .continuous
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: 0, trailing: spacing)
         return section
     }
     
     func sectionForToRead() -> NSCollectionLayoutSection {
-        let spacing: CGFloat = 16
+        let spacing: CGFloat = 20
         let width: CGFloat = (view.frame.width - spacing * 3 ) / 2.0
         let height: CGFloat = width * (4.5 / 3.0)
         
@@ -185,7 +186,7 @@ private extension LibraryViewController {
         
         let section = NSCollectionLayoutSection(group: group)
         section.interGroupSpacing = spacing
-        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing, trailing: spacing)
         return section
     }
     
