@@ -13,7 +13,7 @@ import RxCocoa
 
 class SearchViewController: UIViewController {
     
-    private let searchController = UISearchController()
+    fileprivate let searchBar = UISearchBar()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
     
     private var dataSource: DataSource!
@@ -46,7 +46,7 @@ class SearchViewController: UIViewController {
             .map { owner, item in
                 switch item {
                 case .recentSearch(let keyword):
-                    owner.searchController.searchBar.rx.text.onNext(keyword)
+                    owner.searchBar.rx.text.onNext(keyword)
                     selectRecentSearchesItem.accept(keyword)
                 case .searchResult(let book):
                     selectSearchResultsItem.accept(book)
@@ -58,14 +58,14 @@ class SearchViewController: UIViewController {
         let input = SearchViewModel.Input(willDisplayCell: collectionView.rx.willDisplayCell.map{ $0.at },
                                           selectRecentSearchesItem: selectRecentSearchesItem,
                                           selectSearchResultItem: selectSearchResultsItem,
-                                          searchKeyword: searchController.searchBar.rx.text.orEmpty,
-                                          tapSearchButton: searchController.searchBar.rx.searchButtonClicked,
-                                          tapSearchCancelButton: searchController.searchBar.rx.cancelButtonClicked,
+                                          searchKeyword: searchBar.rx.text.orEmpty,
+                                          tapSearchButton: searchBar.rx.searchButtonClicked,
+                                          tapSearchCancelButton: searchBar.rx.cancelButtonClicked,
                                           deleteRecentSearch: recentSearchDeleteRelay)
         let output = viewMdoel.transform(input: input)
         
         collectionView.rx.willBeginDragging
-            .bind(to: searchController.searchBar.rx.endEditing)
+            .bind(to: rx.endEditing)
             .disposed(by: disposeBag)
         
         output.recentResearches
@@ -79,6 +79,15 @@ class SearchViewController: UIViewController {
         output.paginationBookSearches
             .drive(rx.updateSearchResults)
             .disposed(by: disposeBag)
+        
+        searchBar.rx.textDidBeginEditing
+            .map{ _ in true }
+            .bind(to: rx.showCancelButton)
+            .disposed(by: disposeBag)
+        
+        searchBar.rx.cancelButtonClicked
+            .bind(to: rx.endEditing)
+            .disposed(by: disposeBag)
     }
 }
 
@@ -89,10 +98,10 @@ private extension SearchViewController {
         view.backgroundColor = TomeLinkColor.background
         collectionView.backgroundColor = .clear
         
-        navigationItem.searchController = searchController
-        searchController.searchBar.placeholder = "제목, 저자, 출판사 검색"
-        searchController.searchBar.tintColor = TomeLinkColor.point
-        searchController.automaticallyShowsCancelButton = true
+        navigationItem.titleView = searchBar
+        searchBar.placeholder = "제목, 저자, 출판사 검색"
+        searchBar.tintColor = TomeLinkColor.point
+        searchBar.showsCancelButton = false
     }
     
     func configureHierarchy() {
@@ -271,6 +280,19 @@ extension Reactive where Base: SearchViewController {
     var updateSearchResults: Binder<[Book]> {
         return Binder(base) { base, list in
             base.updateSnapshotForSearchResults(list)
+        }
+    }
+    
+    var showCancelButton: Binder<Bool> {
+        return Binder(base) { base, value in
+            base.searchBar.setShowsCancelButton(value, animated: true)
+        }
+    }
+    
+    var endEditing: Binder<Void> {
+        return Binder(base) { base, _ in
+            base.searchBar.searchTextField.resignFirstResponder()
+            base.searchBar.setShowsCancelButton(false, animated: true)
         }
     }
 }
