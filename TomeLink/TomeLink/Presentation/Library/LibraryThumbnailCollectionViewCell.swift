@@ -74,7 +74,7 @@ private extension LibraryThumbnailCollectionViewCell {
         }
         
         favoriteButton.snp.makeConstraints { make in
-            make.top.equalTo(thumbnailView.snp.bottom).offset(6)
+            make.top.equalTo(thumbnailView.snp.bottom).offset(8)
             make.trailing.equalTo(thumbnailView)
             make.size.equalTo(30)
             make.bottom.equalToSuperview()
