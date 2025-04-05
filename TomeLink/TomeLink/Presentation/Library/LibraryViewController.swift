@@ -16,6 +16,7 @@ final class LibraryViewController: UIViewController {
     private let iconBarButtonItem = UIBarButtonItem()
     private let searchBarButtonItem = UIBarButtonItem()
     private lazy var categoryCollectionView = UICollectionView(frame: .zero, collectionViewLayout: categoryLayout())
+    private let separatorView = SeparatorView()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
     
     // Properties
@@ -102,18 +103,24 @@ private extension LibraryViewController {
     }
     
     func configureHierarchy() {
-        view.addSubviews(categoryCollectionView, collectionView)
+        view.addSubviews(categoryCollectionView, separatorView, collectionView)
     }
     
     func configureConstraints() {
         
         categoryCollectionView.snp.makeConstraints { make in
             make.top.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
-            make.height.equalTo(60)
+            make.height.equalTo(53)
+        }
+        
+        separatorView.snp.makeConstraints { make in
+            make.top.equalTo(categoryCollectionView.snp.bottom)
+            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
+            make.height.equalTo(1.0)
         }
         
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(categoryCollectionView.snp.bottom)
+            make.top.equalTo(separatorView.snp.bottom)
             make.bottom.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
         }
     }
@@ -172,7 +179,7 @@ private extension LibraryViewController {
         
         let section = NSCollectionLayoutSection(group: group)
         section.interGroupSpacing = spacing
-        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing, trailing: spacing)
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
         return section
     }
     
@@ -194,11 +201,14 @@ private extension LibraryViewController {
     }
     
     func sectionForRead() -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 16
+        
         let size = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
         
         let item = NSCollectionLayoutItem(layoutSize: size)
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: size, subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
         
         return section
     }

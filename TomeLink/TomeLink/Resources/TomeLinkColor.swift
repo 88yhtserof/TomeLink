@@ -15,4 +15,5 @@ enum TomeLinkColor {
     static let shadow: UIColor = .tomelinkGray
     static let background: UIColor = .tomelinkWhite
     static let imagePlaceholder: UIColor = .white
+    static let separator: UIColor = .tomelinkGrayDark
 }
