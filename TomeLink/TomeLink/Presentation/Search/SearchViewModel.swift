@@ -44,6 +44,7 @@ final class SearchViewModel: BaseViewModel {
         let isLoading = PublishRelay<Bool>()
         
         // update recent researches
+        
         RecentResultsManager.elements
             .bind(to: recentResearches)
             .disposed(by: disposeBag)
@@ -58,8 +59,31 @@ final class SearchViewModel: BaseViewModel {
             .disposed(by: disposeBag)
         
         // update search results
-        let bookSearchResponse = input.tapSearchButton
+        let searchByButton: Observable<String> = input.tapSearchButton
             .withLatestFrom(input.searchKeyword)
+            .withUnretained(self)
+            .map { owner, keyword in
+                owner.page = 1
+                owner.searchResults = []
+                return keyword
+            }
+        
+        let pagination: Observable<String> = input.willDisplayCell
+            .withUnretained(self)
+            .filter { (owner, indexPath) in
+                return !owner.isEnd && (owner.searchResults.count - 1) == indexPath.item
+            }
+            .compactMap {(owner, value) in
+                if let keyword = owner.searchKeyword {
+                    owner.page += 1
+                    return keyword
+                } else {
+                    return nil
+                }
+            }
+        
+        let bookSearchResponse = Observable.of(searchByButton, pagination)
+            .merge()
             .withUnretained(self)
             .flatMap { owner, keyword in
                 owner.searchKeyword = keyword
@@ -74,44 +98,22 @@ final class SearchViewModel: BaseViewModel {
                 owner.isEnd = response.meta.isEnd
                 
                 let books = response.toDomain().books
-                owner.searchResults = books
-                
-                return owner.searchResults
-            }
-            .bind(to: searchResults)
-            .disposed(by: disposeBag)
-        
-        let pagination = input.willDisplayCell
-            .withUnretained(self)
-            .filter { (owner, indexPath) in
-                return !owner.isEnd && (owner.searchResults.count - 1) == indexPath.item
-            }
-            .map {(owner, value) in
-                owner.page += 1
-            }
-        
-        // TODO: - 로직 개선
-        pagination
-            .withUnretained(self)
-            .flatMap { owner, _ in
-                isLoading.accept(true)
-                return owner.requestSearch(keyword: owner.searchKeyword ?? "")
-            }
-            .filter{ !$0.documents.isEmpty }
-            .withUnretained(self)
-            .map { owner, response in
-                isLoading.accept(false)
-                owner.isEnd = response.meta.isEnd
-                
-                let books = response.toDomain().books
                 owner.searchResults.append(contentsOf: books)
                 
                 return owner.searchResults
             }
-            .bind(to: paginationBookSearches)
+            .bind(with: self) { owner, list in
+                if owner.page == 1 {
+                    searchResults.accept(list)
+                } else {
+                    paginationBookSearches.accept(list)
+                }
+            }
             .disposed(by: disposeBag)
         
+        
         // save recent research
+        
         input.tapSearchButton
             .withLatestFrom(input.searchKeyword)
             .bind { text in
@@ -121,6 +123,7 @@ final class SearchViewModel: BaseViewModel {
         
         
         // select item
+        
         input.selectRecentSearchesItem
             .withUnretained(self)
             .flatMap { owner, keyword in
@@ -147,7 +150,12 @@ final class SearchViewModel: BaseViewModel {
                       paginationBookSearches: paginationBookSearches.asDriver(onErrorJustReturn: []),
                       isLoading: isLoading.asDriver(onErrorJustReturn: false))
     }
+}
+
+//MARK: - Feature
+private extension SearchViewModel {
     
+    /// Requests search to Kakao Book API
     func requestSearch(keyword: String) -> Observable<BookSearchResponseDTO> {
         return Observable.just(keyword)
             .distinctUntilChanged()
