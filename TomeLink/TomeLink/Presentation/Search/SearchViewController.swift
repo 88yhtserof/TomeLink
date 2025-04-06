@@ -146,14 +146,27 @@ private extension SearchViewController {
         }
     }
     
-    func sectionForRecentSearches(_ layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
-        let configuration = UICollectionLayoutListConfiguration(appearance: .plain)
-        let section = NSCollectionLayoutSection.list(using: configuration, layoutEnvironment: layoutEnvironment)
+    func sectionForRecentSearches(_ enviroment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 10
+        
+        let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(26), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(28))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = .fixed(spacing)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = spacing
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
         section.boundarySupplementaryItems = [titleSupplementaryItem()]
         return section
+        
     }
     
     func sectionForSearchResults(_ layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 8
+        
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(130))
         
@@ -162,6 +175,7 @@ private extension SearchViewController {
         
         let section = NSCollectionLayoutSection(group: group)
         section.boundarySupplementaryItems = [titleSupplementaryItem()]
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
         return section
     }
     
@@ -211,24 +225,13 @@ private extension SearchViewController {
         collectionView.dataSource = dataSource
     }
     
-    func recentSearchesCellRegistrationHandler(cell: UICollectionViewListCell, indexPath: IndexPath, item: String) {
-        var contentConfig = UIListContentConfiguration.cell()
-        contentConfig.text = item
-        let backgroundConfiguration = UIBackgroundConfiguration.clear()
-        cell.contentConfiguration = contentConfig
-        cell.backgroundConfiguration = backgroundConfiguration
+    func recentSearchesCellRegistrationHandler(cell: RecentSearchesCollectionViewCell, indexPath: IndexPath, item: String) {
+        cell.configure(with: item)
         
-        let deleteButton = UIButton()
-        deleteButton.setImage(UIImage(systemName: "xmark"), for: .normal)
-        deleteButton.tintColor = TomeLinkColor.subtitle
-        
-        deleteButton.rx.tap
+        cell.deleteButton.rx.tap
             .map{ item }
             .bind(to: recentSearchDeleteRelay)
             .disposed(by: disposeBag)
-        
-        let deleteAccessory = UICellAccessory.CustomViewConfiguration(customView: deleteButton, placement: .trailing(displayed: .always))
-        cell.accessories = [.customView(configuration: deleteAccessory)]
     }
     
     func searchResultsCellRegistrationHandler(cell: BookListCollectionViewCell, indexPath: IndexPath, item: Book) {

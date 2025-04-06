@@ -62,12 +62,12 @@ private extension TitleSupplementaryView {
     
     private func configureConstraints() {
         titleLabel.snp.makeConstraints { make in
-            make.verticalEdges.leading.equalToSuperview().inset(10)
+            make.verticalEdges.leading.equalToSuperview()
         }
         
         accessoryButton.snp.makeConstraints { make in
             make.centerY.equalTo(titleLabel)
-            make.trailing.equalToSuperview().inset(10)
+            make.trailing.equalToSuperview()
         }
     }
 }
