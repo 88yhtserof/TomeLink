@@ -27,6 +27,7 @@ final class SearchViewModel: BaseViewModel {
     struct Output {
         let recentResearches: Driver<[String]>
         let bookSearches: Driver<[Book]>
+        let emptySearchResults: Driver<Void>
         let paginationBookSearches: Driver<[Book]>
         let isLoading: Driver<Bool>
     }
@@ -40,6 +41,7 @@ final class SearchViewModel: BaseViewModel {
         
         let recentResearches = BehaviorRelay<[String]>(value: [])
         let searchResults = PublishRelay<[Book]>()
+        let emptySearchResults = PublishRelay<Void>()
         let paginationBookSearches = PublishRelay<[Book]>()
         let isLoading = PublishRelay<Bool>()
         
@@ -67,6 +69,7 @@ final class SearchViewModel: BaseViewModel {
                 owner.searchResults = []
                 return keyword
             }
+            .share()
         
         let pagination: Observable<String> = input.willDisplayCell
             .withUnretained(self)
@@ -81,6 +84,7 @@ final class SearchViewModel: BaseViewModel {
                     return nil
                 }
             }
+            .share()
         
         let bookSearchResponse = Observable.of(searchByButton, pagination)
             .merge()
@@ -90,6 +94,7 @@ final class SearchViewModel: BaseViewModel {
                 isLoading.accept(true)
                 return owner.requestSearch(keyword: keyword)
             }
+            .share()
         
         bookSearchResponse
             .withUnretained(self)
@@ -99,12 +104,15 @@ final class SearchViewModel: BaseViewModel {
                 
                 let books = response.toDomain().books
                 owner.searchResults.append(contentsOf: books)
-                
                 return owner.searchResults
             }
             .bind(with: self) { owner, list in
                 if owner.page == 1 {
-                    searchResults.accept(list)
+                    if list.isEmpty {
+                        emptySearchResults.accept(Void())
+                    } else {
+                        searchResults.accept(list)
+                    }
                 } else {
                     paginationBookSearches.accept(list)
                 }
@@ -142,11 +150,18 @@ final class SearchViewModel: BaseViewModel {
                 
                 return owner.searchResults
             }
-            .bind(to: searchResults)
+            .bind(with: self) { owner, list in
+                if list.isEmpty {
+                    emptySearchResults.accept(Void())
+                } else {
+                    searchResults.accept(list)
+                }
+            }
             .disposed(by: disposeBag)
         
         return Output(recentResearches: recentResearches.asDriver(),
                       bookSearches: searchResults.asDriver(onErrorJustReturn: []),
+                      emptySearchResults: emptySearchResults.asDriver(onErrorJustReturn: Void()),
                       paginationBookSearches: paginationBookSearches.asDriver(onErrorJustReturn: []),
                       isLoading: isLoading.asDriver(onErrorJustReturn: false))
     }

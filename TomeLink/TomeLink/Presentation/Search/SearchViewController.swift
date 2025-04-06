@@ -49,6 +49,8 @@ class SearchViewController: UIViewController {
                     selectRecentSearchesItem.accept(keyword)
                 case .searchResult(let book):
                     selectSearchResultsItem.accept(book)
+                case .emptySearchResults:
+                    break
                 }
             }
             .subscribe()
@@ -72,6 +74,10 @@ class SearchViewController: UIViewController {
         
         output.bookSearches
             .drive(rx.createSearchResults)
+            .disposed(by: disposeBag)
+        
+        output.emptySearchResults
+            .drive(rx.createEmptySearchResults)
             .disposed(by: disposeBag)
         
         output.paginationBookSearches
@@ -136,14 +142,16 @@ private extension SearchViewController {
             
             switch section {
             case .recentSearches:
-                return self?.sectionForRecentSearches(layoutEnvironment)
+                return self?.sectionForRecentSearches()
             case .searchResults:
-                return self?.sectionForSearchResults(layoutEnvironment)
+                return self?.sectionForSearchResults()
+            case .emptySearchResults:
+                return self?.sectionForEmptySearchResults()
             }
         }
     }
     
-    func sectionForRecentSearches(_ enviroment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+    func sectionForRecentSearches() -> NSCollectionLayoutSection {
         let spacing: CGFloat = 16
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(26), heightDimension: .fractionalHeight(1.0))
@@ -161,7 +169,7 @@ private extension SearchViewController {
         
     }
     
-    func sectionForSearchResults(_ layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+    func sectionForSearchResults() -> NSCollectionLayoutSection {
         let spacing: CGFloat = 16
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
@@ -173,6 +181,21 @@ private extension SearchViewController {
         
         let section = NSCollectionLayoutSection(group: group)
         section.interGroupSpacing = spacing / 2.0
+        section.boundarySupplementaryItems = [titleSupplementaryItem()]
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
+        
+        return section
+    }
+    
+    func sectionForEmptySearchResults() -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 16
+        
+        let size = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(0.9))
+        
+        let item = NSCollectionLayoutItem(layoutSize: size)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: size, subitems: [item])
+        
+        let section = NSCollectionLayoutSection(group: group)
         section.boundarySupplementaryItems = [titleSupplementaryItem()]
         section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
         
@@ -196,17 +219,20 @@ private extension SearchViewController {
     enum Section: Int, CaseIterable {
         case recentSearches
         case searchResults
+        case emptySearchResults
     }
     
     enum Item: Hashable {
         case recentSearch(String)
         case searchResult(Book)
+        case emptySearchResults
     }
     
     func configureDataSource() {
         
         let recentSearchCellRegistration = UICollectionView.CellRegistration(handler: recentSearchesCellRegistrationHandler)
         let searchResultsCellRegistration = UICollectionView.CellRegistration(handler: searchResultsCellRegistrationHandler)
+        let emptySearchResultsCellRegistration = UICollectionView.CellRegistration(handler: emptySearchResultsCellRegistrationHandler)
         
         dataSource = DataSource(collectionView: collectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
             switch itemIdentifier {
@@ -214,6 +240,8 @@ private extension SearchViewController {
                 return collectionView.dequeueConfiguredReusableCell(using: recentSearchCellRegistration, for: indexPath, item: value)
             case .searchResult(let value):
                 return collectionView.dequeueConfiguredReusableCell(using: searchResultsCellRegistration, for: indexPath, item: value)
+            case .emptySearchResults:
+                return collectionView.dequeueConfiguredReusableCell(using: emptySearchResultsCellRegistration, for: indexPath, item: Void())
             }
         })
         
@@ -233,6 +261,8 @@ private extension SearchViewController {
         cell.configure(with: item)
     }
     
+    func emptySearchResultsCellRegistrationHandler(cell: EmptySearchResultsCollectionViewCell, indexPath: IndexPath, item: Void) { }
+    
     func headerSupplementaryRegistrationHandler(supplementaryView: TitleSupplementaryView, string: String, indexPath: IndexPath) {
         guard let section = snapshot.sectionIdentifiers.first else {
             fatalError("Could not find section")
@@ -241,7 +271,7 @@ private extension SearchViewController {
         switch section {
         case .recentSearches:
             supplementaryView.configure(with: "최근 검색어")
-        case .searchResults:
+        case .searchResults, .emptySearchResults:
             supplementaryView.configure(with: "작품")
         }
     }
@@ -261,6 +291,15 @@ private extension SearchViewController {
         snapshot = Snapshot()
         snapshot.appendSections([.searchResults])
         snapshot.appendItems(items, toSection: .searchResults)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
+    
+    func createSnapshotForEmptySearchResults() {
+        let items = [Item.emptySearchResults]
+        
+        snapshot = Snapshot()
+        snapshot.appendSections([.emptySearchResults])
+        snapshot.appendItems(items, toSection: .emptySearchResults)
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
@@ -284,6 +323,12 @@ extension Reactive where Base: SearchViewController {
     var createSearchResults: Binder<[Book]> {
         return Binder(base) { base, list in
             base.createSnapshotForSearchResults(list)
+        }
+    }
+    
+    var createEmptySearchResults: Binder<Void> {
+        return Binder(base) { base, _ in
+            base.createSnapshotForEmptySearchResults()
         }
     }
     
