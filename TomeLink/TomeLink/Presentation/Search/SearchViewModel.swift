@@ -74,7 +74,7 @@ final class SearchViewModel: BaseViewModel {
                 owner.isEnd = response.meta.isEnd
                 
                 let books = response.toDomain().books
-                owner.searchResults.append(contentsOf: books)
+                owner.searchResults = books
                 
                 return owner.searchResults
             }
