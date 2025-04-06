@@ -8,15 +8,22 @@
 import UIKit
 
 import SnapKit
+import RxSwift
+import RxCocoa
 
 final class RecentSearchesCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
     
     static let identifier = String(describing: RecentSearchesCollectionViewCell.self)
     
+    // Views
     private let backgroundBorderView = UIView()
     private let textLabel = UILabel()
-    let deleteButton = UIButton()
+    private let deleteButton = UIButton()
     
+    // Properties
+    private var disposeBag = DisposeBag()
+    
+    // LifeCycle
     override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -29,10 +36,30 @@ final class RecentSearchesCollectionViewCell: UICollectionViewCell, BaseCollecti
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        disposeBag = DisposeBag()
+    }
+    
+    // Feature
     func configure(with value: String) {
         textLabel.text = value
-        
         deleteButton.accessibilityHint = value
+        
+        bind()
+    }
+    
+    // Binding
+    private func bind() {
+        
+        deleteButton.rx.tap
+            .withUnretained(self)
+            .compactMap{ owner, _ in owner.textLabel.text }
+            .bind { text in
+                RecentResultsManager.remove(of: text)
+            }
+            .disposed(by: disposeBag)
     }
 }
 

@@ -22,7 +22,6 @@ final class SearchViewModel: BaseViewModel {
         let searchKeyword: ControlProperty<String>
         let tapSearchButton: ControlEvent<Void>
         let tapSearchCancelButton: ControlEvent<Void>
-        let deleteRecentSearch: PublishRelay<String>
     }
     
     struct Output {
@@ -56,11 +55,6 @@ final class SearchViewModel: BaseViewModel {
             }
             .withLatestFrom(RecentResultsManager.elements)
             .bind(to: recentResearches)
-            .disposed(by: disposeBag)
-        
-        input.deleteRecentSearch
-            .map { RecentResultsManager.remove(of: $0) }
-            .subscribe()
             .disposed(by: disposeBag)
         
         // update search results

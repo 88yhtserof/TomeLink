@@ -23,8 +23,6 @@ class SearchViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewMdoel = SearchViewModel()
     
-    private let recentSearchDeleteRelay = PublishRelay<String>()
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -61,8 +59,7 @@ class SearchViewController: UIViewController {
                                           selectSearchResultItem: selectSearchResultsItem,
                                           searchKeyword: searchBar.rx.text.orEmpty,
                                           tapSearchButton: searchBar.rx.searchButtonClicked,
-                                          tapSearchCancelButton: searchBar.rx.cancelButtonClicked,
-                                          deleteRecentSearch: recentSearchDeleteRelay)
+                                          tapSearchCancelButton: searchBar.rx.cancelButtonClicked)
         let output = viewMdoel.transform(input: input)
         
         collectionView.rx.willBeginDragging
@@ -227,11 +224,6 @@ private extension SearchViewController {
     
     func recentSearchesCellRegistrationHandler(cell: RecentSearchesCollectionViewCell, indexPath: IndexPath, item: String) {
         cell.configure(with: item)
-        
-        cell.deleteButton.rx.tap
-            .map{ item }
-            .bind(to: recentSearchDeleteRelay)
-            .disposed(by: disposeBag)
     }
     
     func searchResultsCellRegistrationHandler(cell: BookListCollectionViewCell, indexPath: IndexPath, item: Book) {
