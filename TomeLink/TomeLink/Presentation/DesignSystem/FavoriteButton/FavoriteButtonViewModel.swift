@@ -27,12 +27,7 @@ final class FavoriteButtonViewModel: BaseViewModel {
     private let id: String
     
     init(id: String) {
-        print("FavoriteButtonViewModel init")
         self.id = id
-    }
-    
-    deinit {
-        print("FavoriteButtonViewModel deinit")
     }
     
     func transform(input: Input) -> Output {
