@@ -59,12 +59,12 @@ private extension CategoryButton {
     func configureView() {
         
         cornerRadius(4)
-        border(color: TomeLinkColor.subtitle)
+        border()
         
         normalConfiguration.baseForegroundColor = TomeLinkColor.title
         normalConfiguration.baseBackgroundColor = TomeLinkColor.point
         
         selectedConfiguration.baseForegroundColor = TomeLinkColor.imagePlaceholder
-        selectedConfiguration.baseBackgroundColor = TomeLinkColor.buttonBackground
+        selectedConfiguration.baseBackgroundColor = TomeLinkColor.title
     }
 }

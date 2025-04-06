@@ -18,7 +18,7 @@ extension UIView {
         self.clipsToBounds = true
     }
     
-    func border(width: CGFloat = 1.0, color: UIColor = .black) {
+    func border(width: CGFloat = 1.0, color: UIColor = TomeLinkColor.buttonBackground) {
         layer.borderWidth = width
         layer.borderColor = color.cgColor
     }

@@ -13,16 +13,15 @@ import RxCocoa
 
 class SearchViewController: UIViewController {
     
-    private let searchController = UISearchController()
+    fileprivate let searchBar = UISearchBar()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
+    fileprivate let loadingView = LoadingView()
     
     private var dataSource: DataSource!
     private var snapshot: Snapshot!
     
     private let disposeBag = DisposeBag()
     private let viewMdoel = SearchViewModel()
-    
-    private let recentSearchDeleteRelay = PublishRelay<String>()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,10 +45,12 @@ class SearchViewController: UIViewController {
             .map { owner, item in
                 switch item {
                 case .recentSearch(let keyword):
-                    owner.searchController.searchBar.rx.text.onNext(keyword)
+                    owner.searchBar.rx.text.onNext(keyword)
                     selectRecentSearchesItem.accept(keyword)
                 case .searchResult(let book):
                     selectSearchResultsItem.accept(book)
+                case .emptySearchResults:
+                    break
                 }
             }
             .subscribe()
@@ -58,14 +59,13 @@ class SearchViewController: UIViewController {
         let input = SearchViewModel.Input(willDisplayCell: collectionView.rx.willDisplayCell.map{ $0.at },
                                           selectRecentSearchesItem: selectRecentSearchesItem,
                                           selectSearchResultItem: selectSearchResultsItem,
-                                          searchKeyword: searchController.searchBar.rx.text.orEmpty,
-                                          tapSearchButton: searchController.searchBar.rx.searchButtonClicked,
-                                          tapSearchCancelButton: searchController.searchBar.rx.cancelButtonClicked,
-                                          deleteRecentSearch: recentSearchDeleteRelay)
+                                          searchKeyword: searchBar.rx.text.orEmpty,
+                                          tapSearchButton: searchBar.rx.searchButtonClicked,
+                                          tapSearchCancelButton: searchBar.rx.cancelButtonClicked)
         let output = viewMdoel.transform(input: input)
         
         collectionView.rx.willBeginDragging
-            .bind(to: searchController.searchBar.rx.endEditing)
+            .bind(to: rx.endEditing)
             .disposed(by: disposeBag)
         
         output.recentResearches
@@ -76,8 +76,26 @@ class SearchViewController: UIViewController {
             .drive(rx.createSearchResults)
             .disposed(by: disposeBag)
         
+        output.emptySearchResults
+            .drive(rx.createEmptySearchResults)
+            .disposed(by: disposeBag)
+        
         output.paginationBookSearches
             .drive(rx.updateSearchResults)
+            .disposed(by: disposeBag)
+        
+        output.isLoading
+            .drive(loadingView.rx.showLoading)
+            .disposed(by: disposeBag)
+
+        
+        searchBar.rx.textDidBeginEditing
+            .map{ _ in true }
+            .bind(to: rx.showCancelButton)
+            .disposed(by: disposeBag)
+        
+        searchBar.rx.cancelButtonClicked
+            .bind(to: rx.endEditing)
             .disposed(by: disposeBag)
     }
 }
@@ -89,20 +107,26 @@ private extension SearchViewController {
         view.backgroundColor = TomeLinkColor.background
         collectionView.backgroundColor = .clear
         
-        navigationItem.searchController = searchController
-        searchController.searchBar.placeholder = "제목, 저자, 출판사 검색"
-        searchController.searchBar.tintColor = TomeLinkColor.point
-        searchController.automaticallyShowsCancelButton = true
+        navigationItem.titleView = searchBar
+        searchBar.placeholder = "제목, 저자, 출판사 검색"
+        searchBar.tintColor = TomeLinkColor.title
+        searchBar.showsCancelButton = false
+        
+        loadingView.isHidden = true
     }
     
     func configureHierarchy() {
-        view.addSubviews(collectionView)
+        view.addSubviews(collectionView, loadingView)
     }
     
     func configureConstraints() {
         
         collectionView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        loadingView.snp.makeConstraints { make in
+            make.edges.equalTo(collectionView)
         }
     }
 }
@@ -118,29 +142,63 @@ private extension SearchViewController {
             
             switch section {
             case .recentSearches:
-                return self?.sectionForRecentSearches(layoutEnvironment)
+                return self?.sectionForRecentSearches()
             case .searchResults:
-                return self?.sectionForSearchResults(layoutEnvironment)
+                return self?.sectionForSearchResults()
+            case .emptySearchResults:
+                return self?.sectionForEmptySearchResults()
             }
         }
     }
     
-    func sectionForRecentSearches(_ layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
-        let configuration = UICollectionLayoutListConfiguration(appearance: .plain)
-        let section = NSCollectionLayoutSection.list(using: configuration, layoutEnvironment: layoutEnvironment)
-        section.boundarySupplementaryItems = [titleSupplementaryItem()]
-        return section
-    }
-    
-    func sectionForSearchResults(_ layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(130))
+    func sectionForRecentSearches() -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 16
+        
+        let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(26), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(28))
         
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = .fixed(spacing / 2.0)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = spacing / 2.0
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
+        section.boundarySupplementaryItems = [titleSupplementaryItem()]
+        return section
+        
+    }
+    
+    func sectionForSearchResults() -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 16
+        
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(150))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = .fixed(spacing / 2.0)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = spacing / 2.0
+        section.boundarySupplementaryItems = [titleSupplementaryItem()]
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
+        
+        return section
+    }
+    
+    func sectionForEmptySearchResults() -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 16
+        
+        let size = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(0.9))
+        
+        let item = NSCollectionLayoutItem(layoutSize: size)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: size, subitems: [item])
         
         let section = NSCollectionLayoutSection(group: group)
         section.boundarySupplementaryItems = [titleSupplementaryItem()]
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
+        
         return section
     }
     
@@ -161,17 +219,20 @@ private extension SearchViewController {
     enum Section: Int, CaseIterable {
         case recentSearches
         case searchResults
+        case emptySearchResults
     }
     
     enum Item: Hashable {
         case recentSearch(String)
         case searchResult(Book)
+        case emptySearchResults
     }
     
     func configureDataSource() {
         
         let recentSearchCellRegistration = UICollectionView.CellRegistration(handler: recentSearchesCellRegistrationHandler)
         let searchResultsCellRegistration = UICollectionView.CellRegistration(handler: searchResultsCellRegistrationHandler)
+        let emptySearchResultsCellRegistration = UICollectionView.CellRegistration(handler: emptySearchResultsCellRegistrationHandler)
         
         dataSource = DataSource(collectionView: collectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
             switch itemIdentifier {
@@ -179,6 +240,8 @@ private extension SearchViewController {
                 return collectionView.dequeueConfiguredReusableCell(using: recentSearchCellRegistration, for: indexPath, item: value)
             case .searchResult(let value):
                 return collectionView.dequeueConfiguredReusableCell(using: searchResultsCellRegistration, for: indexPath, item: value)
+            case .emptySearchResults:
+                return collectionView.dequeueConfiguredReusableCell(using: emptySearchResultsCellRegistration, for: indexPath, item: Void())
             }
         })
         
@@ -190,29 +253,15 @@ private extension SearchViewController {
         collectionView.dataSource = dataSource
     }
     
-    func recentSearchesCellRegistrationHandler(cell: UICollectionViewListCell, indexPath: IndexPath, item: String) {
-        var contentConfig = UIListContentConfiguration.cell()
-        contentConfig.text = item
-        let backgroundConfiguration = UIBackgroundConfiguration.clear()
-        cell.contentConfiguration = contentConfig
-        cell.backgroundConfiguration = backgroundConfiguration
-        
-        let deleteButton = UIButton()
-        deleteButton.setImage(UIImage(systemName: "xmark"), for: .normal)
-        deleteButton.tintColor = TomeLinkColor.subtitle
-        
-        deleteButton.rx.tap
-            .map{ item }
-            .bind(to: recentSearchDeleteRelay)
-            .disposed(by: disposeBag)
-        
-        let deleteAccessory = UICellAccessory.CustomViewConfiguration(customView: deleteButton, placement: .trailing(displayed: .always))
-        cell.accessories = [.customView(configuration: deleteAccessory)]
+    func recentSearchesCellRegistrationHandler(cell: RecentSearchesCollectionViewCell, indexPath: IndexPath, item: String) {
+        cell.configure(with: item)
     }
     
     func searchResultsCellRegistrationHandler(cell: BookListCollectionViewCell, indexPath: IndexPath, item: Book) {
         cell.configure(with: item)
     }
+    
+    func emptySearchResultsCellRegistrationHandler(cell: EmptySearchResultsCollectionViewCell, indexPath: IndexPath, item: Void) { }
     
     func headerSupplementaryRegistrationHandler(supplementaryView: TitleSupplementaryView, string: String, indexPath: IndexPath) {
         guard let section = snapshot.sectionIdentifiers.first else {
@@ -222,7 +271,7 @@ private extension SearchViewController {
         switch section {
         case .recentSearches:
             supplementaryView.configure(with: "최근 검색어")
-        case .searchResults:
+        case .searchResults, .emptySearchResults:
             supplementaryView.configure(with: "작품")
         }
     }
@@ -242,6 +291,15 @@ private extension SearchViewController {
         snapshot = Snapshot()
         snapshot.appendSections([.searchResults])
         snapshot.appendItems(items, toSection: .searchResults)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
+    
+    func createSnapshotForEmptySearchResults() {
+        let items = [Item.emptySearchResults]
+        
+        snapshot = Snapshot()
+        snapshot.appendSections([.emptySearchResults])
+        snapshot.appendItems(items, toSection: .emptySearchResults)
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
@@ -268,9 +326,28 @@ extension Reactive where Base: SearchViewController {
         }
     }
     
+    var createEmptySearchResults: Binder<Void> {
+        return Binder(base) { base, _ in
+            base.createSnapshotForEmptySearchResults()
+        }
+    }
+    
     var updateSearchResults: Binder<[Book]> {
         return Binder(base) { base, list in
             base.updateSnapshotForSearchResults(list)
+        }
+    }
+    
+    var showCancelButton: Binder<Bool> {
+        return Binder(base) { base, value in
+            base.searchBar.setShowsCancelButton(value, animated: true)
+        }
+    }
+    
+    var endEditing: Binder<Void> {
+        return Binder(base) { base, _ in
+            base.searchBar.searchTextField.resignFirstResponder()
+            base.searchBar.setShowsCancelButton(false, animated: true)
         }
     }
 }

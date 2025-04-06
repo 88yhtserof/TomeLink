@@ -20,6 +20,7 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
     private let publisherLabel = UILabel()
     private lazy var labelStackView = UIStackView(arrangedSubviews: [titleLabel, authorLabel, publisherLabel])
     private let favoriteButton = FavoriteButton()
+    private let separatorView = SeparatorView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -59,51 +60,60 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
 private extension BookListCollectionViewCell {
     
     func configureView() {
-        contentView.border(width: 0.5, color: TomeLinkColor.shadow)
         
         thumnailImageView.contentMode = .scaleAspectFill
-        thumnailImageView.cornerRadius()
+        thumnailImageView.cornerRadius(4)
         thumnailImageView.backgroundColor = TomeLinkColor.shadow
         
         titleLabel.text = "title"
-        titleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        titleLabel.font = TomeLinkFont.title
         titleLabel.textColor = TomeLinkColor.title
         
         authorLabel.text = "author"
-        authorLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        authorLabel.font = TomeLinkFont.subtitle
         authorLabel.textColor = TomeLinkColor.subtitle
         
         publisherLabel.text = "publisher"
-        publisherLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        publisherLabel.font = TomeLinkFont.subtitle
         publisherLabel.textColor = TomeLinkColor.subtitle
         
         labelStackView.axis = .vertical
         labelStackView.alignment = .leading
         labelStackView.spacing = 5
+        
+        separatorView.lineColor = TomeLinkColor.separator2
     }
     
     func configureHierarchy() {
-        contentView.addSubviews(thumnailImageView, labelStackView, favoriteButton)
+        contentView.addSubviews(thumnailImageView, labelStackView, favoriteButton, separatorView)
     }
     
     func configureConstraints() {
         
         thumnailImageView.snp.makeConstraints { make in
-            make.verticalEdges.leading.equalToSuperview().inset(10)
+            make.top.equalToSuperview().inset(8)
+            make.leading.equalToSuperview()
             make.width.equalTo(80)
         }
         
         labelStackView.snp.makeConstraints { make in
-            make.top.equalTo(thumnailImageView)
+            make.top.equalTo(thumnailImageView).inset(8)
             make.leading.equalTo(thumnailImageView.snp.trailing).offset(10)
             make.trailing.equalTo(favoriteButton.snp.leading).offset(-8)
-            make.bottom.lessThanOrEqualTo(thumnailImageView)
+            make.bottom.lessThanOrEqualTo(thumnailImageView).inset(8)
         }
         
         favoriteButton.snp.makeConstraints { make in
-            make.top.equalTo(thumnailImageView)
+            make.top.equalTo(labelStackView)
             make.size.equalTo(30)
-            make.trailing.equalToSuperview().inset(10)
+            make.trailing.equalToSuperview()
+        }
+        
+        separatorView.snp.makeConstraints { make in
+            make.top.equalTo(thumnailImageView.snp.bottom).offset(16)
+            make.horizontalEdges.equalToSuperview().inset(16)
+            make.height.equalTo(1.0)
+            make.bottom.equalToSuperview().inset(8)
         }
     }
 }
