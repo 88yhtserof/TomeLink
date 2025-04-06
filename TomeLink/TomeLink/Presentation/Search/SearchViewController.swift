@@ -103,7 +103,7 @@ private extension SearchViewController {
         
         navigationItem.titleView = searchBar
         searchBar.placeholder = "제목, 저자, 출판사 검색"
-        searchBar.tintColor = TomeLinkColor.point
+        searchBar.tintColor = TomeLinkColor.title
         searchBar.showsCancelButton = false
         
         loadingView.isHidden = true
@@ -144,35 +144,38 @@ private extension SearchViewController {
     }
     
     func sectionForRecentSearches(_ enviroment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
-        let spacing: CGFloat = 10
+        let spacing: CGFloat = 16
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(26), heightDimension: .fractionalHeight(1.0))
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(28))
         
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        group.interItemSpacing = .fixed(spacing)
+        group.interItemSpacing = .fixed(spacing / 2.0)
         
         let section = NSCollectionLayoutSection(group: group)
-        section.interGroupSpacing = spacing
-        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
+        section.interGroupSpacing = spacing / 2.0
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
         section.boundarySupplementaryItems = [titleSupplementaryItem()]
         return section
         
     }
     
     func sectionForSearchResults(_ layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
-        let spacing: CGFloat = 8
+        let spacing: CGFloat = 16
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(130))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(150))
         
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = .fixed(spacing / 2.0)
         
         let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = spacing / 2.0
         section.boundarySupplementaryItems = [titleSupplementaryItem()]
-        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
+        
         return section
     }
     
