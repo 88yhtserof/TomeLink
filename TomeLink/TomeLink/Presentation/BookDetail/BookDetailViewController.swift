@@ -1,0 +1,290 @@
+//
+//  BookDetailViewController.swift
+//  TomeLink
+//
+//  Created by 임윤휘 on 4/7/25.
+//
+
+import UIKit
+
+import SnapKit
+import RxSwift
+import RxCocoa
+
+final class BookDetailViewController: UIViewController {
+    
+    // View
+    lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
+    fileprivate let loadingView = LoadingView()
+    
+    // Properties
+    private var dataSource: DataSource!
+    private var snapshot: Snapshot!
+    
+    private let disposeBag = DisposeBag()
+    private let viewModel: BookDetailViewModel
+    
+    // Observable - Observer
+    fileprivate let itemSelectedRelay = PublishRelay<Int>()
+    
+    // LifeCycle
+    init(viewModel: BookDetailViewModel) {
+        self.viewModel = viewModel
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        configureHierarchy()
+        configureConstraints()
+        configureView()
+        configureDataSource()
+        bind()
+        
+    }
+    
+    private func bind() {
+        
+        let input = BookDetailViewModel.Input()
+        let output = viewModel.transform(input: input)
+        
+        
+        output.book
+            .compactMap{ $0 }
+            .drive(with: self) { owner, book in
+                owner.updateSnapshot(thumbnail: book.thumbnailURL)
+                owner.updateSnapshot(bookInfo: book)
+                owner.updateSnapshot(platformList: ["플랫폼"])
+            }
+            .disposed(by: disposeBag)
+    }
+}
+
+//MARK: - Configuration
+private extension BookDetailViewController {
+    
+    func configureView() {
+        view.backgroundColor = TomeLinkColor.background
+        collectionView.backgroundColor = .clear
+        collectionView.bounces = false
+        loadingView.isHidden = true
+    }
+    
+    func configureHierarchy() {
+        view.addSubviews(collectionView, loadingView)
+    }
+    
+    func configureConstraints() {
+        
+        collectionView.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        loadingView.snp.makeConstraints { make in
+            make.edges.equalTo(collectionView)
+        }
+    }
+}
+
+//MARK: - CollectionView Layout
+extension BookDetailViewController {
+    
+    func layout() -> UICollectionViewLayout {
+        let configuration = UICollectionViewCompositionalLayoutConfiguration()
+        configuration.scrollDirection = .vertical
+        configuration.interSectionSpacing = 15
+        
+        return UICollectionViewCompositionalLayout(sectionProvider: sectionProvider, configuration: configuration)
+    }
+    
+    func sectionProvider(sectionIndex: Int, layoutEnvironment: any NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+        guard let section = Section(rawValue: sectionIndex) else {
+            fatalError("Could not find section")
+        }
+        switch section {
+        case .thumbnail:
+            return sectionForThumbnail()
+        case .bookInfo:
+            return sectionForDramaInfo()
+        case .platforms:
+            return sectionForStreamingPlatform()
+        }
+    }
+    
+    func sectionForThumbnail() -> NSCollectionLayoutSection {
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(180))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 15, leading: 10, bottom: 0, trailing: 10)
+        return section
+    }
+    
+    func sectionForDramaInfo() -> NSCollectionLayoutSection {
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(200))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(200))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
+        return section
+    }
+    
+    func sectionForStreamingPlatform() -> NSCollectionLayoutSection {
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(60))
+        
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = 8
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
+        return section
+    }
+    
+    func titleBoundarySupplementaryItem() -> NSCollectionLayoutBoundarySupplementaryItem {
+        let titleSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(40))
+        return NSCollectionLayoutBoundarySupplementaryItem(layoutSize: titleSize, elementKind: TitleSupplementaryView.elementKind, alignment: .top)
+    }
+}
+
+//MARK: - CollectionView DataSource
+private extension BookDetailViewController {
+    
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
+    typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
+    
+    enum Section: Int, CaseIterable {
+        case thumbnail
+        case bookInfo
+        case platforms
+    }
+    
+    enum Item: Hashable {
+        case thumbnail(URL?)
+        case bookInfo(Book)
+        case platforms(String)
+    }
+    
+    func configureDataSource() {
+        let thumbnailCellRegistration = UICollectionView.CellRegistration(handler: thumbnailCellRegistrationHandler)
+        let bookInfoCellRegistration = UICollectionView.CellRegistration(handler: bookInfoCellRegistrationHandler)
+        let platformCellRegistration = UICollectionView.CellRegistration(handler: platformCellRegistrationHandler)
+        
+        dataSource = DataSource(collectionView: collectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
+            
+            switch itemIdentifier {
+            case .thumbnail(let value):
+                return collectionView.dequeueConfiguredReusableCell(using: thumbnailCellRegistration, for: indexPath, item: value)
+            case .bookInfo(let value):
+                return collectionView.dequeueConfiguredReusableCell(using: bookInfoCellRegistration, for: indexPath, item: value)
+            case .platforms(let value):
+                return collectionView.dequeueConfiguredReusableCell(using: platformCellRegistration, for: indexPath, item: value)
+            }
+        })
+        
+//        let titleSupplementaryRegistration = UICollectionView.SupplementaryRegistration(elementKind: TitleSupplementaryView.elementKind, handler: titleSupplementaryRegistrationHandler)
+//        
+//        dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
+//        }
+//    }
+        
+        createSnapshot()
+        collectionView.dataSource = dataSource
+    }
+    
+    // Registration Handler
+    func thumbnailCellRegistrationHandler(cell: ThumbnailCollectionViewCell, indexPath: IndexPath, item: URL?) {
+        cell.configure(with: item)
+    }
+    
+    func bookInfoCellRegistrationHandler(cell: BookInfoCollectionViewCell, indexPath: IndexPath, item: Book) {
+        cell.configure(with: item)
+    }
+    
+    func platformCellRegistrationHandler(cell: PlatformCollectionViewCell, indexPath: IndexPath, item: String) {
+        cell.configure(with: item)
+    }
+    
+    func titleSupplementaryRegistrationHandler(supplementaryView: TitleSupplementaryView, string: String, indexPath: IndexPath) {
+        guard let section = Section(rawValue: indexPath.section) else {
+            fatalError("Could not find section")
+        }
+        
+        switch section {
+        case .bookInfo:
+            supplementaryView.configure(with: "작품 정보")
+        default:
+            break
+        }
+    }
+    
+    // Snapshot
+    func createSnapshot() {
+        snapshot = Snapshot()
+        snapshot.appendSections(Section.allCases)
+        
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
+    
+    func updateSnapshot(thumbnail value: URL?) {
+        
+        let items = [Item.thumbnail(value)]
+        
+        snapshot.appendItems(items, toSection: .thumbnail)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
+    
+    func updateSnapshot(bookInfo value: Book) {
+        
+        let items = [Item.bookInfo(value)]
+        
+        snapshot.appendItems(items, toSection: .bookInfo)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
+    
+    func updateSnapshot(platformList value: [String]) {
+        
+        let items = value.map{ Item.platforms($0) }
+        
+        snapshot.appendItems(items, toSection: .platforms)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
+}
+
+//MARK: - Reactive
+extension Reactive where Base: BookDetailViewController {
+    
+    var updateSnapshotWithThumbnail: Binder<URL?> {
+        return Binder(base) { base, value in
+            base.updateSnapshot(thumbnail: value)
+        }
+    }
+    
+    var updateSnapshotWithDramaInfo: Binder<Book> {
+        return Binder(base) { base, value in
+            base.updateSnapshot(bookInfo: value)
+        }
+    }
+    
+    var updateSnapshotWithStreamingPlatform: Binder<[String]> {
+        return Binder(base) { base, list in
+            base.updateSnapshot(platformList: list)
+        }
+    }
+}
