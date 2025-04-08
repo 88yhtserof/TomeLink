@@ -116,7 +116,7 @@ private extension LibraryViewController {
         navigationItem.leftBarButtonItem = iconBarButtonItem
         
         searchBarButtonItem.image = UIImage(systemName: "line.3.horizontal")
-        navigationItem.rightBarButtonItem = searchBarButtonItem
+//        navigationItem.rightBarButtonItem = searchBarButtonItem
         
         categoryCollectionView.backgroundColor = TomeLinkColor.background
         categoryCollectionView.isScrollEnabled = false
