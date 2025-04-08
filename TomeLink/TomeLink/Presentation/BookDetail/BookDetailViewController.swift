@@ -15,7 +15,7 @@ final class BookDetailViewController: UIViewController {
     
     // View
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
-    private let favoriteBarButtonItem = UIBarButtonItem(customView: FavoriteButton())
+    private let favoriteButton = FavoriteButton()
     fileprivate let loadingView = LoadingView()
     
     // Properties
@@ -61,6 +61,9 @@ final class BookDetailViewController: UIViewController {
         output.book
             .compactMap{ $0 }
             .drive(with: self) { owner, book in
+                let repository = FavoriteRepository()
+                let viewModel = FavoriteButtonViewModel(book: book, repository: repository)
+                owner.favoriteButton.bind(viewModel: viewModel)
                 owner.updateSnapshot(thumbnail: book.thumbnailURL)
                 owner.updateSnapshot(bookInfo: book)
                 owner.updateSnapshot(platformList: [book.detailURL])
@@ -94,7 +97,7 @@ private extension BookDetailViewController {
     func configureView() {
         view.backgroundColor = TomeLinkColor.background
         
-        navigationItem.rightBarButtonItem = favoriteBarButtonItem
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: favoriteButton)
         
         collectionView.backgroundColor = .clear
         collectionView.bounces = false
