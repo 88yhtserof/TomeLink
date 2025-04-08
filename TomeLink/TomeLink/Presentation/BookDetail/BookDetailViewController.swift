@@ -49,7 +49,7 @@ final class BookDetailViewController: UIViewController {
         configureView()
         configureDataSource()
         bind()
-        
+        configureNotification()
     }
     
     private func bind() {
@@ -88,6 +88,19 @@ final class BookDetailViewController: UIViewController {
             }
             .bind(to: rx.pushViewController)
             .disposed(by: disposeBag)
+    }
+    
+    // Notification
+    func configureNotification() {
+        NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
+    }
+    
+    @objc func favoriteButtonDidSave(_ notification: Notification) {
+        guard let message = notification.userInfo?["message"] as? String else {
+            print("Failed to get saving message")
+            return
+        }
+        self.view.makeToast(message, duration: 2.0, position: .bottom)
     }
 }
 

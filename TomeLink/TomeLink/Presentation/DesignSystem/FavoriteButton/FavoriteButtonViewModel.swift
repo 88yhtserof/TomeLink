@@ -46,11 +46,11 @@ final class FavoriteButtonViewModel: BaseViewModel {
                 if isFavorite {
                     
                     owner.repository.like(book: owner.book)
-                    return ("즐겨찾기가 설정 되었습니다.", owner.isbn)
+                    return ("읽고 싶은 도서 목록에 추가 되었습니다.", owner.isbn)
                 } else {
                     
                     owner.repository.unlike(isbn: owner.isbn)
-                    return ("즐겨찾기가 해제 되었습니다.", owner.isbn)
+                    return ("읽고 싶은 도서 목록에서 제거 되었습니다.", owner.isbn)
                 }
             }
             .bind(to: savingMessage)
