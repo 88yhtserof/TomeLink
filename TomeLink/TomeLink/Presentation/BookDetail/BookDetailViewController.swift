@@ -14,7 +14,8 @@ import RxCocoa
 final class BookDetailViewController: UIViewController {
     
     // View
-    lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
+    private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
+    private let favoriteBarButtonItem = UIBarButtonItem(customView: FavoriteButton())
     fileprivate let loadingView = LoadingView()
     
     // Properties
@@ -73,8 +74,12 @@ private extension BookDetailViewController {
     
     func configureView() {
         view.backgroundColor = TomeLinkColor.background
+        
+        navigationItem.rightBarButtonItem = favoriteBarButtonItem
+        
         collectionView.backgroundColor = .clear
         collectionView.bounces = false
+        
         loadingView.isHidden = true
     }
     
