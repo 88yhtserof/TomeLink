@@ -63,7 +63,27 @@ final class BookDetailViewController: UIViewController {
             .drive(with: self) { owner, book in
                 owner.updateSnapshot(thumbnail: book.thumbnailURL)
                 owner.updateSnapshot(bookInfo: book)
+                owner.updateSnapshot(platformList: [book.detailURL])
             }
+            .disposed(by: disposeBag)
+        
+        collectionView.rx.itemSelected
+            .withUnretained(self)
+            .compactMap { owner, indexPath in
+                return owner.dataSource.itemIdentifier(for: indexPath)
+            }
+            .compactMap { item in
+                
+                switch item {
+                case .platforms(let url):
+                    let bookDetailWebViewModel = BookDetailWebViewModel(url: url)
+                    let bookDetailWebVC = BookDetailWebViewController(viewModel: bookDetailWebViewModel)
+                    return bookDetailWebVC
+                default:
+                    return nil
+                }
+            }
+            .bind(to: rx.pushViewController)
             .disposed(by: disposeBag)
     }
 }
@@ -188,7 +208,7 @@ private extension BookDetailViewController {
     enum Item: Hashable {
         case thumbnail(URL?)
         case bookInfo(Book)
-        case platforms(String)
+        case platforms(URL?)
     }
     
     func configureDataSource() {
@@ -221,7 +241,7 @@ private extension BookDetailViewController {
         cell.configure(with: item)
     }
     
-    func platformCellRegistrationHandler(cell: PlatformCollectionViewCell, indexPath: IndexPath, item: String) {
+    func platformCellRegistrationHandler(cell: PlatformCollectionViewCell, indexPath: IndexPath, item: URL?) {
         cell.configure(with: item)
     }
     
@@ -262,7 +282,7 @@ private extension BookDetailViewController {
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
-    func updateSnapshot(platformList value: [String]) {
+    func updateSnapshot(platformList value: [URL?]) {
         
         let items = value.map{ Item.platforms($0) }
         
@@ -286,7 +306,7 @@ extension Reactive where Base: BookDetailViewController {
         }
     }
     
-    var updateSnapshotWithStreamingPlatform: Binder<[String]> {
+    var updateSnapshotWithStreamingPlatform: Binder<[URL?]> {
         return Binder(base) { base, list in
             base.updateSnapshot(platformList: list)
         }

@@ -25,18 +25,15 @@ class PlatformCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
         
         configureViewHierarchy()
         configureViewConstraints()
-        configureViewDetails()
+        configureView()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(with value: String) {
-        if let url = URL(string: "") {
-            logoImageView.kf.setImage(with: url)
-        }
-        platformLabel.text = value
+    func configure(with value: URL?) {
+        platformLabel.text = "상세 정보"
     }
 }
 
@@ -67,17 +64,19 @@ extension PlatformCollectionViewCell {
         }
     }
     
-    func configureViewDetails() {
+    func configureView() {
         
         contentView.backgroundColor = TomeLinkColor.subbackground
         contentView.cornerRadius(8)
         
         logoImageView.contentMode = .scaleAspectFit
+        logoImageView.image = UIImage(systemName: "info.circle")
+        logoImageView.tintColor = TomeLinkColor.subtitle
         
         platformLabel.font = .boldSystemFont(ofSize: 14)
         platformLabel.textColor = TomeLinkColor.title
         
         arrowImageView.image = UIImage(systemName: "chevron.right")
-        arrowImageView.tintColor = .lightGray
+        arrowImageView.tintColor = TomeLinkColor.shadow
     }
 }
