@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "Icon-130 1.png",
+      "filename" : "TomeLink_Icon_Text_512.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Icon-130 1@2x.png",
+      "filename" : "TomeLink_Icon_Text_512@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "Icon-130 1@3x.png",
+      "filename" : "TomeLink_Icon_Text_512@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

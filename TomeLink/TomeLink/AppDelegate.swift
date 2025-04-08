@@ -76,8 +76,19 @@ extension  AppDelegate {
     
     func configureNavigationBarAppearance() {
         
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backButtonAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.clear]
+        appearance.backgroundColor = TomeLinkColor.background
+        appearance.shadowColor = .clear
+        appearance.backButtonAppearance.highlighted.titleTextAttributes = [.foregroundColor: UIColor.clear]
+        
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        
         UINavigationBar.appearance().tintColor = TomeLinkColor.title
-        UINavigationBar.appearance().backIndicatorImage = UIImage(systemName: "arrow.left")
-        UINavigationBar.appearance().backIndicatorTransitionMaskImage = UIImage(systemName: "arrow.left")
+        UINavigationBar.appearance().backIndicatorImage = UIImage(systemName: "chevron.left")
+        UINavigationBar.appearance().backIndicatorTransitionMaskImage = UIImage(systemName: "chevron.left")
+
     }
 }

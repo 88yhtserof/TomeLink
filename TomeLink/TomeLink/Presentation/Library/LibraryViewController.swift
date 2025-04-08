@@ -13,6 +13,7 @@ import RxCocoa
 final class LibraryViewController: UIViewController {
     
     // Views
+    private let iconImageView = UIImageView()
     private let iconBarButtonItem = UIBarButtonItem()
     private let searchBarButtonItem = UIBarButtonItem()
     private lazy var categoryCollectionView = UICollectionView(frame: .zero, collectionViewLayout: categoryLayout())
@@ -69,16 +70,38 @@ final class LibraryViewController: UIViewController {
                 switch category {
                 case .toRead:
                     print("toRead")
-                    let thumbnails = ["https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5450099%3Ftimestamp%3D20250319144818", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6458653%3Ftimestamp%3D20250208152926", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F4751039%3Ftimestamp%3D20190302121725", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540501%3Ftimestamp%3D20241120115010", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6633286%3Ftimestamp%3D20250208153008", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6861926%3Ftimestamp%3D20250401155537", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6062691%3Ftimestamp%3D20240528172936", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6516766%3Ftimestamp%3D20241219152327", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6715922%3Ftimestamp%3D20241029171820", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540832%3Ftimestamp%3D20241018113939"]
+                    let books = [Book(authors: ["제인 오스틴"], contents: "셰익스피어의 뒤를 이어 ‘지난 천 년간 최고의 문학가’로 꼽힌 제인 오스틴 결혼을 마주한 여성들이 헤쳐 나가야 하는 현실적인 난관, 그리고 애정이라는 조건을 예리하게 묘파한 고전 중의 고전  “제가 장담하는데 당신은 저한테서 좋은 점을 하나도 찾지 못했어요. 그렇지만 사랑에 빠지면 그런 거야 문제될 것 없을 테지요.”  완전히 새로운 번역, 원문에 충실한 정확한 번역으로 만나는 『오만과 편견』", publicationDate: Date(), isbn: "8937460882 9788937460883", price: 13000, publisher: "민음사", salePrice: 11700, status: "정상판매", thumbnailURL: URL(string: "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045"), title: "오만과 편견", translators: ["전승희"], detailURL: URL(string: "https://search.daum.net/search?w=bookpage&bookId=540854&q=%EC%98%A4%EB%A7%8C%EA%B3%BC+%ED%8E%B8%EA%B2%AC"))]
                     
-                    owner.createSnapshotForToRead(thumbnails)
+                    owner.createSnapshotForToRead(books)
                 case .reading:
-                    owner.createSnapshotForReading(["-title1", "-title2", "-title3", "-title4", "-title5", "-title6", "-title7", "-title8", "-title9", "-title10"])
+                    break
                 case .read:
-                    owner.createSnapshotForRead(["`title1"])
+                    break
                 }
             }
             .disposed(by: disposeBag)
+        
+        collectionView.rx.itemSelected
+            .withUnretained(self)
+            .compactMap { owner, indexPath in
+                return owner.dataSource.itemIdentifier(for: indexPath)
+            }
+            .compactMap { item in
+                
+                switch item {
+                case .toRead(let book):
+                    let viewModel =  BookDetailViewModel(book: book)
+                    let bookDetailVC = BookDetailViewController(viewModel: viewModel)
+                    return bookDetailVC
+                case .reading:
+                    return nil
+                case .read:
+                    return nil
+                }
+            }
+            .bind(to: rx.pushViewController)
+            .disposed(by: disposeBag)
+        
     }
 }
 
@@ -88,13 +111,13 @@ private extension LibraryViewController {
     func configureView() {
         view.backgroundColor = TomeLinkColor.background
         
-        let iconImageView = UIImageView(image: UIImage(named: "TomeLink_Icon_Text"))
-        iconImageView.sizeThatFits(CGSize(width: 182, height: 29))
+        iconImageView.image = UIImage(named: "TomeLink_Icon_Text")
+        iconImageView.contentMode = .scaleAspectFill
         iconBarButtonItem.customView = iconImageView
         navigationItem.leftBarButtonItem = iconBarButtonItem
         
         searchBarButtonItem.image = UIImage(systemName: "line.3.horizontal")
-        navigationItem.rightBarButtonItem = searchBarButtonItem
+//        navigationItem.rightBarButtonItem = searchBarButtonItem
         
         categoryCollectionView.backgroundColor = TomeLinkColor.background
         categoryCollectionView.isScrollEnabled = false
@@ -107,6 +130,11 @@ private extension LibraryViewController {
     }
     
     func configureConstraints() {
+        
+        iconImageView.snp.makeConstraints { make in
+            make.width.equalTo(130)
+            make.height.equalTo(41)
+        }
         
         categoryCollectionView.snp.makeConstraints { make in
             make.top.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
@@ -240,7 +268,7 @@ private extension LibraryViewController {
     }
     
     enum Item: Hashable {
-        case toRead(String)
+        case toRead(Book)
         case reading(String)
         case read(String)
     }
@@ -275,9 +303,10 @@ private extension LibraryViewController {
         })
         
         
-        let thumbnails = ["https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5450099%3Ftimestamp%3D20250319144818", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6458653%3Ftimestamp%3D20250208152926", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F4751039%3Ftimestamp%3D20190302121725", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540501%3Ftimestamp%3D20241120115010", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6633286%3Ftimestamp%3D20250208153008", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6861926%3Ftimestamp%3D20250401155537", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6062691%3Ftimestamp%3D20240528172936", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6516766%3Ftimestamp%3D20241219152327", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6715922%3Ftimestamp%3D20241029171820", "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540832%3Ftimestamp%3D20241018113939"]
+        let books = [Book(authors: ["제인 오스틴"], contents: "셰익스피어의 뒤를 이어 ‘지난 천 년간 최고의 문학가’로 꼽힌 제인 오스틴 결혼을 마주한 여성들이 헤쳐 나가야 하는 현실적인 난관, 그리고 애정이라는 조건을 예리하게 묘파한 고전 중의 고전  “제가 장담하는데 당신은 저한테서 좋은 점을 하나도 찾지 못했어요. 그렇지만 사랑에 빠지면 그런 거야 문제될 것 없을 테지요.”  완전히 새로운 번역, 원문에 충실한 정확한 번역으로 만나는 『오만과 편견』", publicationDate: Date(), isbn: "8937460882 9788937460883", price: 13000, publisher: "민음사", salePrice: 11700, status: "정상판매", thumbnailURL: URL(string: "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045"), title: "오만과 편견", translators: ["전승희"], detailURL: URL(string: "https://search.daum.net/search?w=bookpage&bookId=540854&q=%EC%98%A4%EB%A7%8C%EA%B3%BC+%ED%8E%B8%EA%B2%AC"))]
         
-        createSnapshotForToRead(thumbnails)
+        
+        createSnapshotForToRead(books)
         collectionView.dataSource = dataSource
     }
     
@@ -286,7 +315,7 @@ private extension LibraryViewController {
         cell.isCategorySelected = indexPath.item == 0
     }
     
-    func toReadCellRegistrationHandler(cell: LibraryThumbnailCollectionViewCell, indexPath: IndexPath, item: String) {
+    func toReadCellRegistrationHandler(cell: LibraryThumbnailCollectionViewCell, indexPath: IndexPath, item: Book) {
         cell.configure(with: item)
     }
     
@@ -299,7 +328,7 @@ private extension LibraryViewController {
     }
     
     func createSnapshotForCategory() {
-        let items = CategoryItem.allCases
+        let items = [CategoryItem.toRead]
         
         var snapshot = CategorySnapshot()
         snapshot.appendSections(CategorySection.allCases)
@@ -307,7 +336,7 @@ private extension LibraryViewController {
         categoryDataSource.applySnapshotUsingReloadData(snapshot)
     }
     
-    func createSnapshotForToRead(_ newItems: [String]) {
+    func createSnapshotForToRead(_ newItems: [Book]) {
         let items = newItems.map{ Item.toRead($0) }
         
         snapshot = Snapshot()
@@ -341,7 +370,7 @@ private extension LibraryViewController {
 //MARK: - Reactive+
 extension Reactive where Base: LibraryViewController {
     
-    var createSnapshotForToRead: Binder<[String]> {
+    var createSnapshotForToRead: Binder<[Book]> {
         return Binder(base) { base, list in
             base.createSnapshotForToRead(list)
         }

@@ -97,6 +97,25 @@ class SearchViewController: UIViewController {
         searchBar.rx.cancelButtonClicked
             .bind(to: rx.endEditing)
             .disposed(by: disposeBag)
+        
+        collectionView.rx.itemSelected
+            .withUnretained(self)
+            .compactMap { owner, indexPath in
+                return owner.dataSource.itemIdentifier(for: indexPath)
+            }
+            .compactMap { item in
+                
+                switch item {
+                case .searchResult(let book):
+                    let viewModel =  BookDetailViewModel(book: book)
+                    let bookDetailVC = BookDetailViewController(viewModel: viewModel)
+                    return bookDetailVC
+                default:
+                    return nil
+                }
+            }
+            .bind(to: rx.pushViewController)
+            .disposed(by: disposeBag)
     }
 }
 

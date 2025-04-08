@@ -13,4 +13,5 @@ enum TomeLinkFont {
     static let recentSearches: UIFont = .systemFont(ofSize: 14, weight: .regular)
     static let title: UIFont = .systemFont(ofSize: 14, weight: .bold)
     static let subtitle: UIFont = .systemFont(ofSize: 12, weight: .regular)
+    static let contents: UIFont = .systemFont(ofSize: 13, weight: .regular)
 }

@@ -54,6 +54,7 @@ private extension TabBarController {
         
         zip(viewControllers, Item.allCases)
             .forEach{ viewController, item in
+                viewController.delegate = self
                 viewController.tabBarItem.title = item.title
                 viewController.tabBarItem.image = UIImage(systemName: item.normalImage)
                 viewController.tabBarItem.selectedImage = UIImage(systemName: item.selectedImage)
@@ -74,5 +75,13 @@ private extension TabBarController {
         
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
+    }
+}
+
+//MARK: - Navigation Delegate
+extension TabBarController: UINavigationControllerDelegate {
+    
+    func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+        self.tabBar.isHidden = navigationController.viewControllers.count > 1
     }
 }
