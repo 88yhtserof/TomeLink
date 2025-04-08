@@ -13,6 +13,7 @@ import RxCocoa
 final class LibraryViewController: UIViewController {
     
     // Views
+    private let iconImageView = UIImageView()
     private let iconBarButtonItem = UIBarButtonItem()
     private let searchBarButtonItem = UIBarButtonItem()
     private lazy var categoryCollectionView = UICollectionView(frame: .zero, collectionViewLayout: categoryLayout())
@@ -110,8 +111,8 @@ private extension LibraryViewController {
     func configureView() {
         view.backgroundColor = TomeLinkColor.background
         
-        let iconImageView = UIImageView(image: UIImage(named: "TomeLink_Icon_Text"))
-        iconImageView.sizeThatFits(CGSize(width: 182, height: 29))
+        iconImageView.image = UIImage(named: "TomeLink_Icon_Text")
+        iconImageView.contentMode = .scaleAspectFill
         iconBarButtonItem.customView = iconImageView
         navigationItem.leftBarButtonItem = iconBarButtonItem
         
@@ -129,6 +130,11 @@ private extension LibraryViewController {
     }
     
     func configureConstraints() {
+        
+        iconImageView.snp.makeConstraints { make in
+            make.width.equalTo(130)
+            make.height.equalTo(41)
+        }
         
         categoryCollectionView.snp.makeConstraints { make in
             make.top.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
