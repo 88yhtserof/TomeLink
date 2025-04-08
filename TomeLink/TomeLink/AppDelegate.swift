@@ -79,6 +79,8 @@ extension  AppDelegate {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backButtonAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.clear]
+        appearance.backgroundColor = TomeLinkColor.background
+        appearance.shadowColor = .clear
         appearance.backButtonAppearance.highlighted.titleTextAttributes = [.foregroundColor: UIColor.clear]
         
         UINavigationBar.appearance().standardAppearance = appearance
