@@ -63,7 +63,6 @@ final class BookDetailViewController: UIViewController {
             .drive(with: self) { owner, book in
                 owner.updateSnapshot(thumbnail: book.thumbnailURL)
                 owner.updateSnapshot(bookInfo: book)
-                owner.updateSnapshot(platformList: ["플랫폼"])
             }
             .disposed(by: disposeBag)
     }
@@ -208,12 +207,6 @@ private extension BookDetailViewController {
                 return collectionView.dequeueConfiguredReusableCell(using: platformCellRegistration, for: indexPath, item: value)
             }
         })
-        
-//        let titleSupplementaryRegistration = UICollectionView.SupplementaryRegistration(elementKind: TitleSupplementaryView.elementKind, handler: titleSupplementaryRegistrationHandler)
-//        
-//        dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
-//        }
-//    }
         
         createSnapshot()
         collectionView.dataSource = dataSource
