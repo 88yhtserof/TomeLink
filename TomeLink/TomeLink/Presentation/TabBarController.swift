@@ -47,9 +47,16 @@ final class TabBarController: UITabBarController {
 //MARK: - Configuration
 private extension TabBarController {
     func configureViewControllers() {
+        
+        let repository = FavoriteRepository()
+        let libraryViewModel = LibraryViewModel(repository: repository)
+        let libraryViewController = LibraryViewController(viewModel: libraryViewModel)
+        
+        let searchViewController = SearchViewController()
+        
         let viewControllers = [
-            UINavigationController(rootViewController: LibraryViewController()),
-            UINavigationController(rootViewController: SearchViewController())
+            UINavigationController(rootViewController: libraryViewController),
+            UINavigationController(rootViewController: searchViewController)
         ]
         
         zip(viewControllers, Item.allCases)

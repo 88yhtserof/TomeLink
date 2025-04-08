@@ -28,9 +28,21 @@ final class LibraryViewController: UIViewController {
     // TODO: - ViewModel로 옮기기
     private let favoriteRepository = FavoriteRepository()
     
+    private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
     
     // LifeCycle
+    init(viewModel: LibraryViewModel) {
+        self.viewModel = viewModel
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -44,6 +56,13 @@ final class LibraryViewController: UIViewController {
     
     // DataBinding
     private func bind() {
+        
+        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear)
+        let output = viewModel.transform(input: input)
+        
+        output.listToRead
+            .drive(rx.createSnapshotForToRead)
+            .disposed(by: disposeBag)
         
         categoryCollectionView.rx.itemSelected
             .withUnretained(self)
