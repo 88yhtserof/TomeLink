@@ -25,6 +25,7 @@ extension BookEntity {
     @NSManaged public var title: String
     @NSManaged public var translators: [String]
     @NSManaged public var detailURL: String
+    @NSManaged public var favorite: FavoriteEntity
 
 }
 
