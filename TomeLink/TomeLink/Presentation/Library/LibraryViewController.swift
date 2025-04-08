@@ -73,9 +73,9 @@ final class LibraryViewController: UIViewController {
                     
                     owner.createSnapshotForToRead(books)
                 case .reading:
-                    owner.createSnapshotForReading(["-title1", "-title2", "-title3", "-title4", "-title5", "-title6", "-title7", "-title8", "-title9", "-title10"])
+                    break
                 case .read:
-                    owner.createSnapshotForRead(["`title1"])
+                    break
                 }
             }
             .disposed(by: disposeBag)
@@ -322,7 +322,7 @@ private extension LibraryViewController {
     }
     
     func createSnapshotForCategory() {
-        let items = CategoryItem.allCases
+        let items = [CategoryItem.toRead]
         
         var snapshot = CategorySnapshot()
         snapshot.appendSections(CategorySection.allCases)
