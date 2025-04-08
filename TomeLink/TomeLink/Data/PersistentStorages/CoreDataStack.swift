@@ -25,3 +25,17 @@ final class CoreDataStack: ObservableObject {
         
     private init() { }
 }
+
+extension CoreDataStack {
+    
+    func save() {
+        
+        guard persistentContainer.viewContext.hasChanges else { return }
+        
+        do {
+            try persistentContainer.viewContext.save()
+        } catch {
+            print("Failed to save the context:", error.localizedDescription)
+        }
+    }
+}
