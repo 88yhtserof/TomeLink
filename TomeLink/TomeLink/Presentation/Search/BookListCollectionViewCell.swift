@@ -47,7 +47,8 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
         authorLabel.text = value.authors.joined(separator: ", ")
         publisherLabel.text = value.publisher
         
-        let favoriteViewModel = FavoriteButtonViewModel(id: value.isbn)
+        let repository = FavoriteRepository()
+        let favoriteViewModel = FavoriteButtonViewModel(book: value, repository: repository)
         favoriteButton.bind(viewModel: favoriteViewModel)
         
         if let imageURL = value.thumbnailURL {

@@ -24,10 +24,14 @@ final class FavoriteButtonViewModel: BaseViewModel {
         let savingMessage: Driver<(String, String)>
     }
     
-    private let id: String
+    private let isbn: String
+    private let book: Book
+    private let repository: FavoriteRepositoryProtocol
     
-    init(id: String) {
-        self.id = id
+    init(book: Book, repository: FavoriteRepositoryProtocol) {
+        self.book = book
+        self.isbn = book.isbn
+        self.repository = repository
     }
     
     func transform(input: Input) -> Output {
@@ -40,20 +44,22 @@ final class FavoriteButtonViewModel: BaseViewModel {
             .withUnretained(self)
             .map { owner, isFavorite in
                 if isFavorite {
-                    // TODO: - DataBase 작업
-                    return (String(format: "%@이 즐겨찾기에 추가되었습니다.", owner.id), owner.id)
+                    
+                    owner.repository.like(book: owner.book)
+                    return ("즐겨찾기가 설정 되었습니다.", owner.isbn)
                 } else {
-                    // TODO: - DataBase 작업
-                    return (String(format: "%@이 즐겨찾기에서 제거되었습니다.", owner.id), owner.id)
+                    
+                    owner.repository.unlike(isbn: owner.isbn)
+                    return ("즐겨찾기가 해제 되었습니다.", owner.isbn)
                 }
             }
             .bind(to: savingMessage)
             .disposed(by: disposeBag)
         
-        Observable<String>.just(id)
-            .map{ object in
-                // TODO: - DataBase 작업
-                true
+        Observable<String>.just(isbn)
+            .withUnretained(self)
+            .map{ owner, isnb in
+                return owner.repository.isBookLiked(for: isnb)
             }
             .bind(to: selectedState)
             .disposed(by: disposeBag)

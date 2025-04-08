@@ -25,6 +25,9 @@ final class LibraryViewController: UIViewController {
     private var dataSource: DataSource!
     private var snapshot: Snapshot!
     
+    // TODO: - ViewModel로 옮기기
+    private let favoriteRepository = FavoriteRepository()
+    
     private let disposeBag = DisposeBag()
     
     // LifeCycle
@@ -69,9 +72,7 @@ final class LibraryViewController: UIViewController {
             .bind(with: self) { (owner, category) in
                 switch category {
                 case .toRead:
-                    print("toRead")
-                    let books = [Book(authors: ["제인 오스틴"], contents: "셰익스피어의 뒤를 이어 ‘지난 천 년간 최고의 문학가’로 꼽힌 제인 오스틴 결혼을 마주한 여성들이 헤쳐 나가야 하는 현실적인 난관, 그리고 애정이라는 조건을 예리하게 묘파한 고전 중의 고전  “제가 장담하는데 당신은 저한테서 좋은 점을 하나도 찾지 못했어요. 그렇지만 사랑에 빠지면 그런 거야 문제될 것 없을 테지요.”  완전히 새로운 번역, 원문에 충실한 정확한 번역으로 만나는 『오만과 편견』", publicationDate: Date(), isbn: "8937460882 9788937460883", price: 13000, publisher: "민음사", salePrice: 11700, status: "정상판매", thumbnailURL: URL(string: "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045"), title: "오만과 편견", translators: ["전승희"], detailURL: URL(string: "https://search.daum.net/search?w=bookpage&bookId=540854&q=%EC%98%A4%EB%A7%8C%EA%B3%BC+%ED%8E%B8%EA%B2%AC"))]
-                    
+                    let books = owner.favoriteRepository.fetchFavorites()
                     owner.createSnapshotForToRead(books)
                 case .reading:
                     break
@@ -302,10 +303,7 @@ private extension LibraryViewController {
             }
         })
         
-        
-        let books = [Book(authors: ["제인 오스틴"], contents: "셰익스피어의 뒤를 이어 ‘지난 천 년간 최고의 문학가’로 꼽힌 제인 오스틴 결혼을 마주한 여성들이 헤쳐 나가야 하는 현실적인 난관, 그리고 애정이라는 조건을 예리하게 묘파한 고전 중의 고전  “제가 장담하는데 당신은 저한테서 좋은 점을 하나도 찾지 못했어요. 그렇지만 사랑에 빠지면 그런 거야 문제될 것 없을 테지요.”  완전히 새로운 번역, 원문에 충실한 정확한 번역으로 만나는 『오만과 편견』", publicationDate: Date(), isbn: "8937460882 9788937460883", price: 13000, publisher: "민음사", salePrice: 11700, status: "정상판매", thumbnailURL: URL(string: "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045"), title: "오만과 편견", translators: ["전승희"], detailURL: URL(string: "https://search.daum.net/search?w=bookpage&bookId=540854&q=%EC%98%A4%EB%A7%8C%EA%B3%BC+%ED%8E%B8%EA%B2%AC"))]
-        
-        
+        let books = favoriteRepository.fetchFavorites()
         createSnapshotForToRead(books)
         collectionView.dataSource = dataSource
     }

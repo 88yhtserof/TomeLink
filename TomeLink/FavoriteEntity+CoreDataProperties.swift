@@ -17,7 +17,7 @@ extension FavoriteEntity {
     }
 
     @NSManaged public var createdAt: Date
-    @NSManaged public var id: UUID
+    @NSManaged public var isbn: String
     @NSManaged public var book: BookEntity
 
 }
