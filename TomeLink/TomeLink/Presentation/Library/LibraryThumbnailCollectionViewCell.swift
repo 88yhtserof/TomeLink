@@ -51,12 +51,13 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
     }
 
     
-    func configure(with value: String) {
+    func configure(with value: Book) {
 //        self.id = value.id
-        if let url = URL(string: value) {
+        if let url = value.thumbnailURL {
             thumbnailView.setImage(with: url)
         }
-        favoriteButton.bind(viewModel: FavoriteButtonViewModel(id: UUID().uuidString)) // 임시
+        
+        favoriteButton.bind(viewModel: FavoriteButtonViewModel(id: value.isbn))
     }
 }
 
