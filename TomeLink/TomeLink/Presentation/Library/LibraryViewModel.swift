@@ -32,6 +32,24 @@ final class LibraryViewModel: BaseViewModel {
     
     func transform(input: Input) -> Output {
         
+        let result = Observable.just("9791130413457")
+            .flatMap { isbn in
+                return NetworkRequestingManager.shared
+                    .requestXML(api: AladinNetworkAPI.itemLookUp(isbn: isbn), type: AladinItemLookUpResponseDTO?.self)
+                    .catch { error in
+                        print("Error: \(error)")
+                        return Single<AladinItemLookUpResponseDTO?>.just(nil)
+                    }
+            }
+            .compactMap{ $0 }
+            
+        
+        result
+            .bind { response in
+                print(response)
+            }
+            .disposed(by: disposeBag)
+        
         let listToRead = BehaviorRelay<[Book]>(value: [])
         let emptyList = BehaviorRelay<String>(value: "")
         
