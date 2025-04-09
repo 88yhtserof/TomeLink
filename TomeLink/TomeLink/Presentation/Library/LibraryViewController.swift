@@ -31,6 +31,8 @@ final class LibraryViewController: UIViewController {
     private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
     
+    private let favoriteButtonDidSaveRalay = PublishRelay<Void>()
+    
     // LifeCycle
     init(viewModel: LibraryViewModel) {
         self.viewModel = viewModel
@@ -58,7 +60,7 @@ final class LibraryViewController: UIViewController {
     // DataBinding
     private func bind() {
         
-        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear)
+        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear, favoriteButtonDidSave: favoriteButtonDidSaveRalay)
         let output = viewModel.transform(input: input)
         
         output.listToRead
@@ -127,6 +129,7 @@ final class LibraryViewController: UIViewController {
     
     // Notification
     func configureNotification() {
+        
         NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
     }
     
@@ -135,7 +138,9 @@ final class LibraryViewController: UIViewController {
             print("Failed to get saving message")
             return
         }
-        self.view.makeToast(message, duration: 2.0, position: .bottom)
+        
+        favoriteButtonDidSaveRalay.accept(Void())
+        self.view.makeToast(message, duration: 1.5, position: .bottom)
     }
 }
 

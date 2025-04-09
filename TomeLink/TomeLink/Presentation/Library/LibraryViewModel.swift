@@ -16,6 +16,7 @@ final class LibraryViewModel: BaseViewModel {
     
     struct Input {
         let viewWillAppear: ControlEvent<Void>
+        let favoriteButtonDidSave: PublishRelay<Void>
     }
     
     struct Output {
@@ -32,7 +33,9 @@ final class LibraryViewModel: BaseViewModel {
         
         let listToRead = BehaviorRelay<[Book]>(value: [])
         
-        input.viewWillAppear
+        Observable.of(input.viewWillAppear.asObservable(),
+                      input.favoriteButtonDidSave.asObservable())
+            .merge()
             .withUnretained(self)
             .map { owner, _ in owner.repository.fetchFavorites() }
             .bind(to: listToRead)

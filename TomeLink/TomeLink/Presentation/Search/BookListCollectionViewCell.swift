@@ -12,6 +12,7 @@ import Kingfisher
 final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
     
     static var identifier = String(describing: BookListCollectionViewCell.self)
+    private var isbn: String?
     
     // View
     private let thumnailImageView = UIImageView()
@@ -28,6 +29,7 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
         configureHierarchy()
         configureConstraints()
         configureView()
+        configureNotification()
     }
     
     @available(*, unavailable)
@@ -43,6 +45,8 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
     
     func configure(with value: Book) {
         
+        self.isbn = value.isbn
+        
         titleLabel.text = value.title
         authorLabel.text = value.authors.joined(separator: ", ")
         publisherLabel.text = value.publisher
@@ -53,6 +57,23 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
         
         if let imageURL = value.thumbnailURL {
             thumnailImageView.kf.setImage(with: imageURL)
+        }
+    }
+    
+    // Notification
+    func configureNotification() {
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonResult"), object: nil)
+    }
+    
+    @objc func favoriteButtonDidSave(_ notification: Notification) {
+        guard let id = notification.userInfo?["id"] as? String,
+              let result = notification.userInfo?["result"] as? Bool else {
+            print("Failed to get result")
+            return
+        }
+        if id == (self.isbn ?? "") {
+            favoriteButton.isSelected = result
         }
     }
 }
