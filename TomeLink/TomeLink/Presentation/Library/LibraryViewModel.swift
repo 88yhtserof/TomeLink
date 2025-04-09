@@ -21,6 +21,7 @@ final class LibraryViewModel: BaseViewModel {
     
     struct Output {
         let listToRead: Driver<[Book]>
+        let emptyList: Driver<String>
     }
     
     private let repository: FavoriteRepositoryProtocol
@@ -32,16 +33,24 @@ final class LibraryViewModel: BaseViewModel {
     func transform(input: Input) -> Output {
         
         let listToRead = BehaviorRelay<[Book]>(value: [])
+        let emptyList = BehaviorRelay<String>(value: "")
         
         Observable.of(input.viewWillAppear.asObservable(),
                       input.favoriteButtonDidSave.asObservable())
             .merge()
             .withUnretained(self)
             .map { owner, _ in owner.repository.fetchFavorites() }
-            .bind(to: listToRead)
+            .bind(with: self) { owner, favorites in
+                if favorites.isEmpty {
+                    emptyList.accept("아직 저장된 도서가 없습니다.")
+                } else {
+                    listToRead.accept(favorites)
+                }
+            }
             .disposed(by: disposeBag)
         
-        return Output(listToRead: listToRead.asDriver())
+        return Output(listToRead: listToRead.asDriver(),
+                      emptyList: emptyList.asDriver())
     }
     
 }

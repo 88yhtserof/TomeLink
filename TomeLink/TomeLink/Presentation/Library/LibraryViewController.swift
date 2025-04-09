@@ -67,6 +67,10 @@ final class LibraryViewController: UIViewController {
             .drive(rx.createSnapshotForToRead)
             .disposed(by: disposeBag)
         
+        output.emptyList
+            .drive(rx.createSnapshotForEmpty)
+            .disposed(by: disposeBag)
+        
         categoryCollectionView.rx.itemSelected
             .withUnretained(self)
             .filter{ owner, indexPath in
@@ -119,6 +123,8 @@ final class LibraryViewController: UIViewController {
                 case .reading:
                     return nil
                 case .read:
+                    return nil
+                default:
                     return nil
                 }
             }
@@ -228,6 +234,8 @@ private extension LibraryViewController {
                 return self.sectionForReading()
             case .read:
                 return self.sectionForRead()
+            case .empty:
+                return self.sectionForEmpty()
             }
         }
     }
@@ -279,6 +287,20 @@ private extension LibraryViewController {
         
         return section
     }
+    
+    func sectionForEmpty() -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 16
+        
+        let size = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(0.9))
+        
+        let item = NSCollectionLayoutItem(layoutSize: size)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: size, subitems: [item])
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
+        
+        return section
+    }
 }
 
 //MARK: - CollectionView DataSource
@@ -304,12 +326,14 @@ private extension LibraryViewController {
         case toRead
         case reading
         case read
+        case empty
     }
     
     enum Item: Hashable {
         case toRead(Book)
         case reading(String)
         case read(String)
+        case empty(String)
     }
     
     func configureCategoryDataSource() {
@@ -329,6 +353,7 @@ private extension LibraryViewController {
         let toReadCellRegistration = UICollectionView.CellRegistration(handler: toReadCellRegistrationHandler)
         let readingCellRegistration = UICollectionView.CellRegistration(handler: readingCellRegistrationHandler)
         let readCellRegistration = UICollectionView.CellRegistration(handler: readCellRegistrationHandler)
+        let emptySearchResultsCellRegistration = UICollectionView.CellRegistration(handler: emptySearchResultsCellRegistrationHandler)
         
         dataSource = DataSource(collectionView: collectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
             switch itemIdentifier {
@@ -338,6 +363,8 @@ private extension LibraryViewController {
                 return collectionView.dequeueConfiguredReusableCell(using: readingCellRegistration, for: indexPath, item: value)
             case .read(let value):
                 return collectionView.dequeueConfiguredReusableCell(using: readCellRegistration, for: indexPath, item: value)
+            case .empty(let value):
+                return collectionView.dequeueConfiguredReusableCell(using: emptySearchResultsCellRegistration, for: indexPath, item: value)
             }
         })
         
@@ -361,6 +388,10 @@ private extension LibraryViewController {
     
     func readCellRegistrationHandler(cell: LibraryCalendarCollectionViewCell, indexPath: IndexPath, item: String) {
         
+    }
+    
+    func emptySearchResultsCellRegistrationHandler(cell: EmptyCollectionViewCell, indexPath: IndexPath, item: String) {
+        cell.configure(with: item)
     }
     
     func createSnapshotForCategory() {
@@ -401,6 +432,15 @@ private extension LibraryViewController {
         snapshot.appendItems(items, toSection: .read)
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
+    
+    func createSnapshotForEmpty(_ newItem: String) {
+        let items = [Item.empty(newItem)]
+        
+        snapshot = Snapshot()
+        snapshot.appendSections([.empty])
+        snapshot.appendItems(items, toSection: .empty)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
 }
 
 //MARK: - Reactive+
@@ -421,6 +461,12 @@ extension Reactive where Base: LibraryViewController {
     var createSnapshotForRead: Binder<[String]> {
         return Binder(base) { base, list in
             base.createSnapshotForRead(list)
+        }
+    }
+    
+    var createSnapshotForEmpty: Binder<String> {
+        return Binder(base) { base, value in
+            base.createSnapshotForEmpty(value)
         }
     }
 }
