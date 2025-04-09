@@ -27,7 +27,7 @@ final class SearchViewModel: BaseViewModel {
     struct Output {
         let recentResearches: Driver<[String]>
         let bookSearches: Driver<[Book]>
-        let emptySearchResults: Driver<Void>
+        let emptySearchResults: Driver<String>
         let paginationBookSearches: Driver<[Book]>
         let isLoading: Driver<Bool>
     }
@@ -41,7 +41,7 @@ final class SearchViewModel: BaseViewModel {
         
         let recentResearches = BehaviorRelay<[String]>(value: [])
         let searchResults = PublishRelay<[Book]>()
-        let emptySearchResults = PublishRelay<Void>()
+        let emptySearchResults = PublishRelay<String>()
         let paginationBookSearches = PublishRelay<[Book]>()
         let isLoading = PublishRelay<Bool>()
         
@@ -109,7 +109,7 @@ final class SearchViewModel: BaseViewModel {
             .bind(with: self) { owner, list in
                 if owner.page == 1 {
                     if list.isEmpty {
-                        emptySearchResults.accept(Void())
+                        emptySearchResults.accept("검색결과가 없습니다.")
                     } else {
                         searchResults.accept(list)
                     }
@@ -152,7 +152,7 @@ final class SearchViewModel: BaseViewModel {
             }
             .bind(with: self) { owner, list in
                 if list.isEmpty {
-                    emptySearchResults.accept(Void())
+                    emptySearchResults.accept("검색결과가 없습니다.")
                 } else {
                     searchResults.accept(list)
                 }
@@ -161,7 +161,7 @@ final class SearchViewModel: BaseViewModel {
         
         return Output(recentResearches: recentResearches.asDriver(),
                       bookSearches: searchResults.asDriver(onErrorJustReturn: []),
-                      emptySearchResults: emptySearchResults.asDriver(onErrorJustReturn: Void()),
+                      emptySearchResults: emptySearchResults.asDriver(onErrorJustReturn: ""),
                       paginationBookSearches: paginationBookSearches.asDriver(onErrorJustReturn: []),
                       isLoading: isLoading.asDriver(onErrorJustReturn: false))
     }

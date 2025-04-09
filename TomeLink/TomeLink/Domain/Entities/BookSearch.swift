@@ -23,10 +23,7 @@ struct Book: Hashable {
     let contents: String
     let publicationDate: Date?
     let isbn: String
-    let price: Int
     let publisher: String
-    let salePrice: Int
-    let status: String
     let thumbnailURL: URL?
     let title: String
     let translators: [String]

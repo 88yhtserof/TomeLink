@@ -31,6 +31,7 @@ class SearchViewController: UIViewController {
         configureView()
         configureDataSource()
         bind()
+        configureNotification()
     }
     
     private func bind() {
@@ -49,7 +50,7 @@ class SearchViewController: UIViewController {
                     selectRecentSearchesItem.accept(keyword)
                 case .searchResult(let book):
                     selectSearchResultsItem.accept(book)
-                case .emptySearchResults:
+                case .empty:
                     break
                 }
             }
@@ -117,6 +118,19 @@ class SearchViewController: UIViewController {
             .bind(to: rx.pushViewController)
             .disposed(by: disposeBag)
     }
+    
+    // Notification
+    func configureNotification() {
+        NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
+    }
+    
+    @objc func favoriteButtonDidSave(_ notification: Notification) {
+        guard let message = notification.userInfo?["message"] as? String else {
+            print("Failed to get saving message")
+            return
+        }
+        self.view.makeToast(message, duration: 2.0, position: .bottom)
+    }
 }
 
 //MARK: - Configuration
@@ -164,7 +178,7 @@ private extension SearchViewController {
                 return self?.sectionForRecentSearches()
             case .searchResults:
                 return self?.sectionForSearchResults()
-            case .emptySearchResults:
+            case .empty:
                 return self?.sectionForEmptySearchResults()
             }
         }
@@ -238,13 +252,13 @@ private extension SearchViewController {
     enum Section: Int, CaseIterable {
         case recentSearches
         case searchResults
-        case emptySearchResults
+        case empty
     }
     
     enum Item: Hashable {
         case recentSearch(String)
         case searchResult(Book)
-        case emptySearchResults
+        case empty(String)
     }
     
     func configureDataSource() {
@@ -259,8 +273,8 @@ private extension SearchViewController {
                 return collectionView.dequeueConfiguredReusableCell(using: recentSearchCellRegistration, for: indexPath, item: value)
             case .searchResult(let value):
                 return collectionView.dequeueConfiguredReusableCell(using: searchResultsCellRegistration, for: indexPath, item: value)
-            case .emptySearchResults:
-                return collectionView.dequeueConfiguredReusableCell(using: emptySearchResultsCellRegistration, for: indexPath, item: Void())
+            case .empty(let value):
+                return collectionView.dequeueConfiguredReusableCell(using: emptySearchResultsCellRegistration, for: indexPath, item: value)
             }
         })
         
@@ -280,7 +294,9 @@ private extension SearchViewController {
         cell.configure(with: item)
     }
     
-    func emptySearchResultsCellRegistrationHandler(cell: EmptySearchResultsCollectionViewCell, indexPath: IndexPath, item: Void) { }
+    func emptySearchResultsCellRegistrationHandler(cell: EmptyCollectionViewCell, indexPath: IndexPath, item: String) {
+        cell.configure(with: item)
+    }
     
     func headerSupplementaryRegistrationHandler(supplementaryView: TitleSupplementaryView, string: String, indexPath: IndexPath) {
         guard let section = snapshot.sectionIdentifiers.first else {
@@ -290,7 +306,7 @@ private extension SearchViewController {
         switch section {
         case .recentSearches:
             supplementaryView.configure(with: "최근 검색어")
-        case .searchResults, .emptySearchResults:
+        case .searchResults, .empty:
             supplementaryView.configure(with: "작품")
         }
     }
@@ -313,12 +329,12 @@ private extension SearchViewController {
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
-    func createSnapshotForEmptySearchResults() {
-        let items = [Item.emptySearchResults]
+    func createSnapshotForEmptySearchResults(_ newItem: String) {
+        let items = [Item.empty(newItem)]
         
         snapshot = Snapshot()
-        snapshot.appendSections([.emptySearchResults])
-        snapshot.appendItems(items, toSection: .emptySearchResults)
+        snapshot.appendSections([.empty])
+        snapshot.appendItems(items, toSection: .empty)
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
@@ -345,9 +361,9 @@ extension Reactive where Base: SearchViewController {
         }
     }
     
-    var createEmptySearchResults: Binder<Void> {
-        return Binder(base) { base, _ in
-            base.createSnapshotForEmptySearchResults()
+    var createEmptySearchResults: Binder<String> {
+        return Binder(base) { base, value in
+            base.createSnapshotForEmptySearchResults(value)
         }
     }
     

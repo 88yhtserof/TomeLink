@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
-    <elements/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23605" systemVersion="24C101" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="BookEntity" representedClassName="BookEntity" syncable="YES">
+        <attribute name="authors" attributeType="Transformable" valueTransformerName="" customClassName="[String]"/>
+        <attribute name="contents" attributeType="String"/>
+        <attribute name="detailURL" attributeType="String"/>
+        <attribute name="isbn" attributeType="String"/>
+        <attribute name="publicationDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="publisher" attributeType="String"/>
+        <attribute name="thumbnailURL" attributeType="String"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="translators" attributeType="Transformable" valueTransformerName="" customClassName="[String]"/>
+        <relationship name="favorite" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="FavoriteEntity" inverseName="book" inverseEntity="FavoriteEntity"/>
+    </entity>
+    <entity name="FavoriteEntity" representedClassName="FavoriteEntity" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="isbn" attributeType="String"/>
+        <relationship name="book" maxCount="1" deletionRule="Nullify" destinationEntity="BookEntity" inverseName="favorite" inverseEntity="BookEntity"/>
+    </entity>
 </model>

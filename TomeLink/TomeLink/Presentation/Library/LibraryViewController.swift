@@ -25,9 +25,26 @@ final class LibraryViewController: UIViewController {
     private var dataSource: DataSource!
     private var snapshot: Snapshot!
     
+    // TODO: - ViewModel로 옮기기
+    private let favoriteRepository = FavoriteRepository()
+    
+    private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
     
+    private let favoriteButtonDidSaveRalay = PublishRelay<Void>()
+    
     // LifeCycle
+    init(viewModel: LibraryViewModel) {
+        self.viewModel = viewModel
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -37,10 +54,22 @@ final class LibraryViewController: UIViewController {
         configureCategoryDataSource()
         configureDataSource()
         bind()
+        configureNotification()
     }
     
     // DataBinding
     private func bind() {
+        
+        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear, favoriteButtonDidSave: favoriteButtonDidSaveRalay)
+        let output = viewModel.transform(input: input)
+        
+        output.listToRead
+            .drive(rx.createSnapshotForToRead)
+            .disposed(by: disposeBag)
+        
+        output.emptyList
+            .drive(rx.createSnapshotForEmpty)
+            .disposed(by: disposeBag)
         
         categoryCollectionView.rx.itemSelected
             .withUnretained(self)
@@ -69,9 +98,7 @@ final class LibraryViewController: UIViewController {
             .bind(with: self) { (owner, category) in
                 switch category {
                 case .toRead:
-                    print("toRead")
-                    let books = [Book(authors: ["제인 오스틴"], contents: "셰익스피어의 뒤를 이어 ‘지난 천 년간 최고의 문학가’로 꼽힌 제인 오스틴 결혼을 마주한 여성들이 헤쳐 나가야 하는 현실적인 난관, 그리고 애정이라는 조건을 예리하게 묘파한 고전 중의 고전  “제가 장담하는데 당신은 저한테서 좋은 점을 하나도 찾지 못했어요. 그렇지만 사랑에 빠지면 그런 거야 문제될 것 없을 테지요.”  완전히 새로운 번역, 원문에 충실한 정확한 번역으로 만나는 『오만과 편견』", publicationDate: Date(), isbn: "8937460882 9788937460883", price: 13000, publisher: "민음사", salePrice: 11700, status: "정상판매", thumbnailURL: URL(string: "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045"), title: "오만과 편견", translators: ["전승희"], detailURL: URL(string: "https://search.daum.net/search?w=bookpage&bookId=540854&q=%EC%98%A4%EB%A7%8C%EA%B3%BC+%ED%8E%B8%EA%B2%AC"))]
-                    
+                    let books = owner.favoriteRepository.fetchFavorites()
                     owner.createSnapshotForToRead(books)
                 case .reading:
                     break
@@ -97,11 +124,29 @@ final class LibraryViewController: UIViewController {
                     return nil
                 case .read:
                     return nil
+                default:
+                    return nil
                 }
             }
             .bind(to: rx.pushViewController)
             .disposed(by: disposeBag)
         
+    }
+    
+    // Notification
+    func configureNotification() {
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
+    }
+    
+    @objc func favoriteButtonDidSave(_ notification: Notification) {
+        guard let message = notification.userInfo?["message"] as? String else {
+            print("Failed to get saving message")
+            return
+        }
+        
+        favoriteButtonDidSaveRalay.accept(Void())
+        self.view.makeToast(message, duration: 1.5, position: .bottom)
     }
 }
 
@@ -189,6 +234,8 @@ private extension LibraryViewController {
                 return self.sectionForReading()
             case .read:
                 return self.sectionForRead()
+            case .empty:
+                return self.sectionForEmpty()
             }
         }
     }
@@ -240,6 +287,20 @@ private extension LibraryViewController {
         
         return section
     }
+    
+    func sectionForEmpty() -> NSCollectionLayoutSection {
+        let spacing: CGFloat = 16
+        
+        let size = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(0.9))
+        
+        let item = NSCollectionLayoutItem(layoutSize: size)
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: size, subitems: [item])
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
+        
+        return section
+    }
 }
 
 //MARK: - CollectionView DataSource
@@ -265,12 +326,14 @@ private extension LibraryViewController {
         case toRead
         case reading
         case read
+        case empty
     }
     
     enum Item: Hashable {
         case toRead(Book)
         case reading(String)
         case read(String)
+        case empty(String)
     }
     
     func configureCategoryDataSource() {
@@ -290,6 +353,7 @@ private extension LibraryViewController {
         let toReadCellRegistration = UICollectionView.CellRegistration(handler: toReadCellRegistrationHandler)
         let readingCellRegistration = UICollectionView.CellRegistration(handler: readingCellRegistrationHandler)
         let readCellRegistration = UICollectionView.CellRegistration(handler: readCellRegistrationHandler)
+        let emptySearchResultsCellRegistration = UICollectionView.CellRegistration(handler: emptySearchResultsCellRegistrationHandler)
         
         dataSource = DataSource(collectionView: collectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
             switch itemIdentifier {
@@ -299,13 +363,12 @@ private extension LibraryViewController {
                 return collectionView.dequeueConfiguredReusableCell(using: readingCellRegistration, for: indexPath, item: value)
             case .read(let value):
                 return collectionView.dequeueConfiguredReusableCell(using: readCellRegistration, for: indexPath, item: value)
+            case .empty(let value):
+                return collectionView.dequeueConfiguredReusableCell(using: emptySearchResultsCellRegistration, for: indexPath, item: value)
             }
         })
         
-        
-        let books = [Book(authors: ["제인 오스틴"], contents: "셰익스피어의 뒤를 이어 ‘지난 천 년간 최고의 문학가’로 꼽힌 제인 오스틴 결혼을 마주한 여성들이 헤쳐 나가야 하는 현실적인 난관, 그리고 애정이라는 조건을 예리하게 묘파한 고전 중의 고전  “제가 장담하는데 당신은 저한테서 좋은 점을 하나도 찾지 못했어요. 그렇지만 사랑에 빠지면 그런 거야 문제될 것 없을 테지요.”  완전히 새로운 번역, 원문에 충실한 정확한 번역으로 만나는 『오만과 편견』", publicationDate: Date(), isbn: "8937460882 9788937460883", price: 13000, publisher: "민음사", salePrice: 11700, status: "정상판매", thumbnailURL: URL(string: "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045"), title: "오만과 편견", translators: ["전승희"], detailURL: URL(string: "https://search.daum.net/search?w=bookpage&bookId=540854&q=%EC%98%A4%EB%A7%8C%EA%B3%BC+%ED%8E%B8%EA%B2%AC"))]
-        
-        
+        let books = favoriteRepository.fetchFavorites()
         createSnapshotForToRead(books)
         collectionView.dataSource = dataSource
     }
@@ -325,6 +388,10 @@ private extension LibraryViewController {
     
     func readCellRegistrationHandler(cell: LibraryCalendarCollectionViewCell, indexPath: IndexPath, item: String) {
         
+    }
+    
+    func emptySearchResultsCellRegistrationHandler(cell: EmptyCollectionViewCell, indexPath: IndexPath, item: String) {
+        cell.configure(with: item)
     }
     
     func createSnapshotForCategory() {
@@ -365,6 +432,15 @@ private extension LibraryViewController {
         snapshot.appendItems(items, toSection: .read)
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
+    
+    func createSnapshotForEmpty(_ newItem: String) {
+        let items = [Item.empty(newItem)]
+        
+        snapshot = Snapshot()
+        snapshot.appendSections([.empty])
+        snapshot.appendItems(items, toSection: .empty)
+        dataSource.applySnapshotUsingReloadData(snapshot)
+    }
 }
 
 //MARK: - Reactive+
@@ -385,6 +461,12 @@ extension Reactive where Base: LibraryViewController {
     var createSnapshotForRead: Binder<[String]> {
         return Binder(base) { base, list in
             base.createSnapshotForRead(list)
+        }
+    }
+    
+    var createSnapshotForEmpty: Binder<String> {
+        return Binder(base) { base, value in
+            base.createSnapshotForEmpty(value)
         }
     }
 }
