@@ -7,8 +7,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>ALALDIN_API_KEY</key>
-	<string>$(ALALDIN_API_KEY)</string>
+	<key>ALADIN_API_KEY</key>
+	<string>$(ALADIN_API_KEY)</string>
 	<key>ALADIN_URL</key>
 	<string>$(ALADIN_URL)</string>
 	<key>UIUserInterfaceStyle</key>
