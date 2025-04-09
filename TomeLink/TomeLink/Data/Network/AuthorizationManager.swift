@@ -9,6 +9,7 @@ import Foundation
 
 enum AuthorizationManager: String {
     case kakao = "KAKAO"
+    case aladin = "ALADIN"
     
     var apiKey: String? {
         return Bundle.main.infoDictionary?["\(self.rawValue)_API_KEY"] as? String
