@@ -7,10 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1486F4D52DA5E19F00946426 /* BookEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1486F4D22DA5E19F00946426 /* BookEntity+CoreDataProperties.swift */; };
-		1486F4D62DA5E19F00946426 /* FavoriteEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1486F4D32DA5E19F00946426 /* FavoriteEntity+CoreDataClass.swift */; };
-		1486F4D72DA5E19F00946426 /* BookEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1486F4D12DA5E19F00946426 /* BookEntity+CoreDataClass.swift */; };
-		1486F4D82DA5E19F00946426 /* FavoriteEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1486F4D42DA5E19F00946426 /* FavoriteEntity+CoreDataProperties.swift */; };
 		149D75972D97E07C00A42C7F /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 149D75962D97E07C00A42C7F /* Kingfisher */; };
 		149D759A2D97E08800A42C7F /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 149D75992D97E08800A42C7F /* SnapKit */; };
 		149D759D2D97E0B700A42C7F /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 149D759C2D97E0B700A42C7F /* RxCocoa */; };
@@ -19,10 +15,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1486F4D12DA5E19F00946426 /* BookEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
-		1486F4D22DA5E19F00946426 /* BookEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		1486F4D32DA5E19F00946426 /* FavoriteEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FavoriteEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
-		1486F4D42DA5E19F00946426 /* FavoriteEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FavoriteEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		149D75442D97811200A42C7F /* TomeLink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TomeLink.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -66,10 +58,6 @@
 		149D753B2D97811200A42C7F = {
 			isa = PBXGroup;
 			children = (
-				1486F4D12DA5E19F00946426 /* BookEntity+CoreDataClass.swift */,
-				1486F4D22DA5E19F00946426 /* BookEntity+CoreDataProperties.swift */,
-				1486F4D32DA5E19F00946426 /* FavoriteEntity+CoreDataClass.swift */,
-				1486F4D42DA5E19F00946426 /* FavoriteEntity+CoreDataProperties.swift */,
 				149D75462D97811200A42C7F /* TomeLink */,
 				149D75452D97811200A42C7F /* Products */,
 			);
@@ -168,10 +156,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1486F4D52DA5E19F00946426 /* BookEntity+CoreDataProperties.swift in Sources */,
-				1486F4D62DA5E19F00946426 /* FavoriteEntity+CoreDataClass.swift in Sources */,
-				1486F4D72DA5E19F00946426 /* BookEntity+CoreDataClass.swift in Sources */,
-				1486F4D82DA5E19F00946426 /* FavoriteEntity+CoreDataProperties.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
