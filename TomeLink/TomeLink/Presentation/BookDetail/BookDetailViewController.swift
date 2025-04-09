@@ -16,6 +16,7 @@ final class BookDetailViewController: UIViewController {
     // View
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
     private let favoriteButton = FavoriteButton()
+    private let readingButton = ReadingButton()
     fileprivate let loadingView = LoadingView()
     
     // Properties
@@ -61,12 +62,16 @@ final class BookDetailViewController: UIViewController {
         output.book
             .compactMap{ $0 }
             .drive(with: self) { owner, book in
-                let repository = FavoriteRepository()
-                let viewModel = FavoriteButtonViewModel(book: book, repository: repository)
-                owner.favoriteButton.bind(viewModel: viewModel)
+                let favoriteRepository = FavoriteRepository()
+                let favoriteViewModel = FavoriteButtonViewModel(book: book, repository: favoriteRepository)
+                owner.favoriteButton.bind(viewModel: favoriteViewModel)
                 owner.updateSnapshot(thumbnail: book.thumbnailURL)
                 owner.updateSnapshot(bookInfo: book)
                 owner.updateSnapshot(platformList: [book.detailURL])
+                
+                let readingRepository = FavoriteRepository()
+                let viewModel = ReadingButtonViewModel(book: book, repository: readingRepository)
+                owner.readingButton.bind(viewModel: viewModel)
             }
             .disposed(by: disposeBag)
         
@@ -93,9 +98,18 @@ final class BookDetailViewController: UIViewController {
     // Notification
     func configureNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(readingButtonDidSave), name: NSNotification.Name("ReadingButtonDidSave"), object: nil)
     }
     
     @objc func favoriteButtonDidSave(_ notification: Notification) {
+        guard let message = notification.userInfo?["message"] as? String else {
+            print("Failed to get saving message")
+            return
+        }
+        self.view.makeToast(message, duration: 2.0, position: .bottom)
+    }
+    
+    @objc func readingButtonDidSave(_ notification: Notification) {
         guard let message = notification.userInfo?["message"] as? String else {
             print("Failed to get saving message")
             return
@@ -111,6 +125,7 @@ private extension BookDetailViewController {
         view.backgroundColor = TomeLinkColor.background
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: favoriteButton)
+        navigationItem.rightBarButtonItems = [ UIBarButtonItem(customView: favoriteButton), UIBarButtonItem(customView: readingButton)]
         
         collectionView.backgroundColor = .clear
         collectionView.bounces = false
