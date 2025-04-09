@@ -1,5 +1,5 @@
 //
-//  EmptySearchResultsCollectionViewCell.swift
+//  EmptyCollectionViewCell.swift
 //  TomeLink
 //
 //  Created by 임윤휘 on 4/6/25.
@@ -8,11 +8,12 @@
 import UIKit
 import SnapKit
 
-final class EmptySearchResultsCollectionViewCell: UICollectionViewCell {
+final class EmptyCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
+    
+    static let identifier = String(describing: EmptyCollectionViewCell.self)
     
     private let messageLabel: UILabel = {
         let label = UILabel()
-        label.text = "검색결과가 없습니다."
         label.font = TomeLinkFont.title
         label.textColor = TomeLinkColor.subtitle
         label.textAlignment = .center
@@ -30,7 +31,15 @@ final class EmptySearchResultsCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func configureConstraints() {
+    func configure(with value: String) {
+        messageLabel.text = value
+    }
+}
+
+//MARK: - Configuration
+private extension EmptyCollectionViewCell {
+    
+    func configureConstraints() {
         
         messageLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
