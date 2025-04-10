@@ -93,12 +93,25 @@ final class BookDetailViewController: UIViewController {
             }
             .bind(to: rx.pushViewController)
             .disposed(by: disposeBag)
+        
+        readingButton.rx.tap
+            .map { _ in
+                
+                let readingEditVC = ReadingEditViewController()
+                if let sheet = readingEditVC.sheetPresentationController {
+                    sheet.detents = [.small()]
+                    sheet.prefersGrabberVisible = true
+                }
+                return readingEditVC
+            }
+            .bind(to: rx.present)
+            .disposed(by: disposeBag)
     }
     
     // Notification
     func configureNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(readingButtonDidSave), name: NSNotification.Name("ReadingButtonDidSave"), object: nil)
+//        NotificationCenter.default.addObserver(self, selector: #selector(readingButtonDidSave), name: NSNotification.Name("ReadingButtonDidSave"), object: nil)
     }
     
     @objc func favoriteButtonDidSave(_ notification: Notification) {
