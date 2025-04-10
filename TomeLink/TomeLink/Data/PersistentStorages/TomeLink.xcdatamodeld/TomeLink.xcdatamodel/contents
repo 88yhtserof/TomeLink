@@ -19,8 +19,10 @@
         <relationship name="book" maxCount="1" deletionRule="Nullify" destinationEntity="BookEntity" inverseName="favorite" inverseEntity="BookEntity"/>
     </entity>
     <entity name="ReadingEntity" representedClassName="ReadingEntity" syncable="YES">
+        <attribute name="currentPage" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="isbn" optional="YES" attributeType="String"/>
-        <attribute name="startedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="pageCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="startedAt" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="book" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BookEntity" inverseName="reading" inverseEntity="BookEntity"/>
     </entity>
 </model>

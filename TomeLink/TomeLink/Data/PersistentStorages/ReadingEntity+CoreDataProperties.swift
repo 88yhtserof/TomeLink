@@ -18,6 +18,8 @@ extension ReadingEntity {
 
     @NSManaged public var startedAt: Date
     @NSManaged public var isbn: String
+    @NSManaged public var currentPage: Int32
+    @NSManaged public var pageCount: Int32
     @NSManaged public var book: BookEntity
 
 }
