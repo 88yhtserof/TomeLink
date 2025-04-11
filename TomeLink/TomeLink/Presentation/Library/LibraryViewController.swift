@@ -132,27 +132,33 @@ final class LibraryViewController: UIViewController {
         collectionView.rx.itemSelected
             .withUnretained(self)
             .compactMap { owner, indexPath in
-                return (owner, owner.dataSource.itemIdentifier(for: indexPath))
+                return owner.dataSource.itemIdentifier(for: indexPath)
             }
-            .compactMap { owner, item in
+            .bind(with: self) { owner, item in
                 
                 switch item {
                 case .toRead(let book):
                     owner.lastestSection = .toRead
                     let viewModel =  BookDetailViewModel(book: book)
                     let bookDetailVC = BookDetailViewController(viewModel: viewModel)
-                    return bookDetailVC
-                case .reading:
+                    owner.rx.pushViewController.onNext(bookDetailVC)
+                case .reading(let reading):
                     owner.lastestSection = .reading
-                    return nil
+                    let repotitory = ReadingRepository()
+                    let viewModel = ReadingEditViewModel(book: reading.book, repository: repotitory)
+                    let readingEditVC = ReadingEditViewController(viewModel: viewModel)
+                    if let sheet = readingEditVC.sheetPresentationController {
+                        sheet.detents = [.small()]
+                        sheet.prefersGrabberVisible = true
+                    }
+                    owner.rx.present.onNext(readingEditVC)
                 case .read:
                     owner.lastestSection = .read
-                    return nil
+                    break
                 default:
-                    return nil
+                    break
                 }
             }
-            .bind(to: rx.pushViewController)
             .disposed(by: disposeBag)
         
     }
