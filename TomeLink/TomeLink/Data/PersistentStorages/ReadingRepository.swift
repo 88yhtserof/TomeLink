@@ -64,14 +64,16 @@ struct ReadingRepository: ReadingRepositoryProtocol {
         }
     }
 
-    func fetchAllReadings() -> [Book] {
+    func fetchAllReadings() -> [Reading] {
         let request: NSFetchRequest<ReadingEntity> = ReadingEntity.fetchRequest()
         let readings = try? context.fetch(request)
         
         return readings?
-            .map{ $0.book }
             .map {
-                return Book(authors: $0.authors, contents: $0.contents, publicationDate: $0.publicationDate, isbn: $0.isbn, publisher: $0.publisher, thumbnailURL: URL(string: $0.thumbnailURL), title: $0.title, translators: $0.translators, detailURL: URL(string: $0.detailURL))
+                let bookEntity = $0.book
+                let book = Book(authors: bookEntity.authors, contents: bookEntity.contents, publicationDate: bookEntity.publicationDate, isbn: bookEntity.isbn, publisher: bookEntity.publisher, thumbnailURL: URL(string: bookEntity.thumbnailURL), title: bookEntity.title, translators: bookEntity.translators, detailURL: URL(string: bookEntity.detailURL))
+                
+                return Reading(isbn: book.isbn, currentPage: Int($0.currentPage), pageCount: Int($0.pageCount), startedAt: $0.startedAt, book: book)
             } ?? []
     }
 }

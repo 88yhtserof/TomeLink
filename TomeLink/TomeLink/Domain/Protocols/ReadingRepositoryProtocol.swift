@@ -14,5 +14,5 @@ protocol ReadingRepositoryProtocol {
     func updateCurrentPage(isbn: String, currentPage: Int32)
     func fetchReading(isbn: String) -> ReadingEntity?
     func deleteReading(isbn: String)
-    func fetchAllReadings() -> [Book]
+    func fetchAllReadings() -> [Reading]
 }
