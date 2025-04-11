@@ -15,7 +15,6 @@ struct Reading: Hashable {
     let book: Book
 
     var progress: Double {
-        print(pageCount, currentPage, Double(currentPage) / Double(pageCount))
         guard pageCount > 0 else { return 0 }
         return Double(currentPage) / Double(pageCount) * 100
     }

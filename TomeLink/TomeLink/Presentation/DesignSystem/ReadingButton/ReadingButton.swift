@@ -77,10 +77,6 @@ final class ReadingButton: UIButton {
         let output = viewModel.transform(input: input)
         
         output.selectedState
-            .map({
-                print("22222222", $0)
-                return $0
-            })
             .drive(rx.isSelected)
             .disposed(by: disposeBag)
         

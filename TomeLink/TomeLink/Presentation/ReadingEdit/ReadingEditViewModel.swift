@@ -53,10 +53,6 @@ final class ReadingEditViewModel: BaseViewModel {
         let startedAt = BehaviorRelay<Date>(value: Date())
         
         input.currentPage
-            .map{
-                print($0)
-                return $0
-            }
             .bind(to: currentPage)
             .disposed(by: disposeBag)
         
