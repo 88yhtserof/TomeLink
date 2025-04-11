@@ -23,6 +23,12 @@ extension Reactive where Base: UIViewController {
         }
     }
     
+    var dismiss: Binder<Void> {
+        return Binder(base) { base, _ in
+            base.dismiss(animated: true)
+        }
+    }
+    
     var pushViewController: Binder<UIViewController> {
         return Binder(base) { base, viewController in
             base.navigationController?.pushViewController(viewController, animated: true)

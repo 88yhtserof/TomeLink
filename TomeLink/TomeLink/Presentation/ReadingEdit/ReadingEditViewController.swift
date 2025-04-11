@@ -19,17 +19,41 @@ final class ReadingEditViewController: UIViewController {
     private let datePicker = UIDatePicker()
     private let doneButton = UIButton()
     
+    private let viewModel: ReadingEditViewModel
     private let disposeBag = DisposeBag()
     
     private var contentDate: String?
     
     // LifeCycle
+    init(viewModel: ReadingEditViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         configureHierarchy()
         configureConstraints()
         configureView()
+        bind()
+    }
+    
+    private func bind() {
+        
+        let input = ReadingEditViewModel.Input(tapDoneButton: doneButton.rx.tap,
+                                               currentPage: pageTextField.rx.text.orEmpty,
+                                               startedAt: datePicker.rx.date)
+        let output = viewModel.transform(input: input)
+        
+        output.doneAddingReading
+            .drive(rx.dismiss)
+            .disposed(by: disposeBag)
     }
 }
 
@@ -57,7 +81,7 @@ private extension ReadingEditViewController {
         datePicker.tintColor = TomeLinkColor.point
         
         var doneButtonConfig = UIButton.Configuration.filled()
-        doneButtonConfig.title = "완료"
+        doneButtonConfig.title = "시작"
         doneButtonConfig.baseForegroundColor = TomeLinkColor.background
         doneButtonConfig.baseBackgroundColor = TomeLinkColor.title
         doneButton.configuration = doneButtonConfig
