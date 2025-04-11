@@ -16,6 +16,7 @@ final class BookDetailViewController: UIViewController {
     // View
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
     private let favoriteButton = FavoriteButton()
+    private let readingButton = ReadingButton()
     fileprivate let loadingView = LoadingView()
     
     // Properties
@@ -54,19 +55,24 @@ final class BookDetailViewController: UIViewController {
     
     private func bind() {
         
-        let input = BookDetailViewModel.Input()
+        let input = BookDetailViewModel.Input(tapReadingButton: readingButton.rx.tap)
         let output = viewModel.transform(input: input)
         
         
         output.book
             .compactMap{ $0 }
             .drive(with: self) { owner, book in
-                let repository = FavoriteRepository()
-                let viewModel = FavoriteButtonViewModel(book: book, repository: repository)
-                owner.favoriteButton.bind(viewModel: viewModel)
+                let favoriteRepository = FavoriteRepository()
+                let favoriteViewModel = FavoriteButtonViewModel(book: book, repository: favoriteRepository)
+                owner.favoriteButton.bind(viewModel: favoriteViewModel)
+                
                 owner.updateSnapshot(thumbnail: book.thumbnailURL)
                 owner.updateSnapshot(bookInfo: book)
                 owner.updateSnapshot(platformList: [book.detailURL])
+                
+                let readingRepository = ReadingRepository()
+                let viewModel = ReadingButtonViewModel(book: book, repository: readingRepository)
+                owner.readingButton.bind(viewModel: viewModel)
             }
             .disposed(by: disposeBag)
         
@@ -87,6 +93,35 @@ final class BookDetailViewController: UIViewController {
                 }
             }
             .bind(to: rx.pushViewController)
+            .disposed(by: disposeBag)
+        
+        output.reading
+            .compactMap{ $0 }
+            .drive(with: self) { owner, book in
+                if owner.readingButton.isSelected { // stop
+                    let alert = UIAlertController(title: "삭제", message: "독서 기록이 삭제됩니다.", preferredStyle: .alert)
+                    let cancelAction = UIAlertAction(title: "취소", style: .cancel) { _ in
+                        owner.readingButton.isSelected = false
+                    }
+                    let deleteAction = UIAlertAction(title: "삭제", style: .destructive) { _ in
+                        print("Delete Reading Record")
+                        owner.readingButton.isSelected = true
+                        ReadingRepository().deleteReading(isbn: book.isbn)
+                    }
+                    alert.addAction(cancelAction)
+                    alert.addAction(deleteAction)
+                    owner.rx.present.onNext(alert)
+                } else { // play
+                    let repository = ReadingRepository()
+                    let readingEditViewModel = ReadingEditViewModel(book: book, repository: repository)
+                    let readingEditVC = ReadingEditViewController(viewModel: readingEditViewModel, eventReceiver: owner.viewModel)
+                    if let sheet = readingEditVC.sheetPresentationController {
+                        sheet.detents = [.small()]
+                        sheet.prefersGrabberVisible = true
+                    }
+                    owner.rx.present.onNext(readingEditVC)
+                }
+            }
             .disposed(by: disposeBag)
     }
     
@@ -111,6 +146,7 @@ private extension BookDetailViewController {
         view.backgroundColor = TomeLinkColor.background
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: favoriteButton)
+        navigationItem.rightBarButtonItems = [ UIBarButtonItem(customView: favoriteButton), UIBarButtonItem(customView: readingButton)]
         
         collectionView.backgroundColor = .clear
         collectionView.bounces = false

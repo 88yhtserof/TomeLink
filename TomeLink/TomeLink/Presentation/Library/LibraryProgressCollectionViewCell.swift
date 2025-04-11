@@ -17,6 +17,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
     private let backgroungContainerView = UIView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
+    private let pageLabel = UILabel()
     private let progressLabel = UILabel()
     private let thumbnailView = ThumbnailView()
     
@@ -52,12 +53,18 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
         return progressView
     }()
     
-    func configure(with value: String) {
-        titleLabel.text = "책 제목"
-        subtitleLabel.text = "작가"
-        thumbnailView.setImage(with: URL(string: "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5450099%3Ftimestamp%3D20250319144818")!)
-        progressLabel.text = "78 %"
-        progressBar.progress = Float(23) / Float(140)
+    func configure(with value: Reading) {
+        let book = value.book
+        titleLabel.text = book.title
+        subtitleLabel.text = book.authors.joined(separator: ", ")
+        pageLabel.text = "\(value.currentPage) / \(value.pageCount)"
+        
+        if let url = book.thumbnailURL {
+            thumbnailView.setImage(with: url)
+        }
+        
+        progressLabel.text = String(format: "%0.f%%", value.progress)
+        progressBar.progress = Float(value.progress / 100.0)
     }
 }
 
@@ -71,16 +78,20 @@ private extension LibraryProgressCollectionViewCell {
         
         titleLabel.font = .systemFont(ofSize: 15, weight: .bold)
         titleLabel.textColor = TomeLinkColor.title
+        titleLabel.numberOfLines = 2
         
         subtitleLabel.font = .systemFont(ofSize: 15, weight: .regular)
         subtitleLabel.textColor = TomeLinkColor.subtitle
         
         progressLabel.font = .systemFont(ofSize: 30, weight: .bold)
         progressLabel.textColor = TomeLinkColor.title
+        
+        pageLabel.font = .systemFont(ofSize: 13, weight: .light)
+        pageLabel.textColor = TomeLinkColor.title
     }
     
     func configureHierarchy() {
-        backgroungContainerView.addSubviews(titleLabel, subtitleLabel, thumbnailView, progressLabel, progressBar)
+        backgroungContainerView.addSubviews(titleLabel, subtitleLabel, thumbnailView, pageLabel, progressLabel, progressBar)
         contentView.addSubviews(backgroungContainerView)
     }
     
@@ -92,7 +103,7 @@ private extension LibraryProgressCollectionViewCell {
         
         titleLabel.snp.makeConstraints { make in
             make.top.leading.equalToSuperview().offset(16)
-            make.trailing.equalTo(thumbnailView.snp.leading).offset(8)
+            make.trailing.equalTo(thumbnailView.snp.leading).offset(-8)
         }
         
         subtitleLabel.snp.makeConstraints { make in
@@ -106,9 +117,14 @@ private extension LibraryProgressCollectionViewCell {
             make.height.equalTo(140)
         }
         
+        pageLabel.snp.makeConstraints { make in
+            make.bottom.equalTo(progressLabel)
+            make.trailing.equalTo(thumbnailView).inset(8)
+        }
+        
         progressLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(16)
-            make.bottom.greaterThanOrEqualTo(thumbnailView)
+            make.top.greaterThanOrEqualTo(thumbnailView)
         }
         
         progressBar.snp.makeConstraints { make in

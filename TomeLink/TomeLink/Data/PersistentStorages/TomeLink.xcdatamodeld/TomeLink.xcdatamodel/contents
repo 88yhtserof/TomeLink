@@ -11,10 +11,18 @@
         <attribute name="title" attributeType="String"/>
         <attribute name="translators" attributeType="Transformable" valueTransformerName="" customClassName="[String]"/>
         <relationship name="favorite" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="FavoriteEntity" inverseName="book" inverseEntity="FavoriteEntity"/>
+        <relationship name="reading" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="ReadingEntity" inverseName="book" inverseEntity="ReadingEntity"/>
     </entity>
     <entity name="FavoriteEntity" representedClassName="FavoriteEntity" syncable="YES">
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="isbn" attributeType="String"/>
         <relationship name="book" maxCount="1" deletionRule="Nullify" destinationEntity="BookEntity" inverseName="favorite" inverseEntity="BookEntity"/>
+    </entity>
+    <entity name="ReadingEntity" representedClassName="ReadingEntity" syncable="YES">
+        <attribute name="currentPage" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="isbn" optional="YES" attributeType="String"/>
+        <attribute name="pageCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="startedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="book" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BookEntity" inverseName="reading" inverseEntity="BookEntity"/>
     </entity>
 </model>

@@ -27,11 +27,15 @@ final class LibraryViewController: UIViewController {
     
     // TODO: - ViewModel로 옮기기
     private let favoriteRepository = FavoriteRepository()
+    private let readingRepository = ReadingRepository()
     
     private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
     
+    fileprivate var lastestSection: Section = .toRead
+    
     private let favoriteButtonDidSaveRalay = PublishRelay<Void>()
+    private let readingButtonDidSaveRalay = PublishRelay<Void>()
     
     // LifeCycle
     init(viewModel: LibraryViewModel) {
@@ -60,11 +64,17 @@ final class LibraryViewController: UIViewController {
     // DataBinding
     private func bind() {
         
-        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear, favoriteButtonDidSave: favoriteButtonDidSaveRalay)
+        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear,
+                                           favoriteButtonDidSave: favoriteButtonDidSaveRalay,
+                                           readingButtonDidSave: readingButtonDidSaveRalay)
         let output = viewModel.transform(input: input)
         
         output.listToRead
             .drive(rx.createSnapshotForToRead)
+            .disposed(by: disposeBag)
+        
+        output.listReading
+            .drive(rx.createSnapshotForReading)
             .disposed(by: disposeBag)
         
         output.emptyList
@@ -74,6 +84,18 @@ final class LibraryViewController: UIViewController {
         categoryCollectionView.rx.itemSelected
             .withUnretained(self)
             .filter{ owner, indexPath in
+                
+                if let category = CategoryItem(rawValue: indexPath.item) {
+                    switch category {
+                    case .toRead:
+                        owner.lastestSection = .toRead
+                    case .reading:
+                        owner.lastestSection = .reading
+                    case .read:
+                        owner.lastestSection = .read
+                    }
+                }
+                
                 guard let currentCell = owner.categoryCollectionView.cellForItem(at: indexPath) as? CategoryCollectionViewCell else {
                     return false
                 }
@@ -99,9 +121,20 @@ final class LibraryViewController: UIViewController {
                 switch category {
                 case .toRead:
                     let books = owner.favoriteRepository.fetchFavorites()
-                    owner.createSnapshotForToRead(books)
+                    
+                    if books.isEmpty {
+                        owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
+                    } else {
+                        owner.createSnapshotForToRead(books)
+                    }
                 case .reading:
-                    break
+                    let books = owner.readingRepository.fetchAllReadings()
+                    
+                    if books.isEmpty {
+                        owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
+                    } else {
+                        owner.createSnapshotForReading(books)
+                    }
                 case .read:
                     break
                 }
@@ -113,22 +146,29 @@ final class LibraryViewController: UIViewController {
             .compactMap { owner, indexPath in
                 return owner.dataSource.itemIdentifier(for: indexPath)
             }
-            .compactMap { item in
+            .bind(with: self) { owner, item in
                 
                 switch item {
                 case .toRead(let book):
                     let viewModel =  BookDetailViewModel(book: book)
                     let bookDetailVC = BookDetailViewController(viewModel: viewModel)
-                    return bookDetailVC
-                case .reading:
-                    return nil
+                    owner.rx.pushViewController.onNext(bookDetailVC)
+                case .reading(let reading):
+                    let repotitory = ReadingRepository()
+                    let readingEditViewModel = ReadingEditViewModel(book: reading.book, repository: repotitory)
+                    
+                    let readingEditVC = ReadingEditViewController(viewModel: readingEditViewModel, eventReceiver: owner.viewModel)
+                    if let sheet = readingEditVC.sheetPresentationController {
+                        sheet.detents = [.small()]
+                        sheet.prefersGrabberVisible = true
+                    }
+                    owner.rx.present.onNext(readingEditVC)
                 case .read:
-                    return nil
+                    break
                 default:
-                    return nil
+                    break
                 }
             }
-            .bind(to: rx.pushViewController)
             .disposed(by: disposeBag)
         
     }
@@ -260,7 +300,7 @@ private extension LibraryViewController {
     
     func sectionForReading() -> NSCollectionLayoutSection {
         let spacing: CGFloat = 16
-        let height: CGFloat = 200
+        let height: CGFloat = 240
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height))
@@ -316,10 +356,21 @@ private extension LibraryViewController {
         case library
     }
     
-    enum CategoryItem: String, CaseIterable {
-        case toRead = "읽고 싶은 도서"
-        case reading = "독서 진행률 %"
-        case read = "독서 기록"
+    enum CategoryItem: Int, CaseIterable {
+        case toRead
+        case reading
+        case read
+        
+        var title: String {
+            switch self {
+            case .toRead:
+                return "읽고 싶은 도서"
+            case .reading:
+                return "독서 진행률 %"
+            case .read:
+                return "읽고 싶은 도서"
+            }
+        }
     }
     
     enum Section: Int, CaseIterable {
@@ -331,7 +382,7 @@ private extension LibraryViewController {
     
     enum Item: Hashable {
         case toRead(Book)
-        case reading(String)
+        case reading(Reading)
         case read(String)
         case empty(String)
     }
@@ -341,7 +392,7 @@ private extension LibraryViewController {
         let categoryCellRegistration = UICollectionView.CellRegistration(handler: catergoryCellRegistrationHandler)
         
         categoryDataSource = CategoryDataSource(collectionView: categoryCollectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
-            return collectionView.dequeueConfiguredReusableCell(using: categoryCellRegistration, for: indexPath, item: itemIdentifier.rawValue)
+            return collectionView.dequeueConfiguredReusableCell(using: categoryCellRegistration, for: indexPath, item: itemIdentifier.title)
         })
         
         createSnapshotForCategory()
@@ -382,7 +433,7 @@ private extension LibraryViewController {
         cell.configure(with: item)
     }
     
-    func readingCellRegistrationHandler(cell: LibraryProgressCollectionViewCell, indexPath: IndexPath, item: String) {
+    func readingCellRegistrationHandler(cell: LibraryProgressCollectionViewCell, indexPath: IndexPath, item: Reading) {
         cell.configure(with: item)
     }
     
@@ -395,7 +446,7 @@ private extension LibraryViewController {
     }
     
     func createSnapshotForCategory() {
-        let items = [CategoryItem.toRead]
+        let items = [CategoryItem.toRead, CategoryItem.reading]
         
         var snapshot = CategorySnapshot()
         snapshot.appendSections(CategorySection.allCases)
@@ -413,7 +464,7 @@ private extension LibraryViewController {
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
-    func createSnapshotForReading(_ newItems: [String]) {
+    func createSnapshotForReading(_ newItems: [Reading]) {
         let items = newItems.map{ Item.reading($0) }
         
         snapshot = Snapshot()
@@ -448,13 +499,23 @@ extension Reactive where Base: LibraryViewController {
     
     var createSnapshotForToRead: Binder<[Book]> {
         return Binder(base) { base, list in
-            base.createSnapshotForToRead(list)
+            
+            if base.lastestSection == .toRead {
+                base.createSnapshotForToRead(list)
+            } else {
+                return
+            }
         }
     }
     
-    var createSnapshotForReading: Binder<[String]> {
+    var createSnapshotForReading: Binder<[Reading]> {
         return Binder(base) { base, list in
-            base.createSnapshotForReading(list)
+            
+            if base.lastestSection == .reading {
+                base.createSnapshotForReading(list)
+            } else {
+                return
+            }
         }
     }
     

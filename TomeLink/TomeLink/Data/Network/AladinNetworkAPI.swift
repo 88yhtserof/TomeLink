@@ -24,7 +24,7 @@ enum AladinNetworkAPI: NetworkAPI {
     var parameters: [URLQueryItem] {
         switch self {
         case .itemLookUp(let isbn):
-            return [URLQueryItem(name: "ttbkey", value: AladinNetworkAPI.apiKey), URLQueryItem(name: "ItemIdType", value: "ISBN13"), URLQueryItem(name: "ItemId", value: isbn)]
+            return [URLQueryItem(name: "ttbkey", value: AladinNetworkAPI.apiKey), URLQueryItem(name: "ItemIdType", value: "ISBN13"), URLQueryItem(name: "ItemId", value: isbn.components(separatedBy: " ").last ?? "")] // TODO: - 예외 처리
         }
     }
     

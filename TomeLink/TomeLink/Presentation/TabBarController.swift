@@ -48,8 +48,9 @@ final class TabBarController: UITabBarController {
 private extension TabBarController {
     func configureViewControllers() {
         
-        let repository = FavoriteRepository()
-        let libraryViewModel = LibraryViewModel(repository: repository)
+        let favoriteRepository = FavoriteRepository()
+        let readingRepository = ReadingRepository()
+        let libraryViewModel = LibraryViewModel(favoriteRepository: favoriteRepository, readingRepository: readingRepository)
         let libraryViewController = LibraryViewController(viewModel: libraryViewModel)
         
         let searchViewController = SearchViewController()

@@ -2,7 +2,7 @@
 //  BookEntity+CoreDataProperties.swift
 //  TomeLink
 //
-//  Created by 임윤휘 on 4/8/25.
+//  Created by 임윤휘 on 4/10/25.
 //
 //
 
@@ -26,6 +26,7 @@ extension BookEntity {
     @NSManaged public var title: String
     @NSManaged public var translators: [String]
     @NSManaged public var favorite: NSSet
+    @NSManaged public var reading: NSSet
 
 }
 
@@ -43,6 +44,23 @@ extension BookEntity {
 
     @objc(removeFavorite:)
     @NSManaged public func removeFromFavorite(_ values: NSSet)
+
+}
+
+// MARK: Generated accessors for reading
+extension BookEntity {
+
+    @objc(addReadingObject:)
+    @NSManaged public func addToReading(_ value: ReadingEntity)
+
+    @objc(removeReadingObject:)
+    @NSManaged public func removeFromReading(_ value: ReadingEntity)
+
+    @objc(addReading:)
+    @NSManaged public func addToReading(_ values: NSSet)
+
+    @objc(removeReading:)
+    @NSManaged public func removeFromReading(_ values: NSSet)
 
 }
 
