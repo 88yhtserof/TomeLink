@@ -49,11 +49,29 @@ final class ReadingEditViewModel: BaseViewModel {
             }
             .share()
         
-        Observable
-            .zip(response, input.currentPage, input.startedAt)
+        let currentPage = BehaviorRelay<String>(value: "0")
+        let startedAt = BehaviorRelay<Date>(value: Date())
+        
+        input.currentPage
+            .map{
+                print($0)
+                return $0
+            }
+            .bind(to: currentPage)
+            .disposed(by: disposeBag)
+        
+        input.startedAt
+            .bind(to: startedAt)
+            .disposed(by: disposeBag)
+        
+        let input = Observable.combineLatest(currentPage, startedAt)
+        
+        response
+            .withLatestFrom(input){ ($0, $1) }
             .bind(with: self) { owner, value in
                 print("Add Reading")
-                let (response, currentPage, startedAt) = value
+                let (response, input) = value
+                let (currentPage, startedAt) = input
                 owner.repository.addReading(book: owner.book, currentPage: Int32(currentPage) ?? 0, pageCount: Int32(response?.item?.bookinfo?.itemPage ?? 100), startedAt: startedAt)
                 
                 doneAddingReading.accept(Void())

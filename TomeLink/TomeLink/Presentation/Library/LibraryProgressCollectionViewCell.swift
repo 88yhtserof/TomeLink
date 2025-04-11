@@ -61,7 +61,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
             thumbnailView.setImage(with: url)
         }
         
-        progressLabel.text = String(format: "%d %", value.progress)
+        progressLabel.text = String(format: "%0.f%%", value.progress)
         progressBar.progress = Float(value.progress)
     }
 }
