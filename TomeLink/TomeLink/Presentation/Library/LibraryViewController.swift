@@ -119,10 +119,8 @@ final class LibraryViewController: UIViewController {
                     let books = owner.readingRepository.fetchAllReadings()
                     
                     if books.isEmpty {
-                        print("111")
                         owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
                     } else {
-                        print("222")
                         owner.createSnapshotForReading(books)
                     }
                 case .read:
@@ -362,7 +360,7 @@ private extension LibraryViewController {
     
     enum Item: Hashable {
         case toRead(Book)
-        case reading(Book)
+        case reading(Reading)
         case read(String)
         case empty(String)
     }
@@ -413,7 +411,7 @@ private extension LibraryViewController {
         cell.configure(with: item)
     }
     
-    func readingCellRegistrationHandler(cell: LibraryProgressCollectionViewCell, indexPath: IndexPath, item: Book) {
+    func readingCellRegistrationHandler(cell: LibraryProgressCollectionViewCell, indexPath: IndexPath, item: Reading) {
         cell.configure(with: item)
     }
     
@@ -444,7 +442,7 @@ private extension LibraryViewController {
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
-    func createSnapshotForReading(_ newItems: [Book]) {
+    func createSnapshotForReading(_ newItems: [Reading]) {
         let items = newItems.map{ Item.reading($0) }
         
         snapshot = Snapshot()
@@ -488,7 +486,7 @@ extension Reactive where Base: LibraryViewController {
         }
     }
     
-    var createSnapshotForReading: Binder<[Book]> {
+    var createSnapshotForReading: Binder<[Reading]> {
         return Binder(base) { base, list in
             
             if base.lastestSection == .reading {

@@ -22,7 +22,7 @@ final class LibraryViewModel: BaseViewModel {
     
     struct Output {
         let listToRead: Driver<[Book]>
-        let listReading: Driver<[Book]>
+        let listReading: Driver<[Reading]>
         let emptyList: Driver<String>
     }
     
@@ -39,7 +39,7 @@ final class LibraryViewModel: BaseViewModel {
     func transform(input: Input) -> Output {
         
         let listToRead = BehaviorRelay<[Book]>(value: [])
-        let listReading = PublishRelay<[Book]>()
+        let listReading = PublishRelay<[Reading]>()
         let emptyList = BehaviorRelay<String>(value: "")
         
         Observable.of(input.viewWillAppear.asObservable(),

@@ -52,12 +52,17 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
         return progressView
     }()
     
-    func configure(with value: Book) {
-        titleLabel.text = "책 제목"
-        subtitleLabel.text = "작가"
-        thumbnailView.setImage(with: URL(string: "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5450099%3Ftimestamp%3D20250319144818")!)
-        progressLabel.text = "78 %"
-        progressBar.progress = Float(23) / Float(140)
+    func configure(with value: Reading) {
+        let book = value.book
+        titleLabel.text = book.title
+        subtitleLabel.text = book.authors.joined(separator: ", ")
+        
+        if let url = book.thumbnailURL {
+            thumbnailView.setImage(with: url)
+        }
+        
+        progressLabel.text = String(format: "%d %", value.progress)
+        progressBar.progress = Float(value.progress)
     }
 }
 
