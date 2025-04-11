@@ -27,8 +27,6 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
         let emptyList: Driver<String>
     }
     
-    let reloadListReading = PublishRelay<Void>()
-    
     private let favoriteRepository: FavoriteRepositoryProtocol
     private let readingRepository: ReadingRepositoryProtocol
     
@@ -61,12 +59,13 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
         
         
         Observable.of(input.readingButtonDidSave.asObservable(),
-                      reloadListReading.asObservable(),
+                      input.viewWillAppear.asObservable(),
                       outputEvent.map{ _ in Void() }.asObservable())
             .merge()
             .withUnretained(self)
             .map { owner, _ in owner.readingRepository.fetchAllReadings() }
             .bind(with: self) { owner, readings in
+                
                 if readings.isEmpty {
                     emptyList.accept("아직 저장된 도서가 없습니다.")
                 } else {

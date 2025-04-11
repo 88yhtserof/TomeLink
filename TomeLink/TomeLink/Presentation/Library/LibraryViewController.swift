@@ -84,6 +84,18 @@ final class LibraryViewController: UIViewController {
         categoryCollectionView.rx.itemSelected
             .withUnretained(self)
             .filter{ owner, indexPath in
+                
+                if let category = CategoryItem(rawValue: indexPath.item) {
+                    switch category {
+                    case .toRead:
+                        owner.lastestSection = .toRead
+                    case .reading:
+                        owner.lastestSection = .reading
+                    case .read:
+                        owner.lastestSection = .read
+                    }
+                }
+                
                 guard let currentCell = owner.categoryCollectionView.cellForItem(at: indexPath) as? CategoryCollectionViewCell else {
                     return false
                 }
@@ -138,12 +150,10 @@ final class LibraryViewController: UIViewController {
                 
                 switch item {
                 case .toRead(let book):
-                    owner.lastestSection = .toRead
                     let viewModel =  BookDetailViewModel(book: book)
                     let bookDetailVC = BookDetailViewController(viewModel: viewModel)
                     owner.rx.pushViewController.onNext(bookDetailVC)
                 case .reading(let reading):
-                    owner.lastestSection = .reading
                     let repotitory = ReadingRepository()
                     let readingEditViewModel = ReadingEditViewModel(book: reading.book, repository: repotitory)
                     
@@ -154,7 +164,6 @@ final class LibraryViewController: UIViewController {
                     }
                     owner.rx.present.onNext(readingEditVC)
                 case .read:
-                    owner.lastestSection = .read
                     break
                 default:
                     break
@@ -168,7 +177,6 @@ final class LibraryViewController: UIViewController {
     func configureNotification() {
         
         NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(readingButtonDidSave), name: NSNotification.Name("ReadingButtonDidSave"), object: nil)
     }
     
     @objc func favoriteButtonDidSave(_ notification: Notification) {
@@ -179,10 +187,6 @@ final class LibraryViewController: UIViewController {
         
         favoriteButtonDidSaveRalay.accept(Void())
         self.view.makeToast(message, duration: 1.5, position: .bottom)
-    }
-    
-    @objc func readingButtonDidSave(_ notification: Notification) {
-        readingButtonDidSaveRalay.accept(Void())
     }
 }
 
@@ -352,10 +356,21 @@ private extension LibraryViewController {
         case library
     }
     
-    enum CategoryItem: String, CaseIterable {
-        case toRead = "읽고 싶은 도서"
-        case reading = "독서 진행률 %"
-        case read = "독서 기록"
+    enum CategoryItem: Int, CaseIterable {
+        case toRead
+        case reading
+        case read
+        
+        var title: String {
+            switch self {
+            case .toRead:
+                return "읽고 싶은 도서"
+            case .reading:
+                return "독서 진행률 %"
+            case .read:
+                return "읽고 싶은 도서"
+            }
+        }
     }
     
     enum Section: Int, CaseIterable {
@@ -377,7 +392,7 @@ private extension LibraryViewController {
         let categoryCellRegistration = UICollectionView.CellRegistration(handler: catergoryCellRegistrationHandler)
         
         categoryDataSource = CategoryDataSource(collectionView: categoryCollectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
-            return collectionView.dequeueConfiguredReusableCell(using: categoryCellRegistration, for: indexPath, item: itemIdentifier.rawValue)
+            return collectionView.dequeueConfiguredReusableCell(using: categoryCellRegistration, for: indexPath, item: itemIdentifier.title)
         })
         
         createSnapshotForCategory()
