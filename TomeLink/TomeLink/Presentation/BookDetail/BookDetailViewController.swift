@@ -113,8 +113,8 @@ final class BookDetailViewController: UIViewController {
                     owner.rx.present.onNext(alert)
                 } else { // play
                     let repository = ReadingRepository()
-                    let viewModel = ReadingEditViewModel(book: book, repository: repository)
-                    let readingEditVC = ReadingEditViewController(viewModel: viewModel)
+                    let readingEditViewModel = ReadingEditViewModel(book: book, repository: repository)
+                    let readingEditVC = ReadingEditViewController(viewModel: readingEditViewModel, eventReceiver: owner.viewModel)
                     if let sheet = readingEditVC.sheetPresentationController {
                         sheet.detents = [.small()]
                         sheet.prefersGrabberVisible = true

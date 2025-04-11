@@ -10,9 +10,10 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-final class LibraryViewModel: BaseViewModel {
+final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
     
     var disposeBag = DisposeBag()
+    var outputEvent = PublishRelay<OutputEvent>()
     
     struct Input {
         let viewWillAppear: ControlEvent<Void>
@@ -25,6 +26,8 @@ final class LibraryViewModel: BaseViewModel {
         let listReading: Driver<[Reading]>
         let emptyList: Driver<String>
     }
+    
+    let reloadListReading = PublishRelay<Void>()
     
     private let favoriteRepository: FavoriteRepositoryProtocol
     private let readingRepository: ReadingRepositoryProtocol
@@ -56,7 +59,11 @@ final class LibraryViewModel: BaseViewModel {
             }
             .disposed(by: disposeBag)
         
-        input.readingButtonDidSave.asObservable()
+        
+        Observable.of(input.readingButtonDidSave.asObservable(),
+                      reloadListReading.asObservable(),
+                      outputEvent.map{ _ in Void() }.asObservable())
+            .merge()
             .withUnretained(self)
             .map { owner, _ in owner.readingRepository.fetchAllReadings() }
             .bind(with: self) { owner, readings in

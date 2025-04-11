@@ -145,8 +145,9 @@ final class LibraryViewController: UIViewController {
                 case .reading(let reading):
                     owner.lastestSection = .reading
                     let repotitory = ReadingRepository()
-                    let viewModel = ReadingEditViewModel(book: reading.book, repository: repotitory)
-                    let readingEditVC = ReadingEditViewController(viewModel: viewModel)
+                    let readingEditViewModel = ReadingEditViewModel(book: reading.book, repository: repotitory)
+                    
+                    let readingEditVC = ReadingEditViewController(viewModel: readingEditViewModel, eventReceiver: owner.viewModel)
                     if let sheet = readingEditVC.sheetPresentationController {
                         sheet.detents = [.small()]
                         sheet.prefersGrabberVisible = true

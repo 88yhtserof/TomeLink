@@ -10,9 +10,10 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-final class BookDetailViewModel: BaseViewModel {
+final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
     
     var disposeBag = DisposeBag()
+    var outputEvent = PublishRelay<OutputEvent>()
     
     struct Input {
         let tapReadingButton: ControlEvent<Void>

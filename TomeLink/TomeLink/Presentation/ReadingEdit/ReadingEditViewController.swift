@@ -20,13 +20,15 @@ final class ReadingEditViewController: UIViewController {
     private let doneButton = UIButton()
     
     private let viewModel: ReadingEditViewModel
+    private let eventReceiver: any OutputEventEmittable
     private let disposeBag = DisposeBag()
     
     private var contentDate: String?
     
     // LifeCycle
-    init(viewModel: ReadingEditViewModel) {
+    init(viewModel: ReadingEditViewModel, eventReceiver: any OutputEventEmittable) {
         self.viewModel = viewModel
+        self.eventReceiver = eventReceiver
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -52,7 +54,11 @@ final class ReadingEditViewController: UIViewController {
         let output = viewModel.transform(input: input)
         
         output.doneAddingReading
-            .drive(rx.dismiss)
+            .drive(with: self, onNext: { owner, _ in
+                
+                owner.eventReceiver.outputEvent.accept(.reloadTrigger)
+                owner.rx.dismiss.onNext(Void())
+            })
             .disposed(by: disposeBag)
     }
 }
