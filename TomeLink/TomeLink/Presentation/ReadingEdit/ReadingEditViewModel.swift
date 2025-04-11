@@ -72,7 +72,12 @@ final class ReadingEditViewModel: BaseViewModel {
                 print("Add Reading")
                 let (response, input) = value
                 let (currentPage, startedAt) = input
-                owner.repository.addReading(book: owner.book, currentPage: Int32(currentPage) ?? 0, pageCount: Int32(response?.item?.bookinfo?.itemPage ?? 100), startedAt: startedAt)
+                
+                if owner.repository.isBookReading(isbn: owner.book.isbn) {
+                    owner.repository.updateCurrentPage(isbn: owner.book.isbn, currentPage: Int32(currentPage) ?? 0)
+                } else {
+                    owner.repository.addReading(book: owner.book, currentPage: Int32(currentPage) ?? 0, pageCount: Int32(response?.item?.bookinfo?.itemPage ?? 100), startedAt: startedAt)
+                }
                 
                 doneAddingReading.accept(Void())
             }
