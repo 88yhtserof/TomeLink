@@ -295,7 +295,7 @@ private extension LibraryViewController {
     
     func sectionForReading() -> NSCollectionLayoutSection {
         let spacing: CGFloat = 16
-        let height: CGFloat = 200
+        let height: CGFloat = 240
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height))

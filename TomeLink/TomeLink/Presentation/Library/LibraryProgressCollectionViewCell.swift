@@ -17,6 +17,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
     private let backgroungContainerView = UIView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
+    private let pageLabel = UILabel()
     private let progressLabel = UILabel()
     private let thumbnailView = ThumbnailView()
     
@@ -56,6 +57,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
         let book = value.book
         titleLabel.text = book.title
         subtitleLabel.text = book.authors.joined(separator: ", ")
+        pageLabel.text = "\(value.currentPage) / \(value.pageCount)"
         
         if let url = book.thumbnailURL {
             thumbnailView.setImage(with: url)
@@ -83,10 +85,13 @@ private extension LibraryProgressCollectionViewCell {
         
         progressLabel.font = .systemFont(ofSize: 30, weight: .bold)
         progressLabel.textColor = TomeLinkColor.title
+        
+        pageLabel.font = .systemFont(ofSize: 13, weight: .light)
+        pageLabel.textColor = TomeLinkColor.title
     }
     
     func configureHierarchy() {
-        backgroungContainerView.addSubviews(titleLabel, subtitleLabel, thumbnailView, progressLabel, progressBar)
+        backgroungContainerView.addSubviews(titleLabel, subtitleLabel, thumbnailView, pageLabel, progressLabel, progressBar)
         contentView.addSubviews(backgroungContainerView)
     }
     
@@ -112,9 +117,14 @@ private extension LibraryProgressCollectionViewCell {
             make.height.equalTo(140)
         }
         
+        pageLabel.snp.makeConstraints { make in
+            make.bottom.equalTo(progressLabel)
+            make.trailing.equalTo(thumbnailView).inset(8)
+        }
+        
         progressLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(16)
-            make.bottom.greaterThanOrEqualTo(thumbnailView)
+            make.top.greaterThanOrEqualTo(thumbnailView)
         }
         
         progressBar.snp.makeConstraints { make in
