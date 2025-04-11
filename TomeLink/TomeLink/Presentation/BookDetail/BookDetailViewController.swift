@@ -106,7 +106,7 @@ final class BookDetailViewController: UIViewController {
                     let deleteAction = UIAlertAction(title: "삭제", style: .destructive) { _ in
                         print("Delete Reading Record")
                         owner.readingButton.isSelected = true
-                        
+                        ReadingRepository().deleteReading(isbn: book.isbn)
                     }
                     alert.addAction(cancelAction)
                     alert.addAction(deleteAction)
