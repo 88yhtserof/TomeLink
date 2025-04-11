@@ -77,6 +77,10 @@ final class ReadingButton: UIButton {
         let output = viewModel.transform(input: input)
         
         output.selectedState
+            .map({
+                print("22222222", $0)
+                return $0
+            })
             .drive(rx.isSelected)
             .disposed(by: disposeBag)
         
@@ -84,7 +88,6 @@ final class ReadingButton: UIButton {
             .drive(with: self) { owner, value in
                 let (message, id) = value
                 NotificationCenter.default.post(name: NSNotification.Name("ReadingButtonDidSave"), object: nil, userInfo: ["message": message])
-                NotificationCenter.default.post(name: NSNotification.Name("ReadingButtonResult"), object: nil, userInfo: ["id": id, "result": owner.isSelected])
             }
             .disposed(by: disposeBag)
     }

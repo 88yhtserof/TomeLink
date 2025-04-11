@@ -26,9 +26,9 @@ final class ReadingButtonViewModel: BaseViewModel {
     
     private let isbn: String
     private let book: Book
-    private let repository: FavoriteRepositoryProtocol
+    private let repository: ReadingRepositoryProtocol
     
-    init(book: Book, repository: FavoriteRepositoryProtocol) {
+    init(book: Book, repository: ReadingRepositoryProtocol) {
         self.book = book
         self.isbn = book.isbn
         self.repository = repository
@@ -44,12 +44,8 @@ final class ReadingButtonViewModel: BaseViewModel {
             .withUnretained(self)
             .map { owner, isFavorite in
                 if isFavorite {
-                    
-//                    owner.repository.like(book: owner.book)
                     return (ReadingButton.State.play.message, owner.isbn)
                 } else {
-                    
-//                    owner.repository.unlike(isbn: owner.isbn)
                     return (ReadingButton.State.stop.message, owner.isbn)
                 }
             }
@@ -59,7 +55,7 @@ final class ReadingButtonViewModel: BaseViewModel {
         Observable<String>.just(isbn)
             .withUnretained(self)
             .map{ owner, isnb in
-                return owner.repository.isBookLiked(for: isnb)
+                !owner.repository.isBookReading(isbn: isnb)
             }
             .bind(to: selectedState)
             .disposed(by: disposeBag)
