@@ -52,7 +52,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
         return progressView
     }()
     
-    func configure(with value: String) {
+    func configure(with value: Book) {
         titleLabel.text = "책 제목"
         subtitleLabel.text = "작가"
         thumbnailView.setImage(with: URL(string: "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5450099%3Ftimestamp%3D20250319144818")!)

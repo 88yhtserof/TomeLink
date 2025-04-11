@@ -27,11 +27,13 @@ final class LibraryViewController: UIViewController {
     
     // TODO: - ViewModel로 옮기기
     private let favoriteRepository = FavoriteRepository()
+    private let readingRepository = ReadingRepository()
     
     private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
     
     private let favoriteButtonDidSaveRalay = PublishRelay<Void>()
+    private let readingButtonDidSaveRalay = PublishRelay<Void>()
     
     // LifeCycle
     init(viewModel: LibraryViewModel) {
@@ -60,7 +62,9 @@ final class LibraryViewController: UIViewController {
     // DataBinding
     private func bind() {
         
-        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear, favoriteButtonDidSave: favoriteButtonDidSaveRalay)
+        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear,
+                                           favoriteButtonDidSave: favoriteButtonDidSaveRalay,
+                                           readingButtonDidSave: readingButtonDidSaveRalay)
         let output = viewModel.transform(input: input)
         
         output.listToRead
@@ -99,9 +103,20 @@ final class LibraryViewController: UIViewController {
                 switch category {
                 case .toRead:
                     let books = owner.favoriteRepository.fetchFavorites()
-                    owner.createSnapshotForToRead(books)
+                    
+                    if books.isEmpty {
+                        owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
+                    } else {
+                        owner.createSnapshotForToRead(books)
+                    }
                 case .reading:
-                    break
+                    let books = owner.readingRepository.fetchAllReadings()
+                    
+                    if books.isEmpty {
+                        owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
+                    } else {
+                        owner.createSnapshotForReading(books)
+                    }
                 case .read:
                     break
                 }
@@ -137,6 +152,7 @@ final class LibraryViewController: UIViewController {
     func configureNotification() {
         
         NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(readingButtonDidSave), name: NSNotification.Name("ReadingButtonDidSave"), object: nil)
     }
     
     @objc func favoriteButtonDidSave(_ notification: Notification) {
@@ -147,6 +163,10 @@ final class LibraryViewController: UIViewController {
         
         favoriteButtonDidSaveRalay.accept(Void())
         self.view.makeToast(message, duration: 1.5, position: .bottom)
+    }
+    
+    @objc func readingButtonDidSave(_ notification: Notification) {
+        readingButtonDidSaveRalay.accept(Void())
     }
 }
 
@@ -331,7 +351,7 @@ private extension LibraryViewController {
     
     enum Item: Hashable {
         case toRead(Book)
-        case reading(String)
+        case reading(Book)
         case read(String)
         case empty(String)
     }
@@ -382,7 +402,7 @@ private extension LibraryViewController {
         cell.configure(with: item)
     }
     
-    func readingCellRegistrationHandler(cell: LibraryProgressCollectionViewCell, indexPath: IndexPath, item: String) {
+    func readingCellRegistrationHandler(cell: LibraryProgressCollectionViewCell, indexPath: IndexPath, item: Book) {
         cell.configure(with: item)
     }
     
@@ -395,7 +415,7 @@ private extension LibraryViewController {
     }
     
     func createSnapshotForCategory() {
-        let items = [CategoryItem.toRead]
+        let items = [CategoryItem.toRead, CategoryItem.reading]
         
         var snapshot = CategorySnapshot()
         snapshot.appendSections(CategorySection.allCases)
@@ -413,7 +433,7 @@ private extension LibraryViewController {
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
-    func createSnapshotForReading(_ newItems: [String]) {
+    func createSnapshotForReading(_ newItems: [Book]) {
         let items = newItems.map{ Item.reading($0) }
         
         snapshot = Snapshot()
@@ -452,7 +472,7 @@ extension Reactive where Base: LibraryViewController {
         }
     }
     
-    var createSnapshotForReading: Binder<[String]> {
+    var createSnapshotForReading: Binder<[Book]> {
         return Binder(base) { base, list in
             base.createSnapshotForReading(list)
         }
