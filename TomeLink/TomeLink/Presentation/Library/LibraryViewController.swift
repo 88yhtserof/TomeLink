@@ -32,6 +32,8 @@ final class LibraryViewController: UIViewController {
     private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
     
+    fileprivate var lastestSection: Section = .toRead
+    
     private let favoriteButtonDidSaveRalay = PublishRelay<Void>()
     private let readingButtonDidSaveRalay = PublishRelay<Void>()
     
@@ -69,6 +71,10 @@ final class LibraryViewController: UIViewController {
         
         output.listToRead
             .drive(rx.createSnapshotForToRead)
+            .disposed(by: disposeBag)
+        
+        output.listReading
+            .drive(rx.createSnapshotForReading)
             .disposed(by: disposeBag)
         
         output.emptyList
@@ -113,8 +119,10 @@ final class LibraryViewController: UIViewController {
                     let books = owner.readingRepository.fetchAllReadings()
                     
                     if books.isEmpty {
+                        print("111")
                         owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
                     } else {
+                        print("222")
                         owner.createSnapshotForReading(books)
                     }
                 case .read:
@@ -126,18 +134,21 @@ final class LibraryViewController: UIViewController {
         collectionView.rx.itemSelected
             .withUnretained(self)
             .compactMap { owner, indexPath in
-                return owner.dataSource.itemIdentifier(for: indexPath)
+                return (owner, owner.dataSource.itemIdentifier(for: indexPath))
             }
-            .compactMap { item in
+            .compactMap { owner, item in
                 
                 switch item {
                 case .toRead(let book):
+                    owner.lastestSection = .toRead
                     let viewModel =  BookDetailViewModel(book: book)
                     let bookDetailVC = BookDetailViewController(viewModel: viewModel)
                     return bookDetailVC
                 case .reading:
+                    owner.lastestSection = .reading
                     return nil
                 case .read:
+                    owner.lastestSection = .read
                     return nil
                 default:
                     return nil
@@ -468,13 +479,23 @@ extension Reactive where Base: LibraryViewController {
     
     var createSnapshotForToRead: Binder<[Book]> {
         return Binder(base) { base, list in
-            base.createSnapshotForToRead(list)
+            
+            if base.lastestSection == .toRead {
+                base.createSnapshotForToRead(list)
+            } else {
+                return
+            }
         }
     }
     
     var createSnapshotForReading: Binder<[Book]> {
         return Binder(base) { base, list in
-            base.createSnapshotForReading(list)
+            
+            if base.lastestSection == .reading {
+                base.createSnapshotForReading(list)
+            } else {
+                return
+            }
         }
     }
     

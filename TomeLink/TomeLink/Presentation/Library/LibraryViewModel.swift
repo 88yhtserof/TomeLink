@@ -39,7 +39,7 @@ final class LibraryViewModel: BaseViewModel {
     func transform(input: Input) -> Output {
         
         let listToRead = BehaviorRelay<[Book]>(value: [])
-        let listReading = BehaviorRelay<[Book]>(value: [])
+        let listReading = PublishRelay<[Book]>()
         let emptyList = BehaviorRelay<String>(value: "")
         
         Observable.of(input.viewWillAppear.asObservable(),
@@ -56,9 +56,7 @@ final class LibraryViewModel: BaseViewModel {
             }
             .disposed(by: disposeBag)
         
-        Observable.of(input.viewWillAppear.asObservable(),
-                      input.readingButtonDidSave.asObservable())
-            .merge()
+        input.readingButtonDidSave.asObservable()
             .withUnretained(self)
             .map { owner, _ in owner.readingRepository.fetchAllReadings() }
             .bind(with: self) { owner, readings in
@@ -71,7 +69,7 @@ final class LibraryViewModel: BaseViewModel {
             .disposed(by: disposeBag)
         
         return Output(listToRead: listToRead.asDriver(),
-                      listReading: listReading.asDriver(),
+                      listReading: listReading.asDriver(onErrorJustReturn: []),
                       emptyList: emptyList.asDriver())
     }
     
