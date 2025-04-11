@@ -76,6 +76,7 @@ private extension LibraryProgressCollectionViewCell {
         
         titleLabel.font = .systemFont(ofSize: 15, weight: .bold)
         titleLabel.textColor = TomeLinkColor.title
+        titleLabel.numberOfLines = 2
         
         subtitleLabel.font = .systemFont(ofSize: 15, weight: .regular)
         subtitleLabel.textColor = TomeLinkColor.subtitle
@@ -97,7 +98,7 @@ private extension LibraryProgressCollectionViewCell {
         
         titleLabel.snp.makeConstraints { make in
             make.top.leading.equalToSuperview().offset(16)
-            make.trailing.equalTo(thumbnailView.snp.leading).offset(8)
+            make.trailing.equalTo(thumbnailView.snp.leading).offset(-8)
         }
         
         subtitleLabel.snp.makeConstraints { make in
