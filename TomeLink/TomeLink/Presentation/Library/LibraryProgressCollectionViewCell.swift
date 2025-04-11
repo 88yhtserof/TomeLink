@@ -64,7 +64,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
         }
         
         progressLabel.text = String(format: "%0.f%%", value.progress)
-        progressBar.progress = Float(value.progress)
+        progressBar.progress = Float(value.progress / 100.0)
     }
 }
 
