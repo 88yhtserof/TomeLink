@@ -55,7 +55,7 @@ final class BookDetailViewController: UIViewController {
     
     private func bind() {
         
-        let input = BookDetailViewModel.Input()
+        let input = BookDetailViewModel.Input(tapReadingButton: readingButton.rx.tap)
         let output = viewModel.transform(input: input)
         
         
@@ -65,11 +65,12 @@ final class BookDetailViewController: UIViewController {
                 let favoriteRepository = FavoriteRepository()
                 let favoriteViewModel = FavoriteButtonViewModel(book: book, repository: favoriteRepository)
                 owner.favoriteButton.bind(viewModel: favoriteViewModel)
+                
                 owner.updateSnapshot(thumbnail: book.thumbnailURL)
                 owner.updateSnapshot(bookInfo: book)
                 owner.updateSnapshot(platformList: [book.detailURL])
                 
-                let readingRepository = FavoriteRepository()
+                let readingRepository = ReadingRepository()
                 let viewModel = ReadingButtonViewModel(book: book, repository: readingRepository)
                 owner.readingButton.bind(viewModel: viewModel)
             }
@@ -94,35 +95,42 @@ final class BookDetailViewController: UIViewController {
             .bind(to: rx.pushViewController)
             .disposed(by: disposeBag)
         
-        readingButton.rx.tap
-            .map { _ in
-                
-                let readingEditVC = ReadingEditViewController()
-                if let sheet = readingEditVC.sheetPresentationController {
-                    sheet.detents = [.small()]
-                    sheet.prefersGrabberVisible = true
+        output.reading
+            .compactMap{ $0 }
+            .drive(with: self) { owner, book in
+                if owner.readingButton.isSelected { // stop
+                    let alert = UIAlertController(title: "삭제", message: "독서 기록이 삭제됩니다.", preferredStyle: .alert)
+                    let cancelAction = UIAlertAction(title: "취소", style: .cancel) { _ in
+                        owner.readingButton.isSelected = false
+                    }
+                    let deleteAction = UIAlertAction(title: "삭제", style: .destructive) { _ in
+                        print("Delete Reading Record")
+                        owner.readingButton.isSelected = true
+                        
+                    }
+                    alert.addAction(cancelAction)
+                    alert.addAction(deleteAction)
+                    owner.rx.present.onNext(alert)
+                } else { // play
+                    let repository = ReadingRepository()
+                    let viewModel = ReadingEditViewModel(book: book, repository: repository)
+                    let readingEditVC = ReadingEditViewController(viewModel: viewModel)
+                    if let sheet = readingEditVC.sheetPresentationController {
+                        sheet.detents = [.small()]
+                        sheet.prefersGrabberVisible = true
+                    }
+                    owner.rx.present.onNext(readingEditVC)
                 }
-                return readingEditVC
             }
-            .bind(to: rx.present)
             .disposed(by: disposeBag)
     }
     
     // Notification
     func configureNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
-//        NotificationCenter.default.addObserver(self, selector: #selector(readingButtonDidSave), name: NSNotification.Name("ReadingButtonDidSave"), object: nil)
     }
     
     @objc func favoriteButtonDidSave(_ notification: Notification) {
-        guard let message = notification.userInfo?["message"] as? String else {
-            print("Failed to get saving message")
-            return
-        }
-        self.view.makeToast(message, duration: 2.0, position: .bottom)
-    }
-    
-    @objc func readingButtonDidSave(_ notification: Notification) {
         guard let message = notification.userInfo?["message"] as? String else {
             print("Failed to get saving message")
             return
