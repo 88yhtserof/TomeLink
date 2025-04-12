@@ -53,7 +53,10 @@ private extension TabBarController {
         let libraryViewModel = LibraryViewModel(favoriteRepository: favoriteRepository, readingRepository: readingRepository)
         let libraryViewController = LibraryViewController(viewModel: libraryViewModel)
         
-        let searchViewController = SearchViewController()
+        let nertworMonitor = NetworkMonitorManager.shared
+        let useCase = DefaultObserveNetworkStatusUseCase(monitor: nertworMonitor)
+        let searchViewModel =  SearchViewModel(networkStatusUseCase: useCase)
+        let searchViewController = SearchViewController(viewModel: searchViewModel)
         
         let viewControllers = [
             UINavigationController(rootViewController: libraryViewController),

@@ -15,6 +15,9 @@ final class SearchViewModel: BaseViewModel {
     var disposeBag = DisposeBag()
     
     struct Input {
+        let viewWillAppear: ControlEvent<Void>
+        let viewWillDisappear: ControlEvent<Void>
+        
         let willDisplayCell: Observable<IndexPath>
         let selectRecentSearchesItem: PublishRelay<String>
         let selectSearchResultItem: PublishRelay<Book>
@@ -25,6 +28,8 @@ final class SearchViewModel: BaseViewModel {
     }
     
     struct Output {
+        let isConnectedToNetwork: Driver<Bool>
+        
         let recentResearches: Driver<[String]>
         let bookSearches: Driver<[Book]>
         let emptySearchResults: Driver<String>
@@ -32,10 +37,16 @@ final class SearchViewModel: BaseViewModel {
         let isLoading: Driver<Bool>
     }
     
+    private let networkStatusUseCase: ObserveNetworkStatusUseCase
+    
     private var searchKeyword: String?
     private var page: Int = 1
     private var isEnd: Bool = true
     private var searchResults: [Book] = []
+    
+    init(networkStatusUseCase: ObserveNetworkStatusUseCase) {
+        self.networkStatusUseCase = networkStatusUseCase
+    }
     
     func transform(input: Input) -> Output {
         
@@ -44,6 +55,22 @@ final class SearchViewModel: BaseViewModel {
         let emptySearchResults = PublishRelay<String>()
         let paginationBookSearches = PublishRelay<[Book]>()
         let isLoading = PublishRelay<Bool>()
+        let isConnectedToNetwork = PublishRelay<Bool>()
+        
+        // Network Monitoring
+        
+        input.viewWillAppear
+            .bind(with: self) { owner, _ in
+                owner.networkStatusUseCase.start()
+            }
+            .disposed(by: disposeBag)
+        
+        input.viewWillDisappear
+            .bind(with: self) { owner, _ in
+                owner.networkStatusUseCase.stop()
+            }
+            .disposed(by: disposeBag)
+        
         
         // update recent researches
         
@@ -159,7 +186,16 @@ final class SearchViewModel: BaseViewModel {
             }
             .disposed(by: disposeBag)
         
-        return Output(recentResearches: recentResearches.asDriver(),
+        // network status
+        
+        networkStatusUseCase.isConnected
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .bind(to: isConnectedToNetwork)
+            .disposed(by: disposeBag)
+        
+        return Output(isConnectedToNetwork: isConnectedToNetwork.asDriver(onErrorJustReturn: false),
+                      recentResearches: recentResearches.asDriver(),
                       bookSearches: searchResults.asDriver(onErrorJustReturn: []),
                       emptySearchResults: emptySearchResults.asDriver(onErrorJustReturn: ""),
                       paginationBookSearches: paginationBookSearches.asDriver(onErrorJustReturn: []),
