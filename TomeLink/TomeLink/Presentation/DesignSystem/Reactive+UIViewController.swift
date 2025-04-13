@@ -41,4 +41,10 @@ extension Reactive where Base: UIViewController {
             base.navigationController?.pushViewController(viewController, animated: true)
         }
     }
+    
+    var popViewController: Binder<Void> {
+        return Binder(base) { base, _ in
+            base.navigationController?.popViewController(animated: true)
+        }
+    }
 }

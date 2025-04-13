@@ -26,6 +26,7 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
         
         let book: Driver<Book>
         let reading: Driver<Book?>
+        let popViewController: Driver<Void>
     }
     
     private let networkStatusUseCase: ObserveNetworkStatusUseCase
@@ -42,6 +43,7 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
         let isConnectedToNetwork = PublishRelay<Bool>()
         let book = BehaviorRelay<Book>(value: book)
         let reading = PublishRelay<Book?>()
+        let popViewController = PublishRelay<Void>()
         
         // reading
         
@@ -70,10 +72,16 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
         networkStatusUseCase.isConnected
             .bind(to: isConnectedToNetwork)
             .disposed(by: disposeBag)
+        
+        outputEvent
+            .map{ _ in  Void() }
+            .bind(to: popViewController)
+            .disposed(by: disposeBag)
             
         
         return Output(isConnectedToNetwork: isConnectedToNetwork.asDriver(onErrorJustReturn: false),
                       book: book.asDriver(),
-                      reading: reading.asDriver(onErrorJustReturn: nil))
+                      reading: reading.asDriver(onErrorJustReturn: nil),
+                      popViewController: popViewController.asDriver(onErrorJustReturn: ()))
     }
 }

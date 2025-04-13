@@ -31,7 +31,18 @@ final class PopupViewController: UIViewController {
     
     var buttonHandler: (() -> Void)?
     
+    private let viewModel: PopupViewModel
     private let disposeBag = DisposeBag()
+    
+    // LifeCycle
+    init(viewModel: PopupViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,10 +53,14 @@ final class PopupViewController: UIViewController {
         bind()
     }
     
+    // Binding
     func bind() {
         
-        button.rx.tap
-            .bind(to: rx.dismiss)
+        let input = PopupViewModel.Input(tapButton: button.rx.tap)
+        let output = viewModel.transform(input: input)
+        
+        output.dismiss
+            .drive(rx.dismiss)
             .disposed(by: disposeBag)
     }
 }
