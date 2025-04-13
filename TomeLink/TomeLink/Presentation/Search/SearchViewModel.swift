@@ -64,6 +64,10 @@ final class SearchViewModel: BaseViewModel, OutputEventEmittable {
             .bind(to: isConnectedToNetwork)
             .disposed(by: disposeBag)
         
+        input.viewWillAppear
+            .withLatestFrom(networkStatusUseCase.isConnected)
+            .bind(to: isConnectedToNetwork)
+            .disposed(by: disposeBag)
         
         // update recent researches
         

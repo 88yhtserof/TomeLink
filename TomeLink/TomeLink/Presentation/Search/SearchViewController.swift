@@ -67,7 +67,8 @@ final class SearchViewController: UIViewController {
             .subscribe()
             .disposed(by: disposeBag)
         
-        let input = SearchViewModel.Input(willDisplayCell: collectionView.rx.willDisplayCell.map{ $0.at },
+        let input = SearchViewModel.Input(viewWillAppear: rx.viewWillAppear,
+                                          willDisplayCell: collectionView.rx.willDisplayCell.map{ $0.at },
                                           selectRecentSearchesItem: selectRecentSearchesItem,
                                           selectSearchResultItem: selectSearchResultsItem,
                                           searchKeyword: searchBar.rx.text.orEmpty,
