@@ -10,11 +10,13 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-final class SearchViewModel: BaseViewModel {
+final class SearchViewModel: BaseViewModel, OutputEventEmittable {
     
     var disposeBag = DisposeBag()
+    var outputEvent = PublishRelay<OutputEvent>()
     
     struct Input {
+        let viewWillAppear: ControlEvent<Void>
         let willDisplayCell: Observable<IndexPath>
         let selectRecentSearchesItem: PublishRelay<String>
         let selectSearchResultItem: PublishRelay<Book>
@@ -25,17 +27,26 @@ final class SearchViewModel: BaseViewModel {
     }
     
     struct Output {
+        let isConnectedToNetwork: Driver<Bool>
+        
         let recentResearches: Driver<[String]>
         let bookSearches: Driver<[Book]>
         let emptySearchResults: Driver<String>
         let paginationBookSearches: Driver<[Book]>
         let isLoading: Driver<Bool>
+        let switchingSeletedTabBarIndex: Driver<Int>
     }
+    
+    private let networkStatusUseCase: ObserveNetworkStatusUseCase
     
     private var searchKeyword: String?
     private var page: Int = 1
     private var isEnd: Bool = true
     private var searchResults: [Book] = []
+    
+    init(networkStatusUseCase: ObserveNetworkStatusUseCase) {
+        self.networkStatusUseCase = networkStatusUseCase
+    }
     
     func transform(input: Input) -> Output {
         
@@ -44,6 +55,19 @@ final class SearchViewModel: BaseViewModel {
         let emptySearchResults = PublishRelay<String>()
         let paginationBookSearches = PublishRelay<[Book]>()
         let isLoading = PublishRelay<Bool>()
+        let isConnectedToNetwork = BehaviorRelay<Bool>(value: true)
+        let switchingSeletedTabBarIndex = PublishRelay<Int>()
+        
+        // network status
+        
+        networkStatusUseCase.isConnected
+            .bind(to: isConnectedToNetwork)
+            .disposed(by: disposeBag)
+        
+        input.viewWillAppear
+            .withLatestFrom(networkStatusUseCase.isConnected)
+            .bind(to: isConnectedToNetwork)
+            .disposed(by: disposeBag)
         
         // update recent researches
         
@@ -92,7 +116,7 @@ final class SearchViewModel: BaseViewModel {
             .flatMap { owner, keyword in
                 owner.searchKeyword = keyword
                 isLoading.accept(true)
-                return owner.requestSearch(keyword: keyword)
+                return owner.requestSearch(keyword: keyword, isConnectedToNetwork: isConnectedToNetwork, isLoading: isLoading)
             }
             .share()
         
@@ -138,7 +162,7 @@ final class SearchViewModel: BaseViewModel {
                 owner.searchKeyword = keyword
                 isLoading.accept(true)
                 RecentResultsManager.save(keyword)
-                return owner.requestSearch(keyword: keyword)
+                return owner.requestSearch(keyword: keyword, isConnectedToNetwork: isConnectedToNetwork, isLoading: isLoading)
             }
             .withUnretained(self)
             .map { owner, response in
@@ -159,11 +183,19 @@ final class SearchViewModel: BaseViewModel {
             }
             .disposed(by: disposeBag)
         
-        return Output(recentResearches: recentResearches.asDriver(),
+        // output event
+        outputEvent
+            .map{ _ in TabBarController.Item.library.index }
+            .bind(to: switchingSeletedTabBarIndex)
+            .disposed(by: disposeBag)
+        
+        return Output(isConnectedToNetwork: isConnectedToNetwork.asDriver(onErrorJustReturn: false),
+                      recentResearches: recentResearches.asDriver(),
                       bookSearches: searchResults.asDriver(onErrorJustReturn: []),
                       emptySearchResults: emptySearchResults.asDriver(onErrorJustReturn: ""),
                       paginationBookSearches: paginationBookSearches.asDriver(onErrorJustReturn: []),
-                      isLoading: isLoading.asDriver(onErrorJustReturn: false))
+                      isLoading: isLoading.asDriver(onErrorJustReturn: false),
+                      switchingSeletedTabBarIndex: switchingSeletedTabBarIndex.asDriver(onErrorJustReturn: 0))
     }
 }
 
@@ -171,7 +203,9 @@ final class SearchViewModel: BaseViewModel {
 private extension SearchViewModel {
     
     /// Requests search to Kakao Book API
-    func requestSearch(keyword: String) -> Observable<BookSearchResponseDTO> {
+    func requestSearch(keyword: String,
+                       isConnectedToNetwork: BehaviorRelay<Bool>,
+                       isLoading: PublishRelay<Bool>) -> Observable<BookSearchResponseDTO> {
         return Observable.just(keyword)
             .distinctUntilChanged()
             .withUnretained(self)
@@ -180,6 +214,18 @@ private extension SearchViewModel {
                     .request(api: KakaoNetworkAPI.searchBook(query: text, sort: nil, page: owner.page, size: 20, target: nil))
                     .catch { error in
                         print("Error", error)
+                        
+                        if let rxError = error as? RxError {
+                            switch rxError {
+                            case .timeout:
+                                isConnectedToNetwork.accept(false)
+                                isLoading.accept(false)
+                            default:
+                                break
+                            }
+                            
+                        }
+                        
                         return Single<BookSearchResponseDTO?>.just(nil)
                     }
             }

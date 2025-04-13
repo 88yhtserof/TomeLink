@@ -20,20 +20,30 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
     }
     
     struct Output {
+        let isConnectedToNetwork: Driver<Bool>
+        
         let book: Driver<Book>
         let reading: Driver<Book?>
+        let popViewController: Driver<Void>
     }
+    
+    private let networkStatusUseCase: ObserveNetworkStatusUseCase
     
     private let book: Book
     
-    init(book: Book) {
+    init(book: Book, networkStatusUseCase: ObserveNetworkStatusUseCase) {
+        self.networkStatusUseCase = networkStatusUseCase
         self.book = book
     }
     
     func transform(input: Input) -> Output {
         
+        let isConnectedToNetwork =  BehaviorRelay<Bool>(value: false)
         let book = BehaviorRelay<Book>(value: book)
         let reading = PublishRelay<Book?>()
+        let popViewController = PublishRelay<Void>()
+        
+        // reading
         
         input.tapReadingButton
             .withUnretained(self)
@@ -43,7 +53,21 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
             .bind(to: reading)
             .disposed(by: disposeBag)
         
-        return Output(book: book.asDriver(),
-                      reading: reading.asDriver(onErrorJustReturn: nil))
+        // network status
+        
+        networkStatusUseCase.isConnected
+            .bind(to: isConnectedToNetwork)
+            .disposed(by: disposeBag)
+        
+        outputEvent
+            .map{ _ in  Void() }
+            .bind(to: popViewController)
+            .disposed(by: disposeBag)
+            
+        
+        return Output(isConnectedToNetwork: isConnectedToNetwork.asDriver(onErrorJustReturn: false),
+                      book: book.asDriver(),
+                      reading: reading.asDriver(onErrorJustReturn: nil),
+                      popViewController: popViewController.asDriver(onErrorJustReturn: ()))
     }
 }

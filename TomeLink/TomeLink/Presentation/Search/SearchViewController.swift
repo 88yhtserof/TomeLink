@@ -11,7 +11,7 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
-class SearchViewController: UIViewController {
+final class SearchViewController: UIViewController {
     
     fileprivate let searchBar = UISearchBar()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
@@ -20,8 +20,18 @@ class SearchViewController: UIViewController {
     private var dataSource: DataSource!
     private var snapshot: Snapshot!
     
+    private let viewMdoel: SearchViewModel
     private let disposeBag = DisposeBag()
-    private let viewMdoel = SearchViewModel()
+    
+    init(viewModel: SearchViewModel) {
+        self.viewMdoel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -57,7 +67,8 @@ class SearchViewController: UIViewController {
             .subscribe()
             .disposed(by: disposeBag)
         
-        let input = SearchViewModel.Input(willDisplayCell: collectionView.rx.willDisplayCell.map{ $0.at },
+        let input = SearchViewModel.Input(viewWillAppear: rx.viewWillAppear,
+                                          willDisplayCell: collectionView.rx.willDisplayCell.map{ $0.at },
                                           selectRecentSearchesItem: selectRecentSearchesItem,
                                           selectSearchResultItem: selectSearchResultsItem,
                                           searchKeyword: searchBar.rx.text.orEmpty,
@@ -89,6 +100,23 @@ class SearchViewController: UIViewController {
             .drive(loadingView.rx.showLoading)
             .disposed(by: disposeBag)
 
+        output.isConnectedToNetwork
+            .filter{ !$0 }
+            .drive(with: self, onNext: { owner, _ in
+                let popupViewModel = PopupViewModel(eventReceiver: owner.viewMdoel)
+                let popupVC = PopupViewController(viewModel: popupViewModel)
+                popupVC.configuration = PopupViewController.Configuration.networkMonitoring()
+                popupVC.modalTransitionStyle = .crossDissolve
+                popupVC.modalPresentationStyle = .overFullScreen
+                owner.rx.present.onNext(popupVC)
+            })
+            .disposed(by: disposeBag)
+        
+        output.switchingSeletedTabBarIndex
+            .drive(with: self) { owner, tabBarIndex in
+                owner.tabBarController?.selectedIndex = tabBarIndex
+            }
+            .disposed(by: disposeBag)
         
         searchBar.rx.textDidBeginEditing
             .map{ _ in true }
@@ -108,7 +136,9 @@ class SearchViewController: UIViewController {
                 
                 switch item {
                 case .searchResult(let book):
-                    let viewModel =  BookDetailViewModel(book: book)
+                    let networkMonitor = NetworkMonitorManager.shared
+                    let useCase = DefaultObserveNetworkStatusUseCase(monitor: networkMonitor)
+                    let viewModel =  BookDetailViewModel(book: book, networkStatusUseCase: useCase)
                     let bookDetailVC = BookDetailViewController(viewModel: viewModel)
                     return bookDetailVC
                 default:

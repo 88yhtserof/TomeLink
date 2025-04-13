@@ -18,7 +18,7 @@ final class NetworkMonitorManager: NetworkMonitor {
     private let subject = BehaviorSubject<Bool>(value: false)
     
     var isConnected: Observable<Bool> {
-        return subject.asObservable()
+        return subject.share()
     }
     
     private init() {

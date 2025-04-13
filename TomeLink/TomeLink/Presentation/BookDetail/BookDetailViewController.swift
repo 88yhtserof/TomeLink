@@ -123,6 +123,22 @@ final class BookDetailViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
+        
+        output.isConnectedToNetwork
+            .filter{ !$0 }
+            .drive(with: self, onNext: { owner, _ in
+                let popupViewModel = PopupViewModel(eventReceiver: owner.viewModel)
+                let popupVC = PopupViewController(viewModel: popupViewModel)
+                popupVC.configuration = PopupViewController.Configuration.networkMonitoring()
+                popupVC.modalTransitionStyle = .crossDissolve
+                popupVC.modalPresentationStyle = .overFullScreen
+                owner.rx.present.onNext(popupVC)
+            })
+            .disposed(by: disposeBag)
+        
+        output.popViewController
+            .drive(rx.popViewController)
+            .disposed(by: disposeBag)
     }
     
     // Notification
