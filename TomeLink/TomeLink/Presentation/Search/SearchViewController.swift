@@ -105,6 +105,7 @@ final class SearchViewController: UIViewController {
             .filter{ !$0 }
             .map { _ in
                 let popupVC = PopupViewController()
+                popupVC.configuration = PopupViewController.Configuration.networkMonitoring()
                 popupVC.modalTransitionStyle = .crossDissolve
                 popupVC.modalPresentationStyle = .overFullScreen
                 return popupVC

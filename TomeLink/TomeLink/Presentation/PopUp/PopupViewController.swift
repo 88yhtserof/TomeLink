@@ -20,14 +20,13 @@ final class PopupViewController: UIViewController {
     private lazy var alertStackView = UIStackView(arrangedSubviews: [titleLabel, messageLabel])
     private let button = UIButton()
     
-    var message: String? {
-        get { messageLabel.text }
-        set { messageLabel.text = newValue }
-    }
-    
-    var buttonTitle: String? {
-        get { button.title(for: .normal) }
-        set { button.setTitle(newValue, for: .normal) }
+    var configuration: Configuration? {
+        didSet {
+            if let configuration {
+                button.setTitle(configuration.buttonTitle, for: .normal)
+                messageLabel.text = configuration.message
+            }
+        }
     }
     
     var buttonHandler: (() -> Void)?
@@ -52,7 +51,7 @@ final class PopupViewController: UIViewController {
                     owner.buttonHandler?()
                     owner.dismiss(animated: true)
                 } else {
-                    owner.view.makeToast("네트워크 연결이 일시적으로 원활하지 않습니다. 데이터 또는 Wi-Fi 연결 상태를 확인해주세요.")
+                    owner.view.makeToast("네트워크 연결 상태 확인 후, 다시 시도해주세요.")
                 }
             }
             .disposed(by: disposeBag)
@@ -70,11 +69,11 @@ private extension PopupViewController {
         alertBackgroundView.backgroundColor = TomeLinkColor.background
         
         titleLabel.text = "안내"
-        titleLabel.font = .systemFont(ofSize: 14, weight: .bold)
+        titleLabel.font = TomeLinkFont.title
         titleLabel.textColor = TomeLinkColor.title
         titleLabel.textAlignment = .center
         
-        messageLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        messageLabel.font = TomeLinkFont.contents
         messageLabel.textColor = TomeLinkColor.title
         messageLabel.textAlignment = .center
         messageLabel.numberOfLines = 0
@@ -84,7 +83,9 @@ private extension PopupViewController {
         alertStackView.distribution = .fill
         alertStackView.alignment = .fill
         
-        button.setTitleColor(TomeLinkColor.title, for: .normal)
+        button.setTitleColor(TomeLinkColor.background, for: .normal)
+        button.backgroundColor = TomeLinkColor.title
+        button.titleLabel?.font = TomeLinkFont.title
     }
     
     func configureHierarchy() {
@@ -112,6 +113,18 @@ private extension PopupViewController {
             make.bottom.equalToSuperview().inset(16)
             make.centerX.equalToSuperview()
             make.width.equalTo(200)
+        }
+    }
+}
+
+extension PopupViewController {
+    
+    struct Configuration {
+        let message: String
+        let buttonTitle: String
+        
+        static func networkMonitoring() -> Configuration {
+            return Configuration(message: "네트워크 연결이 일시적으로 원활하지 않습니다.\n데이터 또는 Wi-Fi 연결 상태를 확인해주세요.", buttonTitle: "재시도")
         }
     }
 }
