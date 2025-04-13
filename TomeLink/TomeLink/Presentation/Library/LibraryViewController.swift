@@ -150,7 +150,9 @@ final class LibraryViewController: UIViewController {
                 
                 switch item {
                 case .toRead(let book):
-                    let viewModel =  BookDetailViewModel(book: book)
+                    let networkMonitor = NetworkMonitorManager.shared
+                    let useCase = DefaultObserveNetworkStatusUseCase(monitor: networkMonitor)
+                    let viewModel =  BookDetailViewModel(book: book, networkStatusUseCase: useCase)
                     let bookDetailVC = BookDetailViewController(viewModel: viewModel)
                     owner.rx.pushViewController.onNext(bookDetailVC)
                 case .reading(let reading):

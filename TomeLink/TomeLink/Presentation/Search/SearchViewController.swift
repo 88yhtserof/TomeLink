@@ -102,14 +102,14 @@ final class SearchViewController: UIViewController {
             .disposed(by: disposeBag)
 
         output.isConnectedToNetwork
-            .drive(with: self) { owner, isConnected in
-                if !isConnected {
-                    let popupVC = PopupViewController()
-                    popupVC.modalTransitionStyle = .crossDissolve
-                    popupVC.modalPresentationStyle = .overFullScreen
-                    owner.rx.present.onNext(popupVC)
-                }
+            .filter{ !$0 }
+            .map { _ in
+                let popupVC = PopupViewController()
+                popupVC.modalTransitionStyle = .crossDissolve
+                popupVC.modalPresentationStyle = .overFullScreen
+                return popupVC
             }
+            .drive(rx.present)
             .disposed(by: disposeBag)
         
         searchBar.rx.textDidBeginEditing
@@ -130,7 +130,9 @@ final class SearchViewController: UIViewController {
                 
                 switch item {
                 case .searchResult(let book):
-                    let viewModel =  BookDetailViewModel(book: book)
+                    let networkMonitor = NetworkMonitorManager.shared
+                    let useCase = DefaultObserveNetworkStatusUseCase(monitor: networkMonitor)
+                    let viewModel =  BookDetailViewModel(book: book, networkStatusUseCase: useCase)
                     let bookDetailVC = BookDetailViewController(viewModel: viewModel)
                     return bookDetailVC
                 default:

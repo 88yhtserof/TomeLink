@@ -16,24 +16,34 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
     var outputEvent = PublishRelay<OutputEvent>()
     
     struct Input {
+        let viewWillAppear: ControlEvent<Void>
+        let viewWillDisappear: ControlEvent<Void>
         let tapReadingButton: ControlEvent<Void>
     }
     
     struct Output {
+        let isConnectedToNetwork: Driver<Bool>
+        
         let book: Driver<Book>
         let reading: Driver<Book?>
     }
     
+    private let networkStatusUseCase: ObserveNetworkStatusUseCase
+    
     private let book: Book
     
-    init(book: Book) {
+    init(book: Book, networkStatusUseCase: ObserveNetworkStatusUseCase) {
+        self.networkStatusUseCase = networkStatusUseCase
         self.book = book
     }
     
     func transform(input: Input) -> Output {
         
+        let isConnectedToNetwork = PublishRelay<Bool>()
         let book = BehaviorRelay<Book>(value: book)
         let reading = PublishRelay<Book?>()
+        
+        // reading
         
         input.tapReadingButton
             .withUnretained(self)
@@ -43,7 +53,27 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
             .bind(to: reading)
             .disposed(by: disposeBag)
         
-        return Output(book: book.asDriver(),
+        // network status
+        
+        input.viewWillAppear
+            .bind(with: self) { owner, _ in
+                owner.networkStatusUseCase.start()
+            }
+            .disposed(by: disposeBag)
+        
+        input.viewWillDisappear
+            .bind(with: self) { owner, _ in
+                owner.networkStatusUseCase.stop()
+            }
+            .disposed(by: disposeBag)
+        
+        networkStatusUseCase.isConnected
+            .bind(to: isConnectedToNetwork)
+            .disposed(by: disposeBag)
+            
+        
+        return Output(isConnectedToNetwork: isConnectedToNetwork.asDriver(onErrorJustReturn: false),
+                      book: book.asDriver(),
                       reading: reading.asDriver(onErrorJustReturn: nil))
     }
 }
