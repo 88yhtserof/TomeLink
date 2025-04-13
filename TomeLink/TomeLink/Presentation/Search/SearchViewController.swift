@@ -101,15 +101,20 @@ final class SearchViewController: UIViewController {
 
         output.isConnectedToNetwork
             .filter{ !$0 }
-            .map { _ in
-                let popupViewModel = PopupViewModel()
+            .drive(with: self, onNext: { owner, _ in
+                let popupViewModel = PopupViewModel(eventReceiver: owner.viewMdoel)
                 let popupVC = PopupViewController(viewModel: popupViewModel)
                 popupVC.configuration = PopupViewController.Configuration.networkMonitoring()
                 popupVC.modalTransitionStyle = .crossDissolve
                 popupVC.modalPresentationStyle = .overFullScreen
-                return popupVC
+                owner.rx.present.onNext(popupVC)
+            })
+            .disposed(by: disposeBag)
+        
+        output.switchingSeletedTabBarIndex
+            .drive(with: self) { owner, tabBarIndex in
+                owner.tabBarController?.selectedIndex = tabBarIndex
             }
-            .drive(rx.present)
             .disposed(by: disposeBag)
         
         searchBar.rx.textDidBeginEditing

@@ -9,12 +9,21 @@ import UIKit
 
 final class TabBarController: UITabBarController {
     
-    enum Item: String, CaseIterable {
-        case library = "나의 서재"
-        case search = "도서 검색"
+    enum Item: Int, CaseIterable {
+        case library
+        case search
+        
+        var index: Int {
+            return rawValue
+        }
         
         var title: String {
-            return rawValue
+            switch self {
+            case .library:
+                return "나의 서재"
+            case .search:
+                return "도서 검색"
+            }
         }
         
         var normalImage: String {

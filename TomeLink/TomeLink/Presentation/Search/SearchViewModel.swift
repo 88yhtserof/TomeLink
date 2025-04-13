@@ -10,11 +10,13 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-final class SearchViewModel: BaseViewModel {
+final class SearchViewModel: BaseViewModel, OutputEventEmittable {
     
     var disposeBag = DisposeBag()
+    var outputEvent = PublishRelay<OutputEvent>()
     
     struct Input {
+        let viewWillAppear: ControlEvent<Void>
         let willDisplayCell: Observable<IndexPath>
         let selectRecentSearchesItem: PublishRelay<String>
         let selectSearchResultItem: PublishRelay<Book>
@@ -32,6 +34,7 @@ final class SearchViewModel: BaseViewModel {
         let emptySearchResults: Driver<String>
         let paginationBookSearches: Driver<[Book]>
         let isLoading: Driver<Bool>
+        let switchingSeletedTabBarIndex: Driver<Int>
     }
     
     private let networkStatusUseCase: ObserveNetworkStatusUseCase
@@ -53,6 +56,7 @@ final class SearchViewModel: BaseViewModel {
         let paginationBookSearches = PublishRelay<[Book]>()
         let isLoading = PublishRelay<Bool>()
         let isConnectedToNetwork = BehaviorRelay<Bool>(value: true)
+        let switchingSeletedTabBarIndex = PublishRelay<Int>()
         
         // network status
         
@@ -175,12 +179,19 @@ final class SearchViewModel: BaseViewModel {
             }
             .disposed(by: disposeBag)
         
+        // output event
+        outputEvent
+            .map{ _ in TabBarController.Item.library.index }
+            .bind(to: switchingSeletedTabBarIndex)
+            .disposed(by: disposeBag)
+        
         return Output(isConnectedToNetwork: isConnectedToNetwork.asDriver(onErrorJustReturn: false),
                       recentResearches: recentResearches.asDriver(),
                       bookSearches: searchResults.asDriver(onErrorJustReturn: []),
                       emptySearchResults: emptySearchResults.asDriver(onErrorJustReturn: ""),
                       paginationBookSearches: paginationBookSearches.asDriver(onErrorJustReturn: []),
-                      isLoading: isLoading.asDriver(onErrorJustReturn: false))
+                      isLoading: isLoading.asDriver(onErrorJustReturn: false),
+                      switchingSeletedTabBarIndex: switchingSeletedTabBarIndex.asDriver(onErrorJustReturn: 0))
     }
 }
 
