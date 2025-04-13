@@ -119,7 +119,7 @@ final class SearchViewModel: BaseViewModel {
             .flatMap { owner, keyword in
                 owner.searchKeyword = keyword
                 isLoading.accept(true)
-                return owner.requestSearch(keyword: keyword)
+                return owner.requestSearch(keyword: keyword, isConnectedToNetwork: isConnectedToNetwork, isLoading: isLoading)
             }
             .share()
         
@@ -165,7 +165,7 @@ final class SearchViewModel: BaseViewModel {
                 owner.searchKeyword = keyword
                 isLoading.accept(true)
                 RecentResultsManager.save(keyword)
-                return owner.requestSearch(keyword: keyword)
+                return owner.requestSearch(keyword: keyword, isConnectedToNetwork: isConnectedToNetwork, isLoading: isLoading)
             }
             .withUnretained(self)
             .map { owner, response in
@@ -207,7 +207,9 @@ final class SearchViewModel: BaseViewModel {
 private extension SearchViewModel {
     
     /// Requests search to Kakao Book API
-    func requestSearch(keyword: String) -> Observable<BookSearchResponseDTO> {
+    func requestSearch(keyword: String,
+                       isConnectedToNetwork: PublishRelay<Bool>,
+                       isLoading: PublishRelay<Bool>) -> Observable<BookSearchResponseDTO> {
         return Observable.just(keyword)
             .distinctUntilChanged()
             .withUnretained(self)
@@ -216,6 +218,18 @@ private extension SearchViewModel {
                     .request(api: KakaoNetworkAPI.searchBook(query: text, sort: nil, page: owner.page, size: 20, target: nil))
                     .catch { error in
                         print("Error", error)
+                        
+                        if let rxError = error as? RxError {
+                            switch rxError {
+                            case .timeout:
+                                isConnectedToNetwork.accept(false)
+                                isLoading.accept(false)
+                            default:
+                                break
+                            }
+                            
+                        }
+                        
                         return Single<BookSearchResponseDTO?>.just(nil)
                     }
             }

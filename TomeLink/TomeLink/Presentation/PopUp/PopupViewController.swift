@@ -45,15 +45,7 @@ final class PopupViewController: UIViewController {
     func bind() {
         
         button.rx.tap
-            .withLatestFrom(NetworkMonitorManager.shared.isConnected)
-            .bind(with: self) { owner, isConnected in
-                if isConnected {
-                    owner.buttonHandler?()
-                    owner.dismiss(animated: true)
-                } else {
-                    owner.view.makeToast("네트워크 연결 상태 확인 후, 다시 시도해주세요.")
-                }
-            }
+            .bind(to: rx.dismiss)
             .disposed(by: disposeBag)
     }
 }
@@ -124,7 +116,7 @@ extension PopupViewController {
         let buttonTitle: String
         
         static func networkMonitoring() -> Configuration {
-            return Configuration(message: "네트워크 연결이 일시적으로 원활하지 않습니다.\n데이터 또는 Wi-Fi 연결 상태를 확인해주세요.", buttonTitle: "재시도")
+            return Configuration(message: "네트워크 연결이 일시적으로 원활하지 않습니다.\n데이터 또는 Wi-Fi 연결 상태를 확인해주세요.", buttonTitle: "확인")
         }
     }
 }
