@@ -104,7 +104,8 @@ final class SearchViewController: UIViewController {
         output.isConnectedToNetwork
             .filter{ !$0 }
             .map { _ in
-                let popupVC = PopupViewController()
+                let popupViewModel = PopupViewModel()
+                let popupVC = PopupViewController(viewModel: popupViewModel)
                 popupVC.configuration = PopupViewController.Configuration.networkMonitoring()
                 popupVC.modalTransitionStyle = .crossDissolve
                 popupVC.modalPresentationStyle = .overFullScreen
