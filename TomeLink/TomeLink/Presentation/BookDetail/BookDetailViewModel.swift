@@ -16,8 +16,6 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
     var outputEvent = PublishRelay<OutputEvent>()
     
     struct Input {
-        let viewWillAppear: ControlEvent<Void>
-        let viewWillDisappear: ControlEvent<Void>
         let tapReadingButton: ControlEvent<Void>
     }
     
@@ -40,7 +38,7 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
     
     func transform(input: Input) -> Output {
         
-        let isConnectedToNetwork = PublishRelay<Bool>()
+        let isConnectedToNetwork =  BehaviorRelay<Bool>(value: false)
         let book = BehaviorRelay<Book>(value: book)
         let reading = PublishRelay<Book?>()
         let popViewController = PublishRelay<Void>()
@@ -56,18 +54,6 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
             .disposed(by: disposeBag)
         
         // network status
-        
-        input.viewWillAppear
-            .bind(with: self) { owner, _ in
-                owner.networkStatusUseCase.start()
-            }
-            .disposed(by: disposeBag)
-        
-        input.viewWillDisappear
-            .bind(with: self) { owner, _ in
-                owner.networkStatusUseCase.stop()
-            }
-            .disposed(by: disposeBag)
         
         networkStatusUseCase.isConnected
             .bind(to: isConnectedToNetwork)

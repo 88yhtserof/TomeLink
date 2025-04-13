@@ -15,9 +15,6 @@ final class SearchViewModel: BaseViewModel {
     var disposeBag = DisposeBag()
     
     struct Input {
-        let viewWillAppear: ControlEvent<Void>
-        let viewWillDisappear: ControlEvent<Void>
-        
         let willDisplayCell: Observable<IndexPath>
         let selectRecentSearchesItem: PublishRelay<String>
         let selectSearchResultItem: PublishRelay<Book>
@@ -55,20 +52,12 @@ final class SearchViewModel: BaseViewModel {
         let emptySearchResults = PublishRelay<String>()
         let paginationBookSearches = PublishRelay<[Book]>()
         let isLoading = PublishRelay<Bool>()
-        let isConnectedToNetwork = PublishRelay<Bool>()
+        let isConnectedToNetwork = BehaviorRelay<Bool>(value: true)
         
-        // Network Monitoring
+        // network status
         
-        input.viewWillAppear
-            .bind(with: self) { owner, _ in
-                owner.networkStatusUseCase.start()
-            }
-            .disposed(by: disposeBag)
-        
-        input.viewWillDisappear
-            .bind(with: self) { owner, _ in
-                owner.networkStatusUseCase.stop()
-            }
+        networkStatusUseCase.isConnected
+            .bind(to: isConnectedToNetwork)
             .disposed(by: disposeBag)
         
         
@@ -186,14 +175,6 @@ final class SearchViewModel: BaseViewModel {
             }
             .disposed(by: disposeBag)
         
-        // network status
-        
-        networkStatusUseCase.isConnected
-            .distinctUntilChanged()
-            .observe(on: MainScheduler.instance)
-            .bind(to: isConnectedToNetwork)
-            .disposed(by: disposeBag)
-        
         return Output(isConnectedToNetwork: isConnectedToNetwork.asDriver(onErrorJustReturn: false),
                       recentResearches: recentResearches.asDriver(),
                       bookSearches: searchResults.asDriver(onErrorJustReturn: []),
@@ -208,7 +189,7 @@ private extension SearchViewModel {
     
     /// Requests search to Kakao Book API
     func requestSearch(keyword: String,
-                       isConnectedToNetwork: PublishRelay<Bool>,
+                       isConnectedToNetwork: BehaviorRelay<Bool>,
                        isLoading: PublishRelay<Bool>) -> Observable<BookSearchResponseDTO> {
         return Observable.just(keyword)
             .distinctUntilChanged()

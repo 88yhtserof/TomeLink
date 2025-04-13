@@ -55,9 +55,7 @@ final class BookDetailViewController: UIViewController {
     
     private func bind() {
         
-        let input = BookDetailViewModel.Input(viewWillAppear: rx.viewWillAppear,
-                                              viewWillDisappear: rx.viewWillDisappear,
-                                              tapReadingButton: readingButton.rx.tap)
+        let input = BookDetailViewModel.Input(tapReadingButton: readingButton.rx.tap)
         let output = viewModel.transform(input: input)
         
         
