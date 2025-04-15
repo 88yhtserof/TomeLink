@@ -52,7 +52,7 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
 
     
     func configure(with value: Book) {
-        if let url = value.thumbnailURL {
+        if let url = URL(string: value.thumbnailURL) {
             thumbnailView.setImage(with: url)
         }
         

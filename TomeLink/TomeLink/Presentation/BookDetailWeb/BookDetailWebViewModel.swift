@@ -22,9 +22,9 @@ final class BookDetailWebViewModel: BaseViewModel {
         let url: Driver<URL?>
     }
     
-    private let url: URL?
+    private let url: String
     
-    init(url: URL?) {
+    init(url: String) {
         self.url = url
     }
     
@@ -34,6 +34,7 @@ final class BookDetailWebViewModel: BaseViewModel {
         
         
         Observable.just(self.url)
+            .compactMap{ URL(string: $0) }
             .bind(to: url)
             .disposed(by: disposeBag)
         

@@ -24,8 +24,8 @@ struct Book: Hashable {
     let publicationDate: Date?
     let isbn: String
     let publisher: String
-    let thumbnailURL: URL?
+    let thumbnailURL: String
     let title: String
     let translators: [String]
-    let detailURL: URL?
+    let detailURL: String
 }

@@ -25,11 +25,11 @@ struct ReadingRepository: ReadingRepositoryProtocol {
         let bookEntity = BookEntity(context: context)
         bookEntity.authors = book.authors
         bookEntity.contents = book.contents
-        bookEntity.detailURL = book.detailURL?.absoluteString ?? ""
+        bookEntity.detailURL = book.detailURL
         bookEntity.isbn = book.isbn
         bookEntity.publicationDate = book.publicationDate ?? Date()
         bookEntity.publisher = book.publisher
-        bookEntity.thumbnailURL = book.thumbnailURL?.absoluteString ?? ""
+        bookEntity.thumbnailURL = book.thumbnailURL
         bookEntity.title = book.title
         bookEntity.translators = book.translators
         
@@ -71,7 +71,7 @@ struct ReadingRepository: ReadingRepositoryProtocol {
         return readings?
             .map {
                 let bookEntity = $0.book
-                let book = Book(authors: bookEntity.authors, contents: bookEntity.contents, publicationDate: bookEntity.publicationDate, isbn: bookEntity.isbn, publisher: bookEntity.publisher, thumbnailURL: URL(string: bookEntity.thumbnailURL), title: bookEntity.title, translators: bookEntity.translators, detailURL: URL(string: bookEntity.detailURL))
+                let book = Book(authors: bookEntity.authors, contents: bookEntity.contents, publicationDate: bookEntity.publicationDate, isbn: bookEntity.isbn, publisher: bookEntity.publisher, thumbnailURL: bookEntity.thumbnailURL, title: bookEntity.title, translators: bookEntity.translators, detailURL: bookEntity.detailURL)
                 
                 return Reading(isbn: book.isbn, currentPage: Int($0.currentPage), pageCount: Int($0.pageCount), startedAt: $0.startedAt, book: book)
             } ?? []

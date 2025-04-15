@@ -34,10 +34,10 @@ extension BookDTO {
             publicationDate: ISO8601DateFormatter().date(from: datetime),
             isbn: isbn,
             publisher: publisher,
-            thumbnailURL: URL(string: thumbnail),
+            thumbnailURL: thumbnail,
             title: title,
             translators: translators,
-            detailURL: URL(string: url)
+            detailURL: url
         )
     }
 }

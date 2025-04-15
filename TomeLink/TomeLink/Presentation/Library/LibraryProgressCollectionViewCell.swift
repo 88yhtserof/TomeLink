@@ -59,7 +59,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
         subtitleLabel.text = book.authors.joined(separator: ", ")
         pageLabel.text = "\(value.currentPage) / \(value.pageCount)"
         
-        if let url = book.thumbnailURL {
+        if let url = URL(string: book.thumbnailURL) {
             thumbnailView.setImage(with: url)
         }
         

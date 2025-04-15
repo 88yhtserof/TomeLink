@@ -16,11 +16,11 @@ struct FavoriteRepository: FavoriteRepositoryProtocol {
         let bookEntity = BookEntity(context: context)
         bookEntity.authors = book.authors
         bookEntity.contents = book.contents
-        bookEntity.detailURL = book.detailURL?.absoluteString ?? ""
+        bookEntity.detailURL = book.detailURL
         bookEntity.isbn = book.isbn
         bookEntity.publicationDate = book.publicationDate ?? Date()
         bookEntity.publisher = book.publisher
-        bookEntity.thumbnailURL = book.thumbnailURL?.absoluteString ?? ""
+        bookEntity.thumbnailURL = book.thumbnailURL
         bookEntity.title = book.title
         bookEntity.translators = book.translators
         
@@ -61,7 +61,7 @@ struct FavoriteRepository: FavoriteRepositoryProtocol {
         return favorites?
             .map{ $0.book }
             .map {
-                return Book(authors: $0.authors, contents: $0.contents, publicationDate: $0.publicationDate, isbn: $0.isbn, publisher: $0.publisher, thumbnailURL: URL(string: $0.thumbnailURL), title: $0.title, translators: $0.translators, detailURL: URL(string: $0.detailURL))
+                return Book(authors: $0.authors, contents: $0.contents, publicationDate: $0.publicationDate, isbn: $0.isbn, publisher: $0.publisher, thumbnailURL: $0.thumbnailURL, title: $0.title, translators: $0.translators, detailURL: $0.detailURL)
             } ?? []
     }
 }
