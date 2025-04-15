@@ -32,7 +32,7 @@ class PlatformCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(with value: URL?) {
+    func configure(with value: String) {
         platformLabel.text = "상세 정보"
     }
 }

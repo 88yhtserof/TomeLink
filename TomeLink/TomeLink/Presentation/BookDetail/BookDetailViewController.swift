@@ -274,9 +274,9 @@ private extension BookDetailViewController {
     }
     
     enum Item: Hashable {
-        case thumbnail(URL?)
+        case thumbnail(String)
         case bookInfo(Book)
-        case platforms(URL?)
+        case platforms(String)
     }
     
     func configureDataSource() {
@@ -301,7 +301,7 @@ private extension BookDetailViewController {
     }
     
     // Registration Handler
-    func thumbnailCellRegistrationHandler(cell: ThumbnailCollectionViewCell, indexPath: IndexPath, item: URL?) {
+    func thumbnailCellRegistrationHandler(cell: ThumbnailCollectionViewCell, indexPath: IndexPath, item: String) {
         cell.configure(with: item)
     }
     
@@ -309,7 +309,7 @@ private extension BookDetailViewController {
         cell.configure(with: item)
     }
     
-    func platformCellRegistrationHandler(cell: PlatformCollectionViewCell, indexPath: IndexPath, item: URL?) {
+    func platformCellRegistrationHandler(cell: PlatformCollectionViewCell, indexPath: IndexPath, item: String) {
         cell.configure(with: item)
     }
     
@@ -334,7 +334,7 @@ private extension BookDetailViewController {
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
-    func updateSnapshot(thumbnail value: URL?) {
+    func updateSnapshot(thumbnail value: String) {
         
         let items = [Item.thumbnail(value)]
         
@@ -350,7 +350,7 @@ private extension BookDetailViewController {
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
-    func updateSnapshot(platformList value: [URL?]) {
+    func updateSnapshot(platformList value: [String]) {
         
         let items = value.map{ Item.platforms($0) }
         
@@ -362,7 +362,7 @@ private extension BookDetailViewController {
 //MARK: - Reactive
 extension Reactive where Base: BookDetailViewController {
     
-    var updateSnapshotWithThumbnail: Binder<URL?> {
+    var updateSnapshotWithThumbnail: Binder<String> {
         return Binder(base) { base, value in
             base.updateSnapshot(thumbnail: value)
         }
@@ -374,7 +374,7 @@ extension Reactive where Base: BookDetailViewController {
         }
     }
     
-    var updateSnapshotWithStreamingPlatform: Binder<[URL?]> {
+    var updateSnapshotWithStreamingPlatform: Binder<[String]> {
         return Binder(base) { base, list in
             base.updateSnapshot(platformList: list)
         }
