@@ -21,21 +21,20 @@ class CalendarCollectionViewCell: UICollectionViewCell {
         dayLabel.textAlignment = .center
         dayLabel.textColor = TomeLinkColor.title
         dayLabel.font = .systemFont(ofSize: 14)
-        imageView.contentMode = .scaleAspectFill
+        imageView.contentMode = .scaleToFill
         
         contentView.addSubview(dayLabel)
         contentView.addSubview(imageView)
         
-        // SnapKit을 사용한 제약 설정
         dayLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(5)
+            make.top.equalToSuperview().offset(4)
             make.centerX.equalToSuperview()
         }
         
         imageView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(5)
-            make.leading.trailing.bottom.equalToSuperview().inset(5)
-            make.height.equalTo(imageView.snp.width) // 이미지 비율 유지
+            make.top.equalToSuperview()
+            make.leading.trailing.bottom.equalToSuperview()
+            make.bottom.equalToSuperview().inset(2)
         }
     }
     
@@ -47,7 +46,7 @@ class CalendarCollectionViewCell: UICollectionViewCell {
         dayLabel.text = day != nil ? "\(day!)" : ""
         
         if let urlString = imageUrl, let url = URL(string: urlString) {
-            // Kingfisher를 사용해 URL에서 이미지 로드
+            
             imageView.kf.setImage(with: url, placeholder: UIImage(named: "placeholder")) { result in
                 switch result {
                 case .success:
