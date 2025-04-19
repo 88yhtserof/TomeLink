@@ -2,7 +2,7 @@
 //  BookEntity+CoreDataClass.swift
 //  TomeLink
 //
-//  Created by 임윤휘 on 4/10/25.
+//  Created by 임윤휘 on 4/18/25.
 //
 //
 
