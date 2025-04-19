@@ -18,7 +18,7 @@ extension ArchiveEntity {
 
     @NSManaged public var isbn: String
     @NSManaged public var archivedAt: Date
-    @NSManaged public var note: String
+    @NSManaged public var note: String?
     @NSManaged public var id: UUID
     @NSManaged public var book: BookEntity
 
