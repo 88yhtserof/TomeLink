@@ -8,6 +8,8 @@
 import UIKit
 
 import SnapKit
+import RxSwift
+import RxCocoa
 
 final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
@@ -27,9 +29,12 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
     private let nextButton = UIButton()
     private let weeklyStackView = UIStackView()
     
+    private var archives: [Archive] = []
     private var dates: [Date] = [] // 캘린더에 표시할 날짜 배열
     private var currentMonth: Date! // 현재 표시 중인 월
     private let monthLabel = UILabel() // 현재 월 표시 레이블
+    
+    private let disposeBag = DisposeBag()
     
     init() {
         super.init(frame: .zero)
@@ -42,6 +47,21 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // Binding
+    func bind(_ viewModel: CalendarViewModel) {
+        
+        let input = CalendarViewModel.Input()
+        let output = viewModel.transform(input: input)
+        
+        output.archives
+            .drive(with: self) { owner, list in
+                owner.archives = list
+            }
+            .disposed(by: disposeBag)
+            
+        
     }
     
     // 월 표시 레이블 및 이동 버튼 설정
@@ -101,18 +121,13 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
         let date = dates[indexPath.item]
         
         if date == Date.distantPast {
-            cell.configure(day: nil, imageUrl: nil)
+            cell.configure(day: nil, book: nil)
         } else {
             let day = Calendar.current.component(.day, from: date)
             
-            // 날짜를 "yyyy-MM-dd" 형식으로 변환
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            let dateString = dateFormatter.string(from: date)
-            
             // 해당 날짜에 이미지 URL이 있는지 확인
-            let imageUrlString = dateImageMap[dateString]
-            cell.configure(day: day, imageUrl: imageUrlString)
+            let archive = archives.first(where: { $0.archivedAt == date })
+            cell.configure(day: day, book: archive?.book)
         }
         return cell
     }

@@ -54,6 +54,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
     }()
     
     func configure(with value: Reading) {
+        
         let book = value.book
         titleLabel.text = book.title
         subtitleLabel.text = book.authors.joined(separator: ", ")

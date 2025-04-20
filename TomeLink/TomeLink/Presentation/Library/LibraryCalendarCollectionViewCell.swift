@@ -34,7 +34,10 @@ class LibraryCalendarCollectionViewCell: UICollectionViewCell, BaseCollectionVie
     }
     
     // Feature
-    func configure(with value: String) {
+    func configure(with value: [Archive]) {
+        
+        let calendarViewModel = CalendarViewModel(archives: value)
+        calendarView.bind(calendarViewModel)
     }
 }
 

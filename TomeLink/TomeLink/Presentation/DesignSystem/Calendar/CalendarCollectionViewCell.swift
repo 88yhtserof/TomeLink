@@ -42,19 +42,12 @@ class CalendarCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(day: Int?, imageUrl: String?) {
+    func configure(day: Int?, book: Book?) {
         dayLabel.text = day != nil ? "\(day!)" : ""
         
-        if let urlString = imageUrl, let url = URL(string: urlString) {
+        if let urlString = book?.thumbnailURL, let url = URL(string: urlString) {
             
-            imageView.kf.setImage(with: url, placeholder: UIImage(named: "placeholder")) { result in
-                switch result {
-                case .success:
-                    print("Image loaded successfully for \(urlString)")
-                case .failure(let error):
-                    print("Failed to load image for \(urlString): \(error)")
-                }
-            }
+            imageView.kf.setImage(with: url)
         } else {
             imageView.image = nil
         }

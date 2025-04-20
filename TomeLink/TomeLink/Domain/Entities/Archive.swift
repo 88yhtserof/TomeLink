@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Archive: Identifiable {
+struct Archive: Identifiable, Hashable {
     var id = UUID()
     var archivedAt: Date
     var isbn: String
