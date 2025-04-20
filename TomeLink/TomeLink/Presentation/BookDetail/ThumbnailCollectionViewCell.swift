@@ -38,9 +38,7 @@ final class ThumbnailCollectionViewCell: UICollectionViewCell, BaseCollectionVie
     
     // Feature
     func configure(with value: String) {
-        if let url = URL(string: value) {
-            thumnailView.setImage(with: url)
-        }
+        thumnailView.setImage(with: value)
     }
     
 }

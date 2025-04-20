@@ -28,11 +28,14 @@ final class ThumbnailView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setImage(with url: URL) {
+    func setImage(with urlString: String) {
         
-        thumbnailImageView.kf.indicatorType = .activity
-        thumbnailImageView.kf.setImage(with: url,
-                                       placeholder: UIImage(named: "Image_placeholder"))
+        let imageURLString = ImageResizingManager.resizingImage(for: urlString)
+        if let url = URL(string: imageURLString) {
+            thumbnailImageView.kf.indicatorType = .activity
+            thumbnailImageView.kf.setImage(with: url,
+                                           placeholder: UIImage(named: "Image_placeholder"))
+        }
     }
 }
 
