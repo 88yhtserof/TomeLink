@@ -38,9 +38,7 @@ final class ThumbnailCollectionViewCell: UICollectionViewCell, BaseCollectionVie
     
     // Feature
     func configure(with value: String) {
-        if let url = URL(string: value) {
-            thumnailView.setImage(with: url)
-        }
+        thumnailView.setImage(with: value)
     }
     
 }
@@ -55,13 +53,14 @@ extension ThumbnailCollectionViewCell {
     func configureViewConstraints() {
         
         thumnailView.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview()
+            make.verticalEdges.leading.equalToSuperview()
+            make.width.equalTo(thumnailView.snp.height).multipliedBy(3.0 / 4.3)
         }
     }
     
     func configureViewDetails() {
         
-        thumnailView.contentMode = .scaleAspectFill
+        thumnailView.contentMode = .scaleAspectFit
         thumnailView.backgroundColor = TomeLinkColor.background
     }
 }

@@ -28,8 +28,14 @@ final class ThumbnailView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setImage(with url: URL) {
-        thumbnailImageView.kf.setImage(with: url)
+    func setImage(with urlString: String) {
+        
+        let imageURLString = ImageResizingManager.resizingImage(for: urlString)
+        if let url = URL(string: imageURLString) {
+            thumbnailImageView.kf.indicatorType = .activity
+            thumbnailImageView.kf.setImage(with: url,
+                                           placeholder: UIImage(named: "Image_placeholder"))
+        }
     }
 }
 
@@ -44,6 +50,7 @@ private extension ThumbnailView {
         thumbnailImageView.border(width: 0.5, color: TomeLinkColor.shadow)
         thumbnailImageView.clipsToBounds = true
         thumbnailImageView.contentMode = .scaleAspectFill
+        thumbnailImageView.image = UIImage(named: "Image_placeholder")
     }
     
     func configureHierarchy() {

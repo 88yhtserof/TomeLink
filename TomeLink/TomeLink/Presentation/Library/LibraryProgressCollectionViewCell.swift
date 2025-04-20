@@ -36,7 +36,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
     override func prepareForReuse() {
         super.prepareForReuse()
         
-        thumbnailView.image = nil
+        thumbnailView.image = UIImage(named: "Image_placeholder")
     }
     
     private let pageCountLabel: UILabel = {
@@ -59,9 +59,7 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
         subtitleLabel.text = book.authors.joined(separator: ", ")
         pageLabel.text = "\(value.currentPage) / \(value.pageCount)"
         
-        if let url = URL(string: book.thumbnailURL) {
-            thumbnailView.setImage(with: url)
-        }
+        thumbnailView.setImage(with: book.thumbnailURL)
         
         progressLabel.text = String(format: "%0.f%%", value.progress)
         progressBar.progress = Float(value.progress / 100.0)

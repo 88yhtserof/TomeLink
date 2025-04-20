@@ -43,21 +43,33 @@ class CalendarCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        imageView.image = UIImage(named: "Image_placeholder")
+    }
+    
     func configure(day: Int?, imageUrl: String?) {
         dayLabel.text = day != nil ? "\(day!)" : ""
         
-        if let urlString = imageUrl, let url = URL(string: urlString) {
-            // Kingfisher를 사용해 URL에서 이미지 로드
-            imageView.kf.setImage(with: url, placeholder: UIImage(named: "placeholder")) { result in
+        guard let imageUrl else { return }
+        let imageURLString = ImageResizingManager.resizingImage(for: imageUrl)
+        
+        if let url = URL(string: imageURLString) {
+            
+            
+            imageView.kf.indicatorType = .activity
+            imageView.kf.setImage(with: url,
+                                  placeholder: UIImage(named: "Image_placeholder")) { result in
                 switch result {
                 case .success:
-                    print("Image loaded successfully for \(urlString)")
+                    print("Image loaded successfully")
                 case .failure(let error):
-                    print("Failed to load image for \(urlString): \(error)")
+                    print("Failed to load image: \(error)")
                 }
             }
         } else {
-            imageView.image = nil
+            imageView.image = UIImage(named: "Image_placeholder")
         }
     }
 }

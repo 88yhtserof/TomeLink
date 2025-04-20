@@ -47,14 +47,11 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
     override func prepareForReuse() {
         super.prepareForReuse()
         
-        thumbnailView.image = nil
+        thumbnailView.image = UIImage(named: "Image_placeholder")
     }
-
     
     func configure(with value: Book) {
-        if let url = URL(string: value.thumbnailURL) {
-            thumbnailView.setImage(with: url)
-        }
+        thumbnailView.setImage(with: value.thumbnailURL)
         
         let repository = FavoriteRepository()
         favoriteButton.bind(viewModel: FavoriteButtonViewModel(book: value, repository: repository))
