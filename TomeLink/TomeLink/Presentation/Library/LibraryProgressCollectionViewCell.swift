@@ -33,6 +33,12 @@ final class LibraryProgressCollectionViewCell: UICollectionViewCell, BaseCollect
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        thumbnailView.image = UIImage(named: "Image_placeholder")
+    }
+    
     private let pageCountLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14)

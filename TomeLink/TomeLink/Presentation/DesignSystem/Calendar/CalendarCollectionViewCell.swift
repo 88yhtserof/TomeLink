@@ -43,6 +43,12 @@ class CalendarCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        imageView.image = UIImage(named: "Image_placeholder")
+    }
+    
     func configure(day: Int?, imageUrl: String?) {
         dayLabel.text = day != nil ? "\(day!)" : ""
         
