@@ -48,6 +48,7 @@ class CalendarCollectionViewCell: UICollectionViewCell {
         
         if let urlString = imageUrl, let url = URL(string: urlString) {
             
+            imageView.kf.indicatorType = .activity
             imageView.kf.setImage(with: url,
                                   placeholder: UIImage(named: "Image_placeholder")) { result in
                 switch result {

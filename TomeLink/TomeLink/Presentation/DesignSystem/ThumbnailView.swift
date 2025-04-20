@@ -29,6 +29,8 @@ final class ThumbnailView: UIView {
     }
     
     func setImage(with url: URL) {
+        
+        thumbnailImageView.kf.indicatorType = .activity
         thumbnailImageView.kf.setImage(with: url,
                                        placeholder: UIImage(named: "Image_placeholder"))
     }

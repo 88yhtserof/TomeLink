@@ -56,6 +56,8 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
         favoriteButton.bind(viewModel: favoriteViewModel)
         
         if let imageURL = URL(string: value.thumbnailURL) {
+            
+            thumnailImageView.kf.indicatorType = .activity
             thumnailImageView.kf.setImage(with: imageURL,
                                           placeholder: UIImage(named: "Image_placeholder"))
         }
