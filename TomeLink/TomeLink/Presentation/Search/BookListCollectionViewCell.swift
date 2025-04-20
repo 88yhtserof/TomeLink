@@ -40,7 +40,7 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
     override func prepareForReuse() {
         super.prepareForReuse()
         
-        thumnailImageView.image = nil
+        thumnailImageView.image = UIImage(named: "Image_placeholder")
     }
     
     func configure(with value: Book) {
@@ -56,7 +56,8 @@ final class BookListCollectionViewCell: UICollectionViewCell, BaseCollectionView
         favoriteButton.bind(viewModel: favoriteViewModel)
         
         if let imageURL = URL(string: value.thumbnailURL) {
-            thumnailImageView.kf.setImage(with: imageURL)
+            thumnailImageView.kf.setImage(with: imageURL,
+                                          placeholder: UIImage(named: "Image_placeholder"))
         }
     }
     
@@ -86,6 +87,7 @@ private extension BookListCollectionViewCell {
         thumnailImageView.contentMode = .scaleAspectFill
         thumnailImageView.cornerRadius(4)
         thumnailImageView.backgroundColor = TomeLinkColor.shadow
+        thumnailImageView.image = UIImage(named: "Image_placeholder")
         
         titleLabel.text = "title"
         titleLabel.font = TomeLinkFont.title

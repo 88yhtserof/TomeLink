@@ -44,13 +44,6 @@ final class LibraryThumbnailCollectionViewCell: UICollectionViewCell, BaseCollec
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        
-        thumbnailView.image = nil
-    }
-
-    
     func configure(with value: Book) {
         if let url = URL(string: value.thumbnailURL) {
             thumbnailView.setImage(with: url)

@@ -47,8 +47,9 @@ class CalendarCollectionViewCell: UICollectionViewCell {
         dayLabel.text = day != nil ? "\(day!)" : ""
         
         if let urlString = imageUrl, let url = URL(string: urlString) {
-            // Kingfisher를 사용해 URL에서 이미지 로드
-            imageView.kf.setImage(with: url, placeholder: UIImage(named: "placeholder")) { result in
+            
+            imageView.kf.setImage(with: url,
+                                  placeholder: UIImage(named: "Image_placeholder")) { result in
                 switch result {
                 case .success:
                     print("Image loaded successfully for \(urlString)")
@@ -57,7 +58,7 @@ class CalendarCollectionViewCell: UICollectionViewCell {
                 }
             }
         } else {
-            imageView.image = nil
+            imageView.image = UIImage(named: "Image_placeholder")
         }
     }
 }

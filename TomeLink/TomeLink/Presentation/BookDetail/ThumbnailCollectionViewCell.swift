@@ -55,13 +55,14 @@ extension ThumbnailCollectionViewCell {
     func configureViewConstraints() {
         
         thumnailView.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview()
+            make.verticalEdges.leading.equalToSuperview()
+            make.width.equalTo(thumnailView.snp.height).multipliedBy(3.0 / 4.3)
         }
     }
     
     func configureViewDetails() {
         
-        thumnailView.contentMode = .scaleAspectFill
+        thumnailView.contentMode = .scaleAspectFit
         thumnailView.backgroundColor = TomeLinkColor.background
     }
 }
