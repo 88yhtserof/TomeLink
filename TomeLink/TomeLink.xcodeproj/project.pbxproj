@@ -13,6 +13,8 @@
 		149D759D2D97E0B700A42C7F /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 149D759C2D97E0B700A42C7F /* RxCocoa */; };
 		149D759F2D97E0B700A42C7F /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 149D759E2D97E0B700A42C7F /* RxSwift */; };
 		149D783E2D9A7D4000A42C7F /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = 149D783D2D9A7D4000A42C7F /* Toast */; };
+		14A3F49D2DB907AB00C72323 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 14A3F49C2DB907AB00C72323 /* FirebaseAnalytics */; };
+		14A3F49F2DB907AB00C72323 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 14A3F49E2DB907AB00C72323 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,10 +47,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				14A3F49D2DB907AB00C72323 /* FirebaseAnalytics in Frameworks */,
 				148982692DA68C110024892B /* XMLCoder in Frameworks */,
 				149D759D2D97E0B700A42C7F /* RxCocoa in Frameworks */,
 				149D75972D97E07C00A42C7F /* Kingfisher in Frameworks */,
 				149D759F2D97E0B700A42C7F /* RxSwift in Frameworks */,
+				14A3F49F2DB907AB00C72323 /* FirebaseCrashlytics in Frameworks */,
 				149D783E2D9A7D4000A42C7F /* Toast in Frameworks */,
 				149D759A2D97E08800A42C7F /* SnapKit in Frameworks */,
 			);
@@ -99,6 +103,8 @@
 				149D759E2D97E0B700A42C7F /* RxSwift */,
 				149D783D2D9A7D4000A42C7F /* Toast */,
 				148982682DA68C110024892B /* XMLCoder */,
+				14A3F49C2DB907AB00C72323 /* FirebaseAnalytics */,
+				14A3F49E2DB907AB00C72323 /* FirebaseCrashlytics */,
 			);
 			productName = TomeLink;
 			productReference = 149D75442D97811200A42C7F /* TomeLink.app */;
@@ -134,6 +140,7 @@
 				149D759B2D97E0B700A42C7F /* XCRemoteSwiftPackageReference "RxSwift" */,
 				149D783C2D9A7D4000A42C7F /* XCRemoteSwiftPackageReference "Toast-Swift" */,
 				148982672DA68C110024892B /* XCRemoteSwiftPackageReference "XMLCoder" */,
+				14A3F49B2DB907AB00C72323 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 149D75452D97811200A42C7F /* Products */;
@@ -421,6 +428,14 @@
 				minimumVersion = 5.1.1;
 			};
 		};
+		14A3F49B2DB907AB00C72323 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.12.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -453,6 +468,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 149D783C2D9A7D4000A42C7F /* XCRemoteSwiftPackageReference "Toast-Swift" */;
 			productName = Toast;
+		};
+		14A3F49C2DB907AB00C72323 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 14A3F49B2DB907AB00C72323 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		14A3F49E2DB907AB00C72323 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 14A3F49B2DB907AB00C72323 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
