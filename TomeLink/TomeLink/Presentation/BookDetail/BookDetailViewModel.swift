@@ -17,6 +17,7 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
     
     struct Input {
         let tapReadingButton: ControlEvent<Void>
+        let tapArchiveButton: ControlEvent<Void>
     }
     
     struct Output {
@@ -24,6 +25,7 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
         
         let book: Driver<Book>
         let reading: Driver<Book?>
+        let archive: Driver<Book?>
         let popViewController: Driver<Void>
     }
     
@@ -41,6 +43,7 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
         let isConnectedToNetwork =  BehaviorRelay<Bool>(value: false)
         let book = BehaviorRelay<Book>(value: book)
         let reading = PublishRelay<Book?>()
+        let archive = PublishRelay<Book?>()
         let popViewController = PublishRelay<Void>()
         
         // reading
@@ -51,6 +54,16 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
                 return owner.book
             }
             .bind(to: reading)
+            .disposed(by: disposeBag)
+        
+        // archive
+        
+        input.tapArchiveButton
+            .withUnretained(self)
+            .map { owner, _ in
+                return owner.book
+            }
+            .bind(to: archive)
             .disposed(by: disposeBag)
         
         // network status
@@ -68,6 +81,7 @@ final class BookDetailViewModel: BaseViewModel, OutputEventEmittable {
         return Output(isConnectedToNetwork: isConnectedToNetwork.asDriver(onErrorJustReturn: false),
                       book: book.asDriver(),
                       reading: reading.asDriver(onErrorJustReturn: nil),
+                      archive: archive.asDriver(onErrorJustReturn: nil),
                       popViewController: popViewController.asDriver(onErrorJustReturn: ()))
     }
 }

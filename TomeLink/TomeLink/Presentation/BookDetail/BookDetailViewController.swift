@@ -17,6 +17,7 @@ final class BookDetailViewController: UIViewController {
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
     private let favoriteButton = FavoriteButton()
     private let readingButton = ReadingButton()
+    private let archiveButton = ArchiveButton()
     fileprivate let loadingView = LoadingView()
     
     // Properties
@@ -55,7 +56,8 @@ final class BookDetailViewController: UIViewController {
     
     private func bind() {
         
-        let input = BookDetailViewModel.Input(tapReadingButton: readingButton.rx.tap)
+        let input = BookDetailViewModel.Input(tapReadingButton: readingButton.rx.tap,
+                                              tapArchiveButton: archiveButton.rx.tap)
         let output = viewModel.transform(input: input)
         
         
@@ -124,6 +126,21 @@ final class BookDetailViewController: UIViewController {
             }
             .disposed(by: disposeBag)
         
+        output.archive
+            .compactMap{ $0 }
+            .map { book in
+                let archiveRepository = ArchiveRepository()
+                let viewModel = ArchiveEditViewModel(book: book, repository: archiveRepository)
+                let archiveVC = ArchiveEditViewController(viewModel: viewModel)
+                if let sheet = archiveVC.sheetPresentationController {
+                    sheet.detents = [.medium()]
+                    sheet.prefersGrabberVisible = true
+                }
+                return archiveVC
+            }
+            .drive(rx.present)
+            .disposed(by: disposeBag)
+        
         output.isConnectedToNetwork
             .filter{ !$0 }
             .drive(with: self, onNext: { owner, _ in
@@ -161,8 +178,9 @@ private extension BookDetailViewController {
     func configureView() {
         view.backgroundColor = TomeLinkColor.background
         
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: favoriteButton)
-        navigationItem.rightBarButtonItems = [ UIBarButtonItem(customView: favoriteButton), UIBarButtonItem(customView: readingButton)]
+        navigationItem.rightBarButtonItems = [ UIBarButtonItem(customView: favoriteButton),
+                                               UIBarButtonItem(customView: readingButton),
+                                               UIBarButtonItem(customView: archiveButton) ]
         
         collectionView.backgroundColor = .clear
         collectionView.bounces = false
