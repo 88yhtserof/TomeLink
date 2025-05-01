@@ -7,6 +7,9 @@
 
 import UIKit
 
+import RxSwift
+import RxCocoa
+
 final class ArchiveEditViewController: UIViewController {
     
     private let noteLabel = UILabel()
@@ -16,6 +19,7 @@ final class ArchiveEditViewController: UIViewController {
     private let doneButton = UIButton()
     
     private let viewModel: ArchiveEditViewModel
+    private let disposeBag = DisposeBag()
     
     init(viewModel: ArchiveEditViewModel) {
         
@@ -34,12 +38,25 @@ final class ArchiveEditViewController: UIViewController {
         configureHierarchy()
         configureConstraints()
         configureView()
+        bind()
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         
         view.endEditing(true)
+    }
+    
+    func bind() {
+        let input = ArchiveEditViewModel.Input(tapDoneButton: doneButton.rx.tap,
+                                               archivedAt: datePicker.rx.date,
+                                               note: noteTextView.rx.text)
+        let output = viewModel.transform(input: input)
+        
+        output.dismiss
+            .drive(rx.dismiss)
+            .disposed(by: disposeBag)
+            
     }
 }
 
@@ -58,7 +75,7 @@ private extension ArchiveEditViewController {
         noteTextView.cornerRadius()
         noteTextView.tintColor = TomeLinkColor.title
         
-        dateLabel.text = "시작 날짜"
+        dateLabel.text = "기록할 날짜"
         dateLabel.font = .systemFont(ofSize: 16)
         
         datePicker.datePickerMode = .date

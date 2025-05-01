@@ -15,10 +15,13 @@ final class ArchiveEditViewModel: BaseViewModel {
     let disposeBag = DisposeBag()
     
     struct Input {
+        let tapDoneButton: ControlEvent<Void>
+        let archivedAt: ControlProperty<Date>
+        let note: ControlProperty<String?>
     }
     
     struct Output {
-        
+        let dismiss: Driver<Void>
     }
     
     private let isbn: String
@@ -34,20 +37,20 @@ final class ArchiveEditViewModel: BaseViewModel {
     
     func transform(input: Input) -> Output {
         
+        let dismiss = PublishRelay<Void>()
         
+        let contentsToArchive = Observable
+            .combineLatest(input.note, input.archivedAt)
         
-        return Output()
-    }
-}
-
-//MARK: - Action
-extension ArchiveEditViewModel {
-    
-    enum Action {
+        input.tapDoneButton
+            .withLatestFrom(contentsToArchive)
+            .bind(with: self) { owner, contents in
+                let (note, archivedAt) = contents
+                owner.repository.addArchive(book: owner.book, note: note, archivedAt: archivedAt)
+                dismiss.accept(())
+            }
+            .disposed(by: disposeBag)
         
-    }
-    
-    func action(_ action: Action) {
-        
+        return Output(dismiss: dismiss.asDriver(onErrorDriveWith: .empty()))
     }
 }
