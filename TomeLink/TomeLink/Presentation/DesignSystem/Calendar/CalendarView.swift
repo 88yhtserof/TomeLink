@@ -110,15 +110,17 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
         let date = dates[indexPath.item]
         
         if date == Date.distantPast {
-            cell.configure(day: nil, book: nil)
+            cell.configure(day: nil, books: nil)
         } else {
             let day = Calendar.current.component(.day, from: date)
             
-            let archive = archives
-                .first(where: {
+            let archivesForDate = archives
+                .filter {
                     Calendar.current.isDate($0.archivedAt, inSameDayAs: date)
-                })
-            cell.configure(day: day, book: archive?.book)
+                }
+                .sorted { $0.archivedAt < $1.archivedAt }
+                .map{ $0.book }
+            cell.configure(day: day, books: archivesForDate)
         }
         return cell
     }

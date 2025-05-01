@@ -10,21 +10,74 @@ import UIKit
 import Kingfisher
 import SnapKit
 
-// 커스텀 셀 클래스
 class CalendarCollectionViewCell: UICollectionViewCell {
+    
     private let dayLabel = UILabel()
     private let imageView = UIImageView()
+    private let countingView = CountingView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        
+        configureHierarchy()
+        configureConstraints()
+        configureView()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        dayLabel.text = nil
+        imageView.image = nil
+        countingView.isHidden = true
+    }
+    
+    func configure(day: Int?, books: [Book]?) {
+        
+        guard let day,
+              let books else {
+            dayLabel.text = nil
+            imageView.image = nil
+            return
+        }
+        
+        dayLabel.text = String(day)
+        
+        if let urlString = books.first?.thumbnailURL,
+           let url = URL(string: urlString) {
+            imageView.kf.setImage(with: url)
+        }
+        
+        if books.count > 1 {
+            countingView.isHidden = false
+            countingView.text = String(books.count)
+        }
+    }
+}
+
+//MARK: - Configuration
+private extension CalendarCollectionViewCell {
+    
+    func configureView() {
         
         dayLabel.textAlignment = .center
         dayLabel.textColor = TomeLinkColor.title
         dayLabel.font = .systemFont(ofSize: 14)
         imageView.contentMode = .scaleToFill
         
-        contentView.addSubview(dayLabel)
-        contentView.addSubview(imageView)
+        countingView.isHidden = true
+    }
+    
+    func configureHierarchy() {
+        
+        addSubviews(dayLabel, imageView, countingView)
+    }
+    
+    func configureConstraints() {
         
         dayLabel.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(4)
@@ -36,20 +89,11 @@ class CalendarCollectionViewCell: UICollectionViewCell {
             make.leading.trailing.bottom.equalToSuperview()
             make.bottom.equalToSuperview().inset(2)
         }
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func configure(day: Int?, book: Book?) {
-        dayLabel.text = day != nil ? "\(day!)" : ""
         
-        if let urlString = book?.thumbnailURL, let url = URL(string: urlString) {
-            
-            imageView.kf.setImage(with: url)
-        } else {
-            imageView.image = nil
+        countingView.snp.makeConstraints { make in
+            make.top.equalToSuperview().inset(4)
+            make.trailing.equalToSuperview().inset(4)
+            make.size.equalTo(20)
         }
     }
 }
