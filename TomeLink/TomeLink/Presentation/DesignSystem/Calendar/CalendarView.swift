@@ -13,26 +13,15 @@ import RxCocoa
 
 final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
-    // 특정 날짜와 이미지 URL을 매핑하는 딕셔너리
-    private let dateImageMap: [String: String] = [
-        "2025-04-04": "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5450099%3Ftimestamp%3D20250319144818", // 예시 URL
-        "2025-04-11": "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6062691%3Ftimestamp%3D20240528172936",
-        "2025-04-14": "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045",
-        "2025-03-31": "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045",
-        "2024-06-30": "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540854%3Ftimestamp%3D20241122114045",
-        "2025-04-18": "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5134130%3Ftimestamp%3D20250309121933",
-        "2025-04-25": "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5799503%3Ftimestamp%3D20250312150524"
-    ]
-    
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
     private let prevButton = UIButton()
     private let nextButton = UIButton()
     private let weeklyStackView = UIStackView()
+    private let monthLabel = UILabel()
     
     private var archives: [Archive] = []
-    private var dates: [Date] = [] // 캘린더에 표시할 날짜 배열
-    private var currentMonth: Date! // 현재 표시 중인 월
-    private let monthLabel = UILabel() // 현재 월 표시 레이블
+    private var dates: [Date] = []
+    private var currentMonth: Date!
     
     private let disposeBag = DisposeBag()
     
@@ -125,8 +114,10 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
         } else {
             let day = Calendar.current.component(.day, from: date)
             
-            // 해당 날짜에 이미지 URL이 있는지 확인
-            let archive = archives.first(where: { $0.archivedAt == date })
+            let archive = archives
+                .first(where: {
+                    Calendar.current.isDate($0.archivedAt, inSameDayAs: date)
+                })
             cell.configure(day: day, book: archive?.book)
         }
         return cell
