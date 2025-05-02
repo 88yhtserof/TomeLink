@@ -80,20 +80,21 @@ private extension CalendarDetailViewController {
 private extension CalendarDetailViewController {
     
     func layout() -> UICollectionViewLayout {
-        let spacing: CGFloat = 16
         
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(150))
+        var separator = UIListSeparatorConfiguration(listAppearance: .plain)
+        separator.color = TomeLinkColor.separator2
         
-        let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        group.interItemSpacing = .fixed(spacing / 2.0)
+        var config = UICollectionLayoutListConfiguration(appearance: .plain)
+        config.backgroundColor = .clear
+        config.separatorConfiguration = separator
         
-        let section = NSCollectionLayoutSection(group: group)
-        section.interGroupSpacing = spacing / 2.0
-        section.contentInsets = NSDirectionalEdgeInsets(top: spacing / 2.0, leading: spacing, bottom: spacing / 2.0, trailing: spacing)
-        
-        return UICollectionViewCompositionalLayout(section: section)
+        return UICollectionViewCompositionalLayout { _, environment in
+            
+            let horizontalInset: CGFloat = 16
+            let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
+            section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: horizontalInset, bottom: 0, trailing: horizontalInset)
+            return section
+        }
     }
 }
 

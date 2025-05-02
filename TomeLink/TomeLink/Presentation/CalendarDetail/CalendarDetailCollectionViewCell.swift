@@ -21,7 +21,6 @@ final class CalendarDetailCollectionViewCell: UICollectionViewCell, BaseCollecti
     private let publisherLabel = UILabel()
     private lazy var labelStackView = UIStackView(arrangedSubviews: [titleLabel, authorLabel, publisherLabel])
     private let archivedAtLabel = UILabel()
-    private let separatorView = SeparatorView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -85,20 +84,23 @@ private extension CalendarDetailCollectionViewCell {
         labelStackView.axis = .vertical
         labelStackView.alignment = .leading
         labelStackView.spacing = 5
-        
-        separatorView.lineColor = TomeLinkColor.separator2
     }
     
     func configureHierarchy() {
-        contentView.addSubviews(thumnailImageView, labelStackView, archivedAtLabel, separatorView)
+        contentView.addSubviews(thumnailImageView, labelStackView, archivedAtLabel)
     }
     
     func configureConstraints() {
         
+        let verticalInset: CGFloat = 8
+        let height: CGFloat = 150 - (verticalInset * 3)
+        
         thumnailImageView.snp.makeConstraints { make in
-            make.top.equalToSuperview().inset(8)
+            make.top.equalToSuperview().inset(verticalInset)
             make.leading.equalToSuperview()
             make.width.equalTo(80)
+            make.height.equalTo(height)
+            make.bottom.equalToSuperview().inset(verticalInset * 3)
         }
         
         labelStackView.snp.makeConstraints { make in
@@ -111,13 +113,6 @@ private extension CalendarDetailCollectionViewCell {
         archivedAtLabel.snp.makeConstraints { make in
             make.leading.equalTo(thumnailImageView.snp.trailing).offset(10)
             make.bottom.equalTo(thumnailImageView)
-        }
-        
-        separatorView.snp.makeConstraints { make in
-            make.top.equalTo(thumnailImageView.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(16)
-            make.height.equalTo(1.0)
-            make.bottom.equalToSuperview().inset(8)
         }
     }
 }
