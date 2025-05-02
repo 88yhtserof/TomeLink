@@ -53,13 +53,13 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
             .disposed(by: disposeBag)
             
         collectionView.rx.itemSelected
-            .take(1)
             .withUnretained(self)
             .compactMap { owner, indexPath in
                 let date = owner.dates[indexPath.row]
                 guard let books = owner.booksForDate[date] else { return nil }
                 return (date, books)
             }
+            .take(1)
             .do { _ in
                 print("CalendarView - collectionView.rx.itemSelected: next")
             } onDispose: {
@@ -136,7 +136,9 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
                 }
                 .sorted { $0.archivedAt < $1.archivedAt }
                 .map{ $0.book }
-            booksForDate[date] = filteredArchives
+            if filteredArchives.count > 0 {
+                booksForDate[date] = filteredArchives
+            }
             cell.configure(day: day, books: filteredArchives)
         }
         return cell
