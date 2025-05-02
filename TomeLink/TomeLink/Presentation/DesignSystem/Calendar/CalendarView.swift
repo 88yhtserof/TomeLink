@@ -20,6 +20,7 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
     private let monthLabel = UILabel()
     
     private var archives: [Archive] = []
+    private var booksForDate: [Date: [Book]] = [:]
     private var dates: [Date] = []
     private var currentMonth: Date!
     
@@ -112,15 +113,16 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
         if date == Date.distantPast {
             cell.configure(day: nil, books: nil)
         } else {
-            let day = Calendar.current.component(.day, from: date)
+            let day = Calendar.current.component(.day, from: date - 1)
             
-            let archivesForDate = archives
+            let filteredArchives = archives
                 .filter {
                     Calendar.current.isDate($0.archivedAt, inSameDayAs: date)
                 }
                 .sorted { $0.archivedAt < $1.archivedAt }
                 .map{ $0.book }
-            cell.configure(day: day, books: archivesForDate)
+            booksForDate[date] = filteredArchives
+            cell.configure(day: day, books: filteredArchives)
         }
         return cell
     }
@@ -241,7 +243,7 @@ extension CalendarView {
         
         // 해당 월의 날짜 추가
         for day in 1...range.count {
-            let date = calendar.date(byAdding: .day, value: day - 1, to: firstDayOfMonth)!
+            let date = calendar.date(byAdding: .day, value: day, to: firstDayOfMonth)!
             dates.append(date)
         }
     }
