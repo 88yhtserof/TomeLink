@@ -25,6 +25,7 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
     private var currentMonth: Date!
     
     private let disposeBag = DisposeBag()
+    fileprivate var selectedBooks = PublishRelay<(Date, [Book])>()
     
     init() {
         super.init(frame: .zero)
@@ -51,7 +52,21 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
             }
             .disposed(by: disposeBag)
             
-        
+        collectionView.rx.itemSelected
+            .take(1)
+            .withUnretained(self)
+            .compactMap { owner, indexPath in
+                let date = owner.dates[indexPath.row]
+                guard let books = owner.booksForDate[date] else { return nil }
+                return (date, books)
+            }
+            .do { _ in
+                print("CalendarView - collectionView.rx.itemSelected: next")
+            } onDispose: {
+                print("CalendarView - collectionView.rx.itemSelected: dispose")
+            }
+            .bind(to: selectedBooks)
+            .disposed(by: disposeBag)
     }
     
     // 월 표시 레이블 및 이동 버튼 설정
@@ -246,5 +261,18 @@ extension CalendarView {
             let date = calendar.date(byAdding: .day, value: day, to: firstDayOfMonth)!
             dates.append(date)
         }
+    }
+}
+
+extension Reactive where Base: CalendarView {
+    
+    var selectedBooks: Observable<(Date, [Book])> {
+        return base.selectedBooks
+            .take(1)
+            .do { _ in
+                print("CalendarView - selectedBooks: next")
+            } onDispose: {
+                print("CalendarView - selectedBooks: dispose")
+            }
     }
 }

@@ -453,6 +453,15 @@ private extension LibraryViewController {
     
     func archiveCellRegistrationHandler(cell: LibraryCalendarCollectionViewCell, indexPath: IndexPath, item: [Archive]) {
         cell.configure(with: item)
+        
+        cell.calendarView.rx.selectedBooks
+            .map { (date, books) in
+                let calendarDetailViewModel = CalendarDetailViewModel(date: date, books: books)
+                return CalendarDetailViewController(viewModel: calendarDetailViewModel)
+            }
+            .bind(to: rx.pushViewController)
+            .disposed(by: disposeBag)
+        
     }
     
     func emptySearchResultsCellRegistrationHandler(cell: EmptyCollectionViewCell, indexPath: IndexPath, item: String) {

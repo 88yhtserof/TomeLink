@@ -15,7 +15,7 @@ class LibraryCalendarCollectionViewCell: UICollectionViewCell, BaseCollectionVie
     static let identifier = String(describing: CategoryCollectionViewCell.self)
     
     // Views
-    private let calendarView = CalendarView()
+    let calendarView = CalendarView()
     
     // Properties
     
@@ -25,7 +25,6 @@ class LibraryCalendarCollectionViewCell: UICollectionViewCell, BaseCollectionVie
         
         configureHierarchy()
         configureConstraints()
-        configureView()
     }
     
     @available(*, unavailable)
@@ -43,10 +42,6 @@ class LibraryCalendarCollectionViewCell: UICollectionViewCell, BaseCollectionVie
 
 //MARK: - Configuration
 private extension LibraryCalendarCollectionViewCell {
-    
-    func configureView() {
-        
-    }
     
     func configureHierarchy() {
         contentView.addSubviews(calendarView)
