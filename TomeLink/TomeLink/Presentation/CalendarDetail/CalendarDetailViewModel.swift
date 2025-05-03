@@ -18,11 +18,13 @@ final class CalendarDetailViewModel: BaseViewModel, OutputEventEmittable {
     struct Input {
         let viewWillAppear: ControlEvent<Void>
         let deleteBook: Observable<IndexPath>
+        let selectBook: ControlEvent<IndexPath>
     }
     
     struct Output {
         let books: Driver<[Book]>
         let bookWithDateList: Driver<[(Date, Book)]>
+        let presentArchiveEdit: Driver<(Book, Archive.ID)>
     }
     
     private let date: Date
@@ -39,6 +41,7 @@ final class CalendarDetailViewModel: BaseViewModel, OutputEventEmittable {
         let archives = BehaviorRelay<[Archive]>(value: [])
         let books = BehaviorRelay<[Book]>(value: [])
         let bookWithDateList = BehaviorRelay<[(Date, Book)]>(value: [])
+        let presentArchiveEdit = PublishRelay<(Book, Archive.ID)>()
         
         // observer
         let updateArchives = PublishRelay<Void>()
@@ -88,7 +91,18 @@ final class CalendarDetailViewModel: BaseViewModel, OutputEventEmittable {
             .bind(to: bookWithDateList)
             .disposed(by: disposeBag)
         
+        // present archive edit
+        input.selectBook
+            .withLatestFrom(archives){ ($0, $1) }
+            .map { (indexPath, list) in
+                let archive = list[indexPath.row]
+                return (archive.book, archive.id)
+            }
+            .bind(to: presentArchiveEdit)
+            .disposed(by: disposeBag)
+        
         return Output(books: books.asDriver(),
-                      bookWithDateList: bookWithDateList.asDriver())
+                      bookWithDateList: bookWithDateList.asDriver(),
+                      presentArchiveEdit: presentArchiveEdit.asDriver(onErrorDriveWith: .empty()))
     }
 }

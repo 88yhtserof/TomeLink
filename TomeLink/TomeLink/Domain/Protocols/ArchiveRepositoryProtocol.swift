@@ -10,7 +10,7 @@ import Foundation
 protocol ArchiveRepositoryProtocol {
     
     func addArchive(book: Book, note: String?, archivedAt: Date)
-    func updateArchive(at id: UUID, with value: Archive) throws
+    func updateArchive(at id: UUID, with value: Archive)
     func fetchArchive(for id: UUID) -> Archive?
     func fetchAllArchives() -> [Archive]
     func deleteArchive(at id: UUID)

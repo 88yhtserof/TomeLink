@@ -56,6 +56,14 @@ final class ArchiveEditViewController: UIViewController {
         output.dismiss
             .drive(rx.dismiss)
             .disposed(by: disposeBag)
+        
+        output.date
+            .drive(datePicker.rx.date)
+            .disposed(by: disposeBag)
+        
+        output.note
+            .drive(noteTextView.rx.text)
+            .disposed(by: disposeBag)
             
     }
 }

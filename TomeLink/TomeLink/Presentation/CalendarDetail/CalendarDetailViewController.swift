@@ -45,7 +45,8 @@ final class CalendarDetailViewController: UIViewController {
     private func bind() {
         
         let input = CalendarDetailViewModel.Input(viewWillAppear: rx.viewWillAppear,
-                                                  deleteBook: deleteBook.asObservable())
+                                                  deleteBook: deleteBook.asObservable(),
+                                                  selectBook: collectionView.rx.itemSelected)
         let output = viewMdoel.transform(input: input)
         
         output.bookWithDateList
@@ -54,6 +55,21 @@ final class CalendarDetailViewController: UIViewController {
             }
             .drive(rx.createSnapshot)
             .disposed(by: disposeBag)
+        
+        output.presentArchiveEdit
+            .map { (book, archiveID) in
+                let archiveRepository = ArchiveRepository()
+                let viewModel = ArchiveEditViewModel(book: book, archiveID: archiveID, repository: archiveRepository)
+                let archiveVC = ArchiveEditViewController(viewModel: viewModel)
+                if let sheet = archiveVC.sheetPresentationController {
+                    sheet.detents = [.medium()]
+                    sheet.prefersGrabberVisible = true
+                }
+                return archiveVC
+            }
+            .drive(rx.present)
+            .disposed(by: disposeBag)
+            
     }
 }
 
