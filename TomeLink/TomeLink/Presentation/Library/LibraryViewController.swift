@@ -456,7 +456,8 @@ private extension LibraryViewController {
         
         cell.calendarView.rx.selectedBooks
             .map { (date, books) in
-                let calendarDetailViewModel = CalendarDetailViewModel(date: date, books: books)
+                let archiveRepository = ArchiveRepository()
+                let calendarDetailViewModel = CalendarDetailViewModel(date: date, archiveRepository: archiveRepository)
                 return CalendarDetailViewController(viewModel: calendarDetailViewModel)
             }
             .bind(to: rx.pushViewController)

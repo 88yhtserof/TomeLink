@@ -20,6 +20,7 @@ final class CalendarDetailViewController: UIViewController {
     
     private let viewMdoel: CalendarDetailViewModel
     private let disposeBag = DisposeBag()
+    private let deleteBook: PublishRelay<IndexPath> = PublishRelay<IndexPath>()
     
     init(viewModel: CalendarDetailViewModel) {
         self.viewMdoel = viewModel
@@ -43,12 +44,13 @@ final class CalendarDetailViewController: UIViewController {
     
     private func bind() {
         
-        let input = CalendarDetailViewModel.Input(viewWillAppear: rx.viewWillAppear)
+        let input = CalendarDetailViewModel.Input(viewWillAppear: rx.viewWillAppear,
+                                                  deleteBook: deleteBook.asObservable())
         let output = viewMdoel.transform(input: input)
         
         output.bookWithDateList
             .map { list in
-                list.map{ Item(archivedAt: $0.0, book: $0.1) }
+                return list.map{ Item(archivedAt: $0.0, book: $0.1) }
             }
             .drive(rx.createSnapshot)
             .disposed(by: disposeBag)
@@ -87,6 +89,15 @@ private extension CalendarDetailViewController {
         var config = UICollectionLayoutListConfiguration(appearance: .plain)
         config.backgroundColor = .clear
         config.separatorConfiguration = separator
+        
+        config.trailingSwipeActionsConfigurationProvider = { indexPath in
+            
+            let action = UIContextualAction(style: .destructive, title: "삭제") { [weak self] action, view, completionHandler in
+                self?.deleteBook.accept(indexPath)
+            }
+            
+            return UISwipeActionsConfiguration(actions: [action])
+        }
         
         return UICollectionViewCompositionalLayout { _, environment in
             

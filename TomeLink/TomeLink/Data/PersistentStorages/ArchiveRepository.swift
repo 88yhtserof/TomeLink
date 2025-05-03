@@ -55,7 +55,7 @@ struct ArchiveRepository: ArchiveRepositoryProtocol {
         let bookEntity =  archiveEntity.book
         let book = Book(authors: bookEntity.authors, contents: bookEntity.contents, publicationDate: bookEntity.publicationDate, isbn: bookEntity.isbn, publisher: bookEntity.publisher, thumbnailURL: bookEntity.thumbnailURL, title: bookEntity.title, translators: bookEntity.translators, detailURL: bookEntity.detailURL)
         
-        return Archive(archivedAt: archiveEntity.archivedAt, isbn: book.isbn, book: book)
+        return Archive(id: archiveEntity.id, archivedAt: archiveEntity.archivedAt, isbn: book.isbn, book: book)
     }
     
     func fetchAllArchives() -> [Archive] {
@@ -69,7 +69,7 @@ struct ArchiveRepository: ArchiveRepositoryProtocol {
                 let bookEntity = entity.book
                 let book = Book(authors: bookEntity.authors, contents: bookEntity.contents, publicationDate: bookEntity.publicationDate, isbn: bookEntity.isbn, publisher: bookEntity.publisher, thumbnailURL: bookEntity.thumbnailURL, title: bookEntity.title, translators: bookEntity.translators, detailURL: bookEntity.detailURL)
                 
-                return Archive(archivedAt: entity.archivedAt, isbn: entity.isbn, book: book)
+                return Archive(id: entity.id, archivedAt: entity.archivedAt, isbn: entity.isbn, book: book)
             }
     }
     
