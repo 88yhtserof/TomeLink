@@ -30,7 +30,6 @@ extension CoreDataStack {
     
     func save() {
         
-        print(CoreDataStack.shared.persistentContainer.viewContext)
         guard persistentContainer.viewContext.hasChanges else {
             print("Failed to save: no changes")
             return

@@ -57,7 +57,6 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
             .compactMap { owner, indexPath in
                 let date = owner.dates[indexPath.row]
                 guard let books = owner.booksForDate[date] else { return nil }
-                print(indexPath, date, books)
                 return (date, books)
             }
             .take(1)
