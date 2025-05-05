@@ -22,10 +22,13 @@ final class ReadingEditViewModel: BaseViewModel, OutputEventEmittable {
     }
     
     struct Output {
+        let currentPage: Driver<Int>
+        let startedAt: Driver<Date>
         let doneAddingReading: Driver<Void>
     }
     
     private let book: Book
+    private var pageCurrent: Int?
     
     private let repository: ReadingRepositoryProtocol
     
@@ -36,9 +39,45 @@ final class ReadingEditViewModel: BaseViewModel, OutputEventEmittable {
     
     func transform(input: Input) -> Output {
         
+        // output
+        let currentPage = BehaviorRelay<Int>(value: 1)
+        let startedAt = BehaviorRelay<Date>(value: Date())
         let doneAddingReading = PublishRelay<Void>()
         
-        let response = input.tapDoneButton
+        // edit
+        let existingReading = Observable
+            .just(repository.fetchReading(isbn: book.isbn))
+            .share()
+        
+        existingReading
+            .compactMap{ $0 }
+            .bind(with: self) { owner, reading in
+                
+                owner.pageCurrent = reading.pageCount
+                currentPage.accept(reading.currentPage)
+                startedAt.accept(reading.startedAt)
+            }
+            .disposed(by: disposeBag)
+        
+        
+        let requestNetworkTrigger = PublishRelay<Void>()
+        let existingReadingTrigger = PublishRelay<Int>()
+        
+        input.tapDoneButton
+            .withLatestFrom(existingReading)
+            .bind(with: self) { owner, isExistingReading in
+                
+                if isExistingReading == nil {
+                    requestNetworkTrigger.accept(Void())
+                } else {
+                    existingReadingTrigger.accept(owner.pageCurrent ?? 1)
+                }
+            }
+            .disposed(by: disposeBag)
+        
+        
+        // create
+        let response = requestNetworkTrigger
             .withUnretained(self)
             .flatMap { owner, _ in
                 return NetworkRequestingManager.shared
@@ -48,39 +87,41 @@ final class ReadingEditViewModel: BaseViewModel, OutputEventEmittable {
                         return Single<AladinItemLookUpResponseDTO?>.just(nil)
                     }
             }
-            .share()
+            .compactMap{ $0?.toDomain() }
+            .map{ $0.pageCount }
         
-        let currentPage = BehaviorRelay<String>(value: "0")
-        let startedAt = BehaviorRelay<Date>(value: Date())
         
-        input.currentPage
-            .bind(to: currentPage)
-            .disposed(by: disposeBag)
+        // add or update
+        let inputCurrentPage = Observable
+            .merge(input.currentPage.compactMap{ Int($0) },
+                   currentPage.asObservable())
+        let inputStartedAt = Observable
+            .merge(input.startedAt.asObservable(),
+                   startedAt.asObservable())
         
-        input.startedAt
-            .bind(to: startedAt)
-            .disposed(by: disposeBag)
+        let input = Observable.combineLatest(inputCurrentPage, inputStartedAt)
         
-        let input = Observable.combineLatest(currentPage, startedAt)
-        
-        response
+        existingReadingTrigger
+            .amb(response)
             .withLatestFrom(input){ ($0, $1) }
             .bind(with: self) { owner, value in
                 print("Add Reading")
-                let (response, input) = value
+                let (pageCount, input) = value
                 let (currentPage, startedAt) = input
                 
                 if owner.repository.isBookReading(isbn: owner.book.isbn) {
-                    owner.repository.updateCurrentPage(isbn: owner.book.isbn, currentPage: Int32(currentPage) ?? 0)
+                    owner.repository.updateCurrentPage(isbn: owner.book.isbn, currentPage: Int32(currentPage), startedAt: startedAt)
                 } else {
-                    owner.repository.addReading(book: owner.book, currentPage: Int32(currentPage) ?? 0, pageCount: Int32(response?.item?.bookinfo?.itemPage ?? 100), startedAt: startedAt)
+                    owner.repository.addReading(book: owner.book, currentPage: Int32(currentPage), pageCount: Int32(pageCount), startedAt: startedAt)
                 }
                 
                 doneAddingReading.accept(Void())
             }
             .disposed(by: disposeBag)
         
-        return Output(doneAddingReading: doneAddingReading.asDriver(onErrorJustReturn: Void()))
+        return Output(currentPage: currentPage.asDriver(),
+                      startedAt: startedAt.asDriver(onErrorDriveWith: .empty()),
+                      doneAddingReading: doneAddingReading.asDriver(onErrorJustReturn: Void()))
     }
     
 }

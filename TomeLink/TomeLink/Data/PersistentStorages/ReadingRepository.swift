@@ -43,22 +43,24 @@ struct ReadingRepository: ReadingRepositoryProtocol {
         CoreDataStack.shared.save()
     }
 
-    func updateCurrentPage(isbn: String, currentPage: Int32) {
-        guard let reading = fetchReading(isbn: isbn) else { return }
+    func updateCurrentPage(isbn: String, currentPage: Int32, startedAt: Date) {
+        guard let reading = fetchReadingEntity(isbn: isbn) else { return }
         reading.currentPage = currentPage
+        reading.startedAt = startedAt
         CoreDataStack.shared.save()
     }
 
-    func fetchReading(isbn: String) -> ReadingEntity? {
-        let request: NSFetchRequest<ReadingEntity> = ReadingEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "isbn == %@", isbn)
-        request.fetchLimit = 1
-
-        return try? context.fetch(request).first
+    func fetchReading(isbn: String) -> Reading? {
+        guard let entity = fetchReadingEntity(isbn: isbn) else { return nil }
+        
+        let bookEntity = entity.book
+        let book = Book(authors: bookEntity.authors, contents: bookEntity.contents, publicationDate: bookEntity.publicationDate, isbn: bookEntity.isbn, publisher: bookEntity.publisher, thumbnailURL: bookEntity.thumbnailURL, title: bookEntity.title, translators: bookEntity.translators, detailURL: bookEntity.detailURL)
+        
+        return Reading(isbn: entity.isbn, currentPage: Int(entity.currentPage), pageCount: Int(entity.pageCount), startedAt: entity.startedAt, book: book)
     }
 
     func deleteReading(isbn: String) {
-        if let reading = fetchReading(isbn: isbn) {
+        if let reading = fetchReadingEntity(isbn: isbn) {
             context.delete(reading)
             CoreDataStack.shared.save()
         }
@@ -75,5 +77,17 @@ struct ReadingRepository: ReadingRepositoryProtocol {
                 
                 return Reading(isbn: book.isbn, currentPage: Int($0.currentPage), pageCount: Int($0.pageCount), startedAt: $0.startedAt, book: book)
             } ?? []
+    }
+}
+
+//MARK: - Entity
+extension ReadingRepository {
+    
+    func fetchReadingEntity(isbn: String) -> ReadingEntity? {
+        let request: NSFetchRequest<ReadingEntity> = ReadingEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "isbn == %@", isbn)
+        request.fetchLimit = 1
+
+        return try? context.fetch(request).first
     }
 }

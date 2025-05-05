@@ -60,6 +60,15 @@ final class ReadingEditViewController: UIViewController {
                 owner.rx.dismiss.onNext(Void())
             })
             .disposed(by: disposeBag)
+        
+        output.currentPage
+            .map{ String($0) }
+            .drive(pageTextField.rx.text)
+            .disposed(by: disposeBag)
+        
+        output.startedAt
+            .drive(datePicker.rx.date)
+            .disposed(by: disposeBag)
     }
 }
 
@@ -94,18 +103,6 @@ private extension ReadingEditViewController {
         
         let languge = Locale.preferredLanguages.first ?? "ko_KR"
         datePicker.locale = Locale(identifier: languge)
-        
-        let action = UIAction { [weak self]_ in
-            guard let self else { return }
-            let date = self.datePicker.date
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy.MM.dd E"
-            let languge = Locale.preferredLanguages.first ?? "ko_KR"
-            dateFormatter.locale = Locale(identifier: languge)
-            
-            self.contentDate = dateFormatter.string(from: date)
-        }
-        datePicker.addAction(action, for: .valueChanged)
     }
     
     func configureHierarchy() {
