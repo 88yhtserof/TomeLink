@@ -59,7 +59,9 @@ private extension TabBarController {
         
         let favoriteRepository = FavoriteRepository()
         let readingRepository = ReadingRepository()
-        let libraryViewModel = LibraryViewModel(favoriteRepository: favoriteRepository, readingRepository: readingRepository)
+        let archiveReportory = ArchiveRepository()
+        
+        let libraryViewModel = LibraryViewModel(favoriteRepository: favoriteRepository, readingRepository: readingRepository, archiveRepository: archiveReportory)
         let libraryViewController = LibraryViewController(viewModel: libraryViewModel)
         
         let nertworMonitor = NetworkMonitorManager.shared

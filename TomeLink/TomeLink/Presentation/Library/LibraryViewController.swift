@@ -28,6 +28,7 @@ final class LibraryViewController: UIViewController {
     // TODO: - ViewModel로 옮기기
     private let favoriteRepository = FavoriteRepository()
     private let readingRepository = ReadingRepository()
+    private let archiveRepository = ArchiveRepository()
     
     private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
@@ -77,6 +78,10 @@ final class LibraryViewController: UIViewController {
             .drive(rx.createSnapshotForReading)
             .disposed(by: disposeBag)
         
+        output.listArchive
+            .drive(rx.createSnapshotForArchive)
+            .disposed(by: disposeBag)
+        
         output.emptyList
             .drive(rx.createSnapshotForEmpty)
             .disposed(by: disposeBag)
@@ -91,8 +96,8 @@ final class LibraryViewController: UIViewController {
                         owner.lastestSection = .toRead
                     case .reading:
                         owner.lastestSection = .reading
-                    case .read:
-                        owner.lastestSection = .read
+                    case .archive:
+                        owner.lastestSection = .archive
                     }
                 }
                 
@@ -120,6 +125,8 @@ final class LibraryViewController: UIViewController {
             .bind(with: self) { (owner, category) in
                 switch category {
                 case .toRead:
+                    owner.collectionView.isScrollEnabled = true
+                    
                     let books = owner.favoriteRepository.fetchFavorites()
                     
                     if books.isEmpty {
@@ -128,6 +135,8 @@ final class LibraryViewController: UIViewController {
                         owner.createSnapshotForToRead(books)
                     }
                 case .reading:
+                    owner.collectionView.isScrollEnabled = true
+                    
                     let books = owner.readingRepository.fetchAllReadings()
                     
                     if books.isEmpty {
@@ -135,8 +144,10 @@ final class LibraryViewController: UIViewController {
                     } else {
                         owner.createSnapshotForReading(books)
                     }
-                case .read:
-                    break
+                case .archive:
+                    owner.collectionView.setContentOffset(CGPoint(x: 0, y: 0), animated: false)
+                    owner.collectionView.isScrollEnabled = false
+                    owner.createSnapshotForArchive(Archive.archives)
                 }
             }
             .disposed(by: disposeBag)
@@ -165,7 +176,7 @@ final class LibraryViewController: UIViewController {
                         sheet.prefersGrabberVisible = true
                     }
                     owner.rx.present.onNext(readingEditVC)
-                case .read:
+                case .archive:
                     break
                 default:
                     break
@@ -224,8 +235,9 @@ private extension LibraryViewController {
         }
         
         categoryCollectionView.snp.makeConstraints { make in
-            make.top.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
-            make.height.equalTo(45)
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(12)
+            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
+            make.height.equalTo(40)
         }
         
         separatorView.snp.makeConstraints { make in
@@ -274,8 +286,8 @@ private extension LibraryViewController {
                 return self.sectionForToRead()
             case .reading:
                 return self.sectionForReading()
-            case .read:
-                return self.sectionForRead()
+            case .archive:
+                return self.sectionForArchive()
             case .empty:
                 return self.sectionForEmpty()
             }
@@ -317,7 +329,7 @@ private extension LibraryViewController {
         return section
     }
     
-    func sectionForRead() -> NSCollectionLayoutSection {
+    func sectionForArchive() -> NSCollectionLayoutSection {
         let spacing: CGFloat = 16
         
         let size = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
@@ -325,7 +337,7 @@ private extension LibraryViewController {
         let item = NSCollectionLayoutItem(layoutSize: size)
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: size, subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: spacing, bottom: spacing, trailing: spacing)
+        section.contentInsets = NSDirectionalEdgeInsets(top: spacing, leading: 0, bottom: spacing, trailing: 0)
         
         return section
     }
@@ -361,7 +373,7 @@ private extension LibraryViewController {
     enum CategoryItem: Int, CaseIterable {
         case toRead
         case reading
-        case read
+        case archive
         
         var title: String {
             switch self {
@@ -369,8 +381,8 @@ private extension LibraryViewController {
                 return "읽고 싶은 도서"
             case .reading:
                 return "독서 진행률 %"
-            case .read:
-                return "읽고 싶은 도서"
+            case .archive:
+                return "독서 기록"
             }
         }
     }
@@ -378,14 +390,14 @@ private extension LibraryViewController {
     enum Section: Int, CaseIterable {
         case toRead
         case reading
-        case read
+        case archive
         case empty
     }
     
     enum Item: Hashable {
         case toRead(Book)
         case reading(Reading)
-        case read(String)
+        case archive([Archive])
         case empty(String)
     }
     
@@ -405,7 +417,7 @@ private extension LibraryViewController {
         
         let toReadCellRegistration = UICollectionView.CellRegistration(handler: toReadCellRegistrationHandler)
         let readingCellRegistration = UICollectionView.CellRegistration(handler: readingCellRegistrationHandler)
-        let readCellRegistration = UICollectionView.CellRegistration(handler: readCellRegistrationHandler)
+        let readCellRegistration = UICollectionView.CellRegistration(handler: archiveCellRegistrationHandler)
         let emptySearchResultsCellRegistration = UICollectionView.CellRegistration(handler: emptySearchResultsCellRegistrationHandler)
         
         dataSource = DataSource(collectionView: collectionView, cellProvider: { collectionView, indexPath, itemIdentifier in
@@ -414,7 +426,7 @@ private extension LibraryViewController {
                 return collectionView.dequeueConfiguredReusableCell(using: toReadCellRegistration, for: indexPath, item: value)
             case .reading(let value):
                 return collectionView.dequeueConfiguredReusableCell(using: readingCellRegistration, for: indexPath, item: value)
-            case .read(let value):
+            case .archive(let value):
                 return collectionView.dequeueConfiguredReusableCell(using: readCellRegistration, for: indexPath, item: value)
             case .empty(let value):
                 return collectionView.dequeueConfiguredReusableCell(using: emptySearchResultsCellRegistration, for: indexPath, item: value)
@@ -439,7 +451,17 @@ private extension LibraryViewController {
         cell.configure(with: item)
     }
     
-    func readCellRegistrationHandler(cell: LibraryCalendarCollectionViewCell, indexPath: IndexPath, item: String) {
+    func archiveCellRegistrationHandler(cell: LibraryCalendarCollectionViewCell, indexPath: IndexPath, item: [Archive]) {
+        cell.configure(with: item)
+        
+        cell.calendarView.rx.selectedBooks
+            .map { (date, books) in
+                let archiveRepository = ArchiveRepository()
+                let calendarDetailViewModel = CalendarDetailViewModel(date: date, archiveRepository: archiveRepository)
+                return CalendarDetailViewController(viewModel: calendarDetailViewModel)
+            }
+            .bind(to: rx.pushViewController)
+            .disposed(by: disposeBag)
         
     }
     
@@ -448,7 +470,7 @@ private extension LibraryViewController {
     }
     
     func createSnapshotForCategory() {
-        let items = [CategoryItem.toRead, CategoryItem.reading]
+        let items = CategoryItem.allCases
         
         var snapshot = CategorySnapshot()
         snapshot.appendSections(CategorySection.allCases)
@@ -476,13 +498,13 @@ private extension LibraryViewController {
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
-    func createSnapshotForRead(_ newItems: [String]) {
-        let items = newItems.map{ Item.read($0) }
+    func createSnapshotForArchive(_ newItems: [Archive]) {
+        let items = [ Item.archive(newItems) ]
         
         snapshot = Snapshot()
-        snapshot.deleteSections(Section.allCases.filter{ $0 != .read })
-        snapshot.appendSections([.read])
-        snapshot.appendItems(items, toSection: .read)
+        snapshot.deleteSections(Section.allCases.filter{ $0 != .archive })
+        snapshot.appendSections([.archive])
+        snapshot.appendItems(items, toSection: .archive)
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
     
@@ -521,9 +543,9 @@ extension Reactive where Base: LibraryViewController {
         }
     }
     
-    var createSnapshotForRead: Binder<[String]> {
+    var createSnapshotForArchive: Binder<[Archive]> {
         return Binder(base) { base, list in
-            base.createSnapshotForRead(list)
+            base.createSnapshotForArchive(list)
         }
     }
     

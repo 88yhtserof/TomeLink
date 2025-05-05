@@ -24,23 +24,28 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
     struct Output {
         let listToRead: Driver<[Book]>
         let listReading: Driver<[Reading]>
+        let listArchive: Driver<[Archive]>
         let emptyList: Driver<String>
     }
     
     private let favoriteRepository: FavoriteRepositoryProtocol
     private let readingRepository: ReadingRepositoryProtocol
+    private let archiveRepository: ArchiveRepositoryProtocol
     
     init(favoriteRepository: FavoriteRepositoryProtocol,
-         readingRepository: ReadingRepositoryProtocol)
+         readingRepository: ReadingRepositoryProtocol,
+         archiveRepository: ArchiveRepositoryProtocol)
     {
         self.favoriteRepository = favoriteRepository
         self.readingRepository = readingRepository
+        self.archiveRepository = archiveRepository
     }
     
     func transform(input: Input) -> Output {
         
         let listToRead = BehaviorRelay<[Book]>(value: [])
         let listReading = PublishRelay<[Reading]>()
+        let listArchive = PublishRelay<[Archive]>()
         let emptyList = BehaviorRelay<String>(value: "")
         
         Observable.of(input.viewWillAppear.asObservable(),
@@ -74,8 +79,22 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
             }
             .disposed(by: disposeBag)
         
+        Observable.of(input.viewWillAppear.asObservable())
+            .merge()
+            .bind(with: self) { owner, _ in
+                let list = owner.archiveRepository.fetchAllArchives()
+                
+                if list.isEmpty {
+                    emptyList.accept("아직 저장된 도서가 없습니다.")
+                } else {
+                    listArchive.accept(list)
+                }
+            }
+            .disposed(by: disposeBag)
+        
         return Output(listToRead: listToRead.asDriver(),
                       listReading: listReading.asDriver(onErrorJustReturn: []),
+                      listArchive: listArchive.asDriver(onErrorJustReturn: []),
                       emptyList: emptyList.asDriver())
     }
     

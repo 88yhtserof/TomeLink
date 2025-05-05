@@ -1,5 +1,5 @@
 //
-//  TomeLimkDataFormatter.swift
+//  TomeLinkDataFormatter.swift
 //  TomeLink
 //
 //  Created by 임윤휘 on 4/10/25.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum TomeLimkDataFormatter {
+enum TomeLinkDataFormatter {
     
     static let startedAt: DateFormatter = {
         let dateFormatter = DateFormatter()

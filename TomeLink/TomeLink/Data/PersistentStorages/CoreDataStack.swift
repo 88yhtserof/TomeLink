@@ -30,10 +30,14 @@ extension CoreDataStack {
     
     func save() {
         
-        guard persistentContainer.viewContext.hasChanges else { return }
+        guard persistentContainer.viewContext.hasChanges else {
+            print("Failed to save: no changes")
+            return
+        }
         
         do {
             try persistentContainer.viewContext.save()
+            print("Successfully saved the context.")
         } catch {
             print("Failed to save the context:", error.localizedDescription)
         }

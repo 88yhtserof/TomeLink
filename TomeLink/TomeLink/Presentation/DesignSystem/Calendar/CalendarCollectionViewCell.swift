@@ -10,33 +10,18 @@ import UIKit
 import Kingfisher
 import SnapKit
 
-// 커스텀 셀 클래스
 class CalendarCollectionViewCell: UICollectionViewCell {
+    
     private let dayLabel = UILabel()
     private let imageView = UIImageView()
+    private let countingView = CountingView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        dayLabel.textAlignment = .center
-        dayLabel.textColor = TomeLinkColor.title
-        dayLabel.font = .systemFont(ofSize: 14)
-        imageView.contentMode = .scaleAspectFill
-        
-        contentView.addSubview(dayLabel)
-        contentView.addSubview(imageView)
-        
-        // SnapKit을 사용한 제약 설정
-        dayLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(5)
-            make.centerX.equalToSuperview()
-        }
-        
-        imageView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(5)
-            make.leading.trailing.bottom.equalToSuperview().inset(5)
-            make.height.equalTo(imageView.snp.width) // 이미지 비율 유지
-        }
+        configureHierarchy()
+        configureConstraints()
+        configureView()
     }
     
     required init?(coder: NSCoder) {
@@ -46,30 +31,69 @@ class CalendarCollectionViewCell: UICollectionViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         
-        imageView.image = UIImage(named: "Image_placeholder")
+        dayLabel.text = nil
+        imageView.image = nil
+        countingView.isHidden = true
     }
     
-    func configure(day: Int?, imageUrl: String?) {
-        dayLabel.text = day != nil ? "\(day!)" : ""
+    func configure(day: Int?, books: [Book]?) {
         
-        guard let imageUrl else { return }
-        let imageURLString = ImageResizingManager.resizingImage(for: imageUrl)
+        guard let day,
+              let books else {
+            dayLabel.text = nil
+            imageView.image = nil
+            return
+        }
         
-        if let url = URL(string: imageURLString) {
-            
-            
-            imageView.kf.indicatorType = .activity
-            imageView.kf.setImage(with: url,
-                                  placeholder: UIImage(named: "Image_placeholder")) { result in
-                switch result {
-                case .success:
-                    print("Image loaded successfully")
-                case .failure(let error):
-                    print("Failed to load image: \(error)")
-                }
-            }
-        } else {
-            imageView.image = UIImage(named: "Image_placeholder")
+        dayLabel.text = String(day)
+        
+        if let urlString = books.first?.thumbnailURL,
+           let url = URL(string: urlString) {
+            imageView.kf.setImage(with: url)
+        }
+        
+        if books.count > 1 {
+            countingView.isHidden = false
+            countingView.text = String(books.count)
+        }
+    }
+}
+
+//MARK: - Configuration
+private extension CalendarCollectionViewCell {
+    
+    func configureView() {
+        
+        dayLabel.textAlignment = .center
+        dayLabel.textColor = TomeLinkColor.title
+        dayLabel.font = .systemFont(ofSize: 14)
+        imageView.contentMode = .scaleToFill
+        
+        countingView.isHidden = true
+    }
+    
+    func configureHierarchy() {
+        
+        addSubviews(dayLabel, imageView, countingView)
+    }
+    
+    func configureConstraints() {
+        
+        dayLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(4)
+            make.centerX.equalToSuperview()
+        }
+        
+        imageView.snp.makeConstraints { make in
+            make.top.equalToSuperview()
+            make.leading.trailing.bottom.equalToSuperview()
+            make.bottom.equalToSuperview().inset(2)
+        }
+        
+        countingView.snp.makeConstraints { make in
+            make.top.equalToSuperview().inset(4)
+            make.trailing.equalToSuperview().inset(4)
+            make.size.equalTo(20)
         }
     }
 }
