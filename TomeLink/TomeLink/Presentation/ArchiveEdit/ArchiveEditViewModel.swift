@@ -46,10 +46,27 @@ final class ArchiveEditViewModel: BaseViewModel {
         let date = BehaviorRelay<Date>(value: Date())
         let note = BehaviorRelay<String?>(value: nil)
         
-        // observable
-        let contentsToArchive = Observable
-            .combineLatest(input.note, input.archivedAt)
+        
+        // init views with the recieved data
         let archiveID = Observable<UUID?>.just(archiveID)
+        
+        archiveID
+            .compactMap{ $0 }
+            .bind(with: self) { owner, id in
+                guard let archive = owner.repository.fetchArchive(for: id) else { return }
+                date.accept(archive.archivedAt)
+                note.accept(archive.note)
+            }
+            .disposed(by: disposeBag)
+        
+        
+        // observable
+        let archivedAt = Observable
+            .merge(input.archivedAt.asObservable(),
+                   date.asObservable())
+        
+        let contentsToArchive = Observable
+            .combineLatest(input.note, archivedAt)
         
         input.tapDoneButton
             .withLatestFrom(contentsToArchive)
@@ -64,15 +81,6 @@ final class ArchiveEditViewModel: BaseViewModel {
                 }
 
                 dismiss.accept(())
-            }
-            .disposed(by: disposeBag)
-        
-        archiveID
-            .compactMap{ $0 }
-            .bind(with: self) { owner, id in
-                guard let archive = owner.repository.fetchArchive(for: id) else { return }
-                date.accept(archive.archivedAt)
-                note.accept(archive.note)
             }
             .disposed(by: disposeBag)
         

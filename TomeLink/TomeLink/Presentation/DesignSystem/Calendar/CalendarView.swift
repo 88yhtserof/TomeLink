@@ -129,7 +129,7 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
             cell.configure(day: nil, books: nil)
         } else {
             let day = TomeLinkCalendar.component(.day, from: date - 1, in: .calendar)
-            print(day)
+            
             let filteredArchives = archives
                 .filter { TomeLinkCalendar.isDate($0.archivedAt, inSameDayAs: date, in: .calendar) }
                 .sorted { $0.archivedAt < $1.archivedAt }
