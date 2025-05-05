@@ -57,6 +57,7 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
             .compactMap { owner, indexPath in
                 let date = owner.dates[indexPath.row]
                 guard let books = owner.booksForDate[date] else { return nil }
+                print(indexPath, date, books)
                 return (date, books)
             }
             .take(1)
@@ -128,12 +129,10 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
         if date == Date.distantPast {
             cell.configure(day: nil, books: nil)
         } else {
-            let day = Calendar.current.component(.day, from: date - 1)
-            
+            let day = TomeLinkCalendar.component(.day, from: date - 1, in: .calendar)
+            print(day)
             let filteredArchives = archives
-                .filter {
-                    Calendar.current.isDate($0.archivedAt, inSameDayAs: date)
-                }
+                .filter { TomeLinkCalendar.isDate($0.archivedAt, inSameDayAs: date, in: .calendar) }
                 .sorted { $0.archivedAt < $1.archivedAt }
                 .map{ $0.book }
             if filteredArchives.count > 0 {

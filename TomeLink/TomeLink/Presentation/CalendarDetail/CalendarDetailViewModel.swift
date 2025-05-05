@@ -56,7 +56,7 @@ final class CalendarDetailViewModel: BaseViewModel, OutputEventEmittable {
                 let list = owner.archiveRepository.fetchAllArchives()
                 return list
                     .filter {
-                        Calendar.current.isDate($0.archivedAt, inSameDayAs: owner.date)
+                        TomeLinkCalendar.isDate($0.archivedAt, inSameDayAs: owner.date, in: .calendar)
                     }
             }
             .bind(to: archives)
