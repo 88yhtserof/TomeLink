@@ -17,8 +17,9 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
     
     struct Input {
         let viewWillAppear: ControlEvent<Void>
-        let favoriteButtonDidSave: PublishRelay<Void>
-        let readingButtonDidSave: PublishRelay<Void>
+        let tapToReadCategory: PublishRelay<Void>
+        let tapReadingCategory: PublishRelay<Void>
+        let tapArchiveCategory: PublishRelay<Void>
     }
     
     struct Output {
@@ -49,7 +50,7 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
         let emptyList = BehaviorRelay<String>(value: "")
         
         Observable.of(input.viewWillAppear.asObservable(),
-                      input.favoriteButtonDidSave.asObservable())
+                      input.tapToReadCategory.asObservable())
             .merge()
             .withUnretained(self)
             .map { owner, _ in owner.favoriteRepository.fetchFavorites() }
@@ -63,10 +64,7 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
             .disposed(by: disposeBag)
         
         
-        Observable.of(input.readingButtonDidSave.asObservable(),
-                      input.viewWillAppear.asObservable(),
-                      outputEvent.map{ _ in Void() }.asObservable())
-            .merge()
+        input.tapReadingCategory
             .withUnretained(self)
             .map { owner, _ in owner.readingRepository.fetchAllReadings() }
             .bind(with: self) { owner, readings in
@@ -79,8 +77,7 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
             }
             .disposed(by: disposeBag)
         
-        Observable.of(input.viewWillAppear.asObservable())
-            .merge()
+        input.tapArchiveCategory
             .bind(with: self) { owner, _ in
                 let list = owner.archiveRepository.fetchAllArchives()
                 

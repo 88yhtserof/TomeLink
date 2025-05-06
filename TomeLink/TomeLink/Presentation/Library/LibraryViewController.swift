@@ -25,18 +25,10 @@ final class LibraryViewController: UIViewController {
     private var dataSource: DataSource!
     private var snapshot: Snapshot!
     
-    // TODO: - ViewModel로 옮기기
-    private let favoriteRepository = FavoriteRepository()
-    private let readingRepository = ReadingRepository()
-    private let archiveRepository = ArchiveRepository()
-    
     private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
     
-    fileprivate var lastestSection: Section = .toRead
-    
     private let favoriteButtonDidSaveRalay = PublishRelay<Void>()
-    private let readingButtonDidSaveRalay = PublishRelay<Void>()
     
     // LifeCycle
     init(viewModel: LibraryViewModel) {
@@ -65,9 +57,14 @@ final class LibraryViewController: UIViewController {
     // DataBinding
     private func bind() {
         
+        let tapToReadCategory = PublishRelay<Void>()
+        let tapReadingCategory = PublishRelay<Void>()
+        let tapArchiveCategory = PublishRelay<Void>()
+        
         let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear,
-                                           favoriteButtonDidSave: favoriteButtonDidSaveRalay,
-                                           readingButtonDidSave: readingButtonDidSaveRalay)
+                                           tapToReadCategory: tapToReadCategory,
+                                           tapReadingCategory: tapReadingCategory,
+                                           tapArchiveCategory: tapArchiveCategory)
         let output = viewModel.transform(input: input)
         
         output.listToRead
@@ -86,72 +83,25 @@ final class LibraryViewController: UIViewController {
             .drive(rx.createSnapshotForEmpty)
             .disposed(by: disposeBag)
         
+        
+        // category
         categoryCollectionView.rx.itemSelected
-            .withUnretained(self)
-            .filter{ owner, indexPath in
+            .compactMap{ CategoryItem(rawValue: $0.row) }
+            .bind(with: self) { owner, category in
                 
-                if let category = CategoryItem(rawValue: indexPath.item) {
-                    switch category {
-                    case .toRead:
-                        owner.lastestSection = .toRead
-                    case .reading:
-                        owner.lastestSection = .reading
-                    case .archive:
-                        owner.lastestSection = .archive
-                    }
-                }
-                
-                guard let currentCell = owner.categoryCollectionView.cellForItem(at: indexPath) as? CategoryCollectionViewCell else {
-                    return false
-                }
-                return !currentCell.isCategorySelected
-            }
-            .compactMap{ owner, indexPath in
-                owner.categoryCollectionView.visibleCells
-                    .compactMap{ cell in
-                        cell as? CategoryCollectionViewCell
-                    }
-                    .filter{ $0.isCategorySelected }
-                    .forEach { cell in
-                        cell.isCategorySelected = false
-                    }
-                    
-                if let selectedCell = owner.categoryCollectionView.cellForItem(at: indexPath) as? CategoryCollectionViewCell {
-                    selectedCell.isCategorySelected = true
-                }
-                
-                return owner.categoryDataSource.itemIdentifier(for: indexPath)
-            }
-            .bind(with: self) { (owner, category) in
                 switch category {
                 case .toRead:
-                    owner.collectionView.isScrollEnabled = true
-                    
-                    let books = owner.favoriteRepository.fetchFavorites()
-                    
-                    if books.isEmpty {
-                        owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
-                    } else {
-                        owner.createSnapshotForToRead(books)
-                    }
+                    tapToReadCategory.accept(Void())
                 case .reading:
-                    owner.collectionView.isScrollEnabled = true
-                    
-                    let books = owner.readingRepository.fetchAllReadings()
-                    
-                    if books.isEmpty {
-                        owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
-                    } else {
-                        owner.createSnapshotForReading(books)
-                    }
+                    tapReadingCategory.accept(Void())
                 case .archive:
-                    owner.collectionView.setContentOffset(CGPoint(x: 0, y: 0), animated: false)
-                    owner.collectionView.isScrollEnabled = false
-                    owner.createSnapshotForArchive(Archive.archives)
+                    tapArchiveCategory.accept(Void())
                 }
             }
             .disposed(by: disposeBag)
         
+        
+        // library
         collectionView.rx.itemSelected
             .withUnretained(self)
             .compactMap { owner, indexPath in
@@ -433,8 +383,7 @@ private extension LibraryViewController {
             }
         })
         
-        let books = favoriteRepository.fetchFavorites()
-        createSnapshotForToRead(books)
+        createSnapshotForToRead([])
         collectionView.dataSource = dataSource
     }
     
@@ -523,23 +472,13 @@ extension Reactive where Base: LibraryViewController {
     
     var createSnapshotForToRead: Binder<[Book]> {
         return Binder(base) { base, list in
-            
-            if base.lastestSection == .toRead {
-                base.createSnapshotForToRead(list)
-            } else {
-                return
-            }
+            base.createSnapshotForToRead(list)
         }
     }
     
     var createSnapshotForReading: Binder<[Reading]> {
         return Binder(base) { base, list in
-            
-            if base.lastestSection == .reading {
-                base.createSnapshotForReading(list)
-            } else {
-                return
-            }
+            base.createSnapshotForReading(list)
         }
     }
     
