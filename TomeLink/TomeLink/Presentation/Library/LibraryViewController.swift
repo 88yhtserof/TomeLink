@@ -28,8 +28,6 @@ final class LibraryViewController: UIViewController {
     private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
     
-    private let favoriteButtonDidSaveRalay = PublishRelay<Void>()
-    
     // LifeCycle
     init(viewModel: LibraryViewModel) {
         self.viewModel = viewModel
@@ -64,7 +62,8 @@ final class LibraryViewController: UIViewController {
         let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear,
                                            tapToReadCategory: tapToReadCategory,
                                            tapReadingCategory: tapReadingCategory,
-                                           tapArchiveCategory: tapArchiveCategory)
+                                           tapArchiveCategory: tapArchiveCategory,
+                                           didFavoriteButtonMessageSent: rx.didFavoriteButtonMessageSent)
         let output = viewModel.transform(input: input)
         
         output.listToRead
@@ -134,6 +133,14 @@ final class LibraryViewController: UIViewController {
             }
             .disposed(by: disposeBag)
         
+        
+        // to read
+        rx.didFavoriteButtonMessageSent
+            .bind(with: self) { owner, message in
+                owner.view.makeToast(message, duration: 1.5, position: .bottom)
+            }
+            .disposed(by: disposeBag)
+        
     }
     
     // Notification
@@ -142,15 +149,7 @@ final class LibraryViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
     }
     
-    @objc func favoriteButtonDidSave(_ notification: Notification) {
-        guard let message = notification.userInfo?["message"] as? String else {
-            print("Failed to get saving message")
-            return
-        }
-        
-        favoriteButtonDidSaveRalay.accept(Void())
-        self.view.makeToast(message, duration: 1.5, position: .bottom)
-    }
+    @objc func favoriteButtonDidSave(_ notification: Notification) { }
 }
 
 //MARK: - Configuration
@@ -492,5 +491,21 @@ extension Reactive where Base: LibraryViewController {
         return Binder(base) { base, value in
             base.createSnapshotForEmpty(value)
         }
+    }
+    
+    var didFavoriteButtonMessageSent: ControlEvent<String> {
+        let source: Observable<String> = self
+            .methodInvoked(#selector(base.favoriteButtonDidSave))
+            .compactMap{ arguments in
+                guard let notification = arguments.first as? Notification,
+                      let message = notification.userInfo?["message"] as? String else {
+                    print("Failed to get saving message")
+                    return nil
+                }
+                
+                return message
+            }
+        
+        return ControlEvent(events: source)
     }
 }

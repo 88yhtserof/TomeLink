@@ -20,6 +20,7 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
         let tapToReadCategory: PublishRelay<Void>
         let tapReadingCategory: PublishRelay<Void>
         let tapArchiveCategory: PublishRelay<Void>
+        let didFavoriteButtonMessageSent: ControlEvent<String>
     }
     
     struct Output {
@@ -50,7 +51,8 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
         let emptyList = BehaviorRelay<String>(value: "")
         
         Observable.of(input.viewWillAppear.asObservable(),
-                      input.tapToReadCategory.asObservable())
+                      input.tapToReadCategory.asObservable(),
+                      input.didFavoriteButtonMessageSent.map{ _ in Void() }.asObservable())
             .merge()
             .withUnretained(self)
             .map { owner, _ in owner.favoriteRepository.fetchFavorites() }
