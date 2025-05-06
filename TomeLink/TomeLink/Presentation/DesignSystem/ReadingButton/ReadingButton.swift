@@ -79,13 +79,6 @@ final class ReadingButton: UIButton {
         output.selectedState
             .drive(rx.isSelected)
             .disposed(by: disposeBag)
-        
-        output.savingMessage
-            .drive(with: self) { owner, value in
-                let (message, id) = value
-                NotificationCenter.default.post(name: NSNotification.Name("ReadingButtonDidSave"), object: nil, userInfo: ["message": message])
-            }
-            .disposed(by: disposeBag)
     }
 }
 

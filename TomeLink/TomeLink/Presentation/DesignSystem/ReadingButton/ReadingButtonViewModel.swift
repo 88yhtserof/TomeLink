@@ -21,7 +21,6 @@ final class ReadingButtonViewModel: BaseViewModel {
     
     struct Output {
         let selectedState: Driver<Bool>
-        let savingMessage: Driver<(String, String)>
     }
     
     private let isbn: String
@@ -37,20 +36,6 @@ final class ReadingButtonViewModel: BaseViewModel {
     func transform(input: Input) -> Output {
         
         let selectedState = BehaviorRelay(value: false)
-        let savingMessage = PublishRelay<(String, String)>()
-        
-        input.selectButton
-            .withLatestFrom(input.isSelectedState)
-            .withUnretained(self)
-            .map { owner, isFavorite in
-                if isFavorite {
-                    return (ReadingButton.State.play.message, owner.isbn)
-                } else {
-                    return (ReadingButton.State.stop.message, owner.isbn)
-                }
-            }
-            .bind(to: savingMessage)
-            .disposed(by: disposeBag)
         
         Observable<String>.just(isbn)
             .withUnretained(self)
@@ -60,7 +45,6 @@ final class ReadingButtonViewModel: BaseViewModel {
             .bind(to: selectedState)
             .disposed(by: disposeBag)
         
-        return Output(selectedState: selectedState.asDriver(),
-                      savingMessage: savingMessage.asDriver(onErrorJustReturn: ("", "")))
+        return Output(selectedState: selectedState.asDriver())
     }
 }
