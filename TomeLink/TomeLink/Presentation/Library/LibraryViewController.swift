@@ -207,7 +207,7 @@ private extension LibraryViewController {
     
     func categoryLayout() -> UICollectionViewLayout {
         let spacing: CGFloat = 8
-        let height: CGFloat = 34
+        let height: CGFloat = 30
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .fractionalHeight(1.0))
         let groupSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .absolute(height))
@@ -360,6 +360,8 @@ private extension LibraryViewController {
         
         createSnapshotForCategory()
         categoryCollectionView.dataSource = categoryDataSource
+        
+        categoryCollectionView.selectItem(at: IndexPath(item: 0, section: 0), animated: false, scrollPosition: .top)
     }
     
     func configureDataSource() {
@@ -387,8 +389,7 @@ private extension LibraryViewController {
     }
     
     func catergoryCellRegistrationHandler(cell: CategoryCollectionViewCell, indexPath: IndexPath, item: String) {
-        cell.configure(with: (item, indexPath.item == 0))
-        cell.isCategorySelected = indexPath.item == 0
+        cell.configure(with: item)
     }
     
     func toReadCellRegistrationHandler(cell: LibraryThumbnailCollectionViewCell, indexPath: IndexPath, item: Book) {

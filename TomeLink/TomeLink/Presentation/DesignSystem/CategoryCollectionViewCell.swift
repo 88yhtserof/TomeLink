@@ -13,12 +13,16 @@ class CategoryCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
     static let identifier = String(describing: CategoryCollectionViewCell.self)
     
     // Views
-    private let categoryButton = CategoryButton()
+    private let categoryBackgroundView = UIView()
+    private let categoryLabel = UILabel()
     
     // Properties
-    var isCategorySelected: Bool {
-        get { categoryButton.isSelected }
-        set { categoryButton.isSelected = newValue }
+    override var isSelected: Bool {
+        willSet {
+            if newValue != isSelected {
+                updateState(newValue ? .selected : .normal)
+            }
+        }
     }
     
     // LifeCycle
@@ -36,9 +40,9 @@ class CategoryCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
     }
     
     // Feature
-    func configure(with value: (title: String, isSelected: Bool)) {
+    func configure(with value: String) {
         
-        categoryButton.title = value.title
+        categoryLabel.text = value
     }
 }
 
@@ -47,22 +51,46 @@ private extension CategoryCollectionViewCell {
     
     func configureView() {
         
-        contentView.cornerRadius()
-        categoryButton.isUserInteractionEnabled = false
+        contentView.border(color: TomeLinkColor.title)
+        
+        categoryLabel.font = TomeLinkFont.category
+        categoryLabel.textColor = TomeLinkColor.title
+        
     }
     
     func configureHierarchy() {
-        contentView.addSubviews(categoryButton)
+        contentView.addSubviews(categoryLabel)
     }
     
     func configureConstraints() {
         
-        let verticalInset: CGFloat = 4
-        let horizontalInset: CGFloat = 2
+        let verticalInset: CGFloat = 2
+        let horizontalInset: CGFloat = 10
         
-        categoryButton.snp.makeConstraints { make in
+        categoryLabel.snp.makeConstraints { make in
             make.verticalEdges.equalToSuperview().inset(verticalInset)
             make.horizontalEdges.equalToSuperview().inset(horizontalInset)
+        }
+    }
+}
+
+//MARK: - Selected State
+private extension CategoryCollectionViewCell {
+    
+    enum State {
+        case normal
+        case selected
+    }
+    
+    func updateState(_ state: State) {
+        
+        switch state {
+        case .normal:
+            categoryLabel.textColor = TomeLinkColor.title
+            contentView.backgroundColor = TomeLinkColor.background
+        case .selected:
+            categoryLabel.textColor = TomeLinkColor.background
+            contentView.backgroundColor = TomeLinkColor.title
         }
     }
 }
