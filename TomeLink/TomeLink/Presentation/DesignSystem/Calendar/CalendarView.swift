@@ -42,13 +42,13 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
     
     // Binding
     func bind(_ viewModel: CalendarViewModel) {
-        
         let input = CalendarViewModel.Input()
         let output = viewModel.transform(input: input)
         
         output.archives
             .drive(with: self) { owner, list in
                 owner.archives = list
+                owner.collectionView.reloadData()
             }
             .disposed(by: disposeBag)
             
@@ -126,7 +126,7 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
         let date = dates[indexPath.item]
         
         if date == Date.distantPast {
-            cell.configure(day: nil, books: nil)
+            cell.configure(with: (day: nil, books: nil))
         } else {
             let day = TomeLinkCalendar.component(.day, from: date - 1, in: .calendar)
             
@@ -137,7 +137,7 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
             if filteredArchives.count > 0 {
                 booksForDate[date] = filteredArchives
             }
-            cell.configure(day: day, books: filteredArchives)
+            cell.configure(with: (day: day, books: filteredArchives))
         }
         return cell
     }
