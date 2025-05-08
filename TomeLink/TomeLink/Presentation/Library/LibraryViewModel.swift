@@ -16,9 +16,12 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
     var outputEvent = PublishRelay<OutputEvent>()
     
     struct Input {
+        let latestCategory: Observable<LibraryViewController.Section>
         let viewWillAppear: ControlEvent<Void>
-        let favoriteButtonDidSave: PublishRelay<Void>
-        let readingButtonDidSave: PublishRelay<Void>
+        let tapToReadCategory: PublishRelay<Void>
+        let tapReadingCategory: PublishRelay<Void>
+        let tapArchiveCategory: PublishRelay<Void>
+        let didFavoriteButtonMessageSent: ControlEvent<String>
     }
     
     struct Output {
@@ -43,17 +46,43 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
     
     func transform(input: Input) -> Output {
         
+        // output
         let listToRead = BehaviorRelay<[Book]>(value: [])
         let listReading = PublishRelay<[Reading]>()
         let listArchive = PublishRelay<[Archive]>()
         let emptyList = BehaviorRelay<String>(value: "")
         
-        Observable.of(input.viewWillAppear.asObservable(),
-                      input.favoriteButtonDidSave.asObservable())
+        // viewWillAppear
+        let toReadWillAppear = BehaviorRelay<Void>(value: ())
+        let readingWillAppear = BehaviorRelay<Void>(value: ())
+        let archiveWillAppear = BehaviorRelay<Void>(value: ())
+        
+        input.viewWillAppear
+            .withLatestFrom(input.latestCategory)
+            .bind { category in
+                switch category {
+                case .toRead:
+                    toReadWillAppear.accept(())
+                case .reading:
+                    readingWillAppear.accept(())
+                case .archive:
+                    archiveWillAppear.accept(())
+                default:
+                    break
+                }
+            }
+            .disposed(by: disposeBag)
+        
+        
+        // section
+        Observable.of(toReadWillAppear.asObservable(),
+                      input.tapToReadCategory.asObservable(),
+                      input.didFavoriteButtonMessageSent.map{ _ in Void() }.asObservable())
             .merge()
             .withUnretained(self)
             .map { owner, _ in owner.favoriteRepository.fetchFavorites() }
             .bind(with: self) { owner, favorites in
+                
                 if favorites.isEmpty {
                     emptyList.accept("아직 저장된 도서가 없습니다.")
                 } else {
@@ -62,10 +91,8 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
             }
             .disposed(by: disposeBag)
         
-        
-        Observable.of(input.readingButtonDidSave.asObservable(),
-                      input.viewWillAppear.asObservable(),
-                      outputEvent.map{ _ in Void() }.asObservable())
+        Observable.of(readingWillAppear.asObservable(),
+                      input.tapReadingCategory.asObservable())
             .merge()
             .withUnretained(self)
             .map { owner, _ in owner.readingRepository.fetchAllReadings() }
@@ -79,16 +106,12 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
             }
             .disposed(by: disposeBag)
         
-        Observable.of(input.viewWillAppear.asObservable())
-            .merge()
+        Observable.of(archiveWillAppear.asObservable(),
+                      input.tapArchiveCategory.asObservable())
+        .merge()
             .bind(with: self) { owner, _ in
                 let list = owner.archiveRepository.fetchAllArchives()
-                
-                if list.isEmpty {
-                    emptyList.accept("아직 저장된 도서가 없습니다.")
-                } else {
-                    listArchive.accept(list)
-                }
+                listArchive.accept(list)
             }
             .disposed(by: disposeBag)
         

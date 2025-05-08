@@ -10,7 +10,9 @@ import UIKit
 import Kingfisher
 import SnapKit
 
-class CalendarCollectionViewCell: UICollectionViewCell {
+class CalendarCollectionViewCell: UICollectionViewCell, BaseCollectionViewCell {
+    
+    static var identifier: String = String(describing: CalendarCollectionViewCell.self)
     
     private let dayLabel = UILabel()
     private let imageView = UIImageView()
@@ -36,10 +38,10 @@ class CalendarCollectionViewCell: UICollectionViewCell {
         countingView.isHidden = true
     }
     
-    func configure(day: Int?, books: [Book]?) {
+    func configure(with value: (day: Int?, books: [Book]?)) {
         
-        guard let day,
-              let books else {
+        guard let day = value.day,
+              let books = value.books else {
             dayLabel.text = nil
             imageView.image = nil
             return

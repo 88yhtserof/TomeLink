@@ -25,18 +25,8 @@ final class LibraryViewController: UIViewController {
     private var dataSource: DataSource!
     private var snapshot: Snapshot!
     
-    // TODO: - ViewModel로 옮기기
-    private let favoriteRepository = FavoriteRepository()
-    private let readingRepository = ReadingRepository()
-    private let archiveRepository = ArchiveRepository()
-    
     private let viewModel: LibraryViewModel
     private let disposeBag = DisposeBag()
-    
-    fileprivate var lastestSection: Section = .toRead
-    
-    private let favoriteButtonDidSaveRalay = PublishRelay<Void>()
-    private let readingButtonDidSaveRalay = PublishRelay<Void>()
     
     // LifeCycle
     init(viewModel: LibraryViewModel) {
@@ -65,9 +55,17 @@ final class LibraryViewController: UIViewController {
     // DataBinding
     private func bind() {
         
-        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear,
-                                           favoriteButtonDidSave: favoriteButtonDidSaveRalay,
-                                           readingButtonDidSave: readingButtonDidSaveRalay)
+        let tapToReadCategory = PublishRelay<Void>()
+        let tapReadingCategory = PublishRelay<Void>()
+        let tapArchiveCategory = PublishRelay<Void>()
+        let latestCategory = BehaviorRelay<Section>(value: .toRead)
+        
+        let input = LibraryViewModel.Input(latestCategory: latestCategory.asObservable(),
+                                           viewWillAppear: rx.viewWillAppear,
+                                           tapToReadCategory: tapToReadCategory,
+                                           tapReadingCategory: tapReadingCategory,
+                                           tapArchiveCategory: tapArchiveCategory,
+                                           didFavoriteButtonMessageSent: rx.didFavoriteButtonMessageSent)
         let output = viewModel.transform(input: input)
         
         output.listToRead
@@ -86,72 +84,28 @@ final class LibraryViewController: UIViewController {
             .drive(rx.createSnapshotForEmpty)
             .disposed(by: disposeBag)
         
+        
+        // category
         categoryCollectionView.rx.itemSelected
-            .withUnretained(self)
-            .filter{ owner, indexPath in
+            .compactMap{ CategoryItem(rawValue: $0.row) }
+            .bind(with: self) { owner, category in
                 
-                if let category = CategoryItem(rawValue: indexPath.item) {
-                    switch category {
-                    case .toRead:
-                        owner.lastestSection = .toRead
-                    case .reading:
-                        owner.lastestSection = .reading
-                    case .archive:
-                        owner.lastestSection = .archive
-                    }
-                }
-                
-                guard let currentCell = owner.categoryCollectionView.cellForItem(at: indexPath) as? CategoryCollectionViewCell else {
-                    return false
-                }
-                return !currentCell.isCategorySelected
-            }
-            .compactMap{ owner, indexPath in
-                owner.categoryCollectionView.visibleCells
-                    .compactMap{ cell in
-                        cell as? CategoryCollectionViewCell
-                    }
-                    .filter{ $0.isCategorySelected }
-                    .forEach { cell in
-                        cell.isCategorySelected = false
-                    }
-                    
-                if let selectedCell = owner.categoryCollectionView.cellForItem(at: indexPath) as? CategoryCollectionViewCell {
-                    selectedCell.isCategorySelected = true
-                }
-                
-                return owner.categoryDataSource.itemIdentifier(for: indexPath)
-            }
-            .bind(with: self) { (owner, category) in
                 switch category {
                 case .toRead:
-                    owner.collectionView.isScrollEnabled = true
-                    
-                    let books = owner.favoriteRepository.fetchFavorites()
-                    
-                    if books.isEmpty {
-                        owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
-                    } else {
-                        owner.createSnapshotForToRead(books)
-                    }
+                    latestCategory.accept(.toRead)
+                    tapToReadCategory.accept(Void())
                 case .reading:
-                    owner.collectionView.isScrollEnabled = true
-                    
-                    let books = owner.readingRepository.fetchAllReadings()
-                    
-                    if books.isEmpty {
-                        owner.createSnapshotForEmpty("아직 저장된 도서가 없습니다.")
-                    } else {
-                        owner.createSnapshotForReading(books)
-                    }
+                    latestCategory.accept(.reading)
+                    tapReadingCategory.accept(Void())
                 case .archive:
-                    owner.collectionView.setContentOffset(CGPoint(x: 0, y: 0), animated: false)
-                    owner.collectionView.isScrollEnabled = false
-                    owner.createSnapshotForArchive(Archive.archives)
+                    latestCategory.accept(.archive)
+                    tapArchiveCategory.accept(Void())
                 }
             }
             .disposed(by: disposeBag)
         
+        
+        // library
         collectionView.rx.itemSelected
             .withUnretained(self)
             .compactMap { owner, indexPath in
@@ -184,6 +138,14 @@ final class LibraryViewController: UIViewController {
             }
             .disposed(by: disposeBag)
         
+        
+        // to read
+        rx.didFavoriteButtonMessageSent
+            .bind(with: self) { owner, message in
+                owner.view.makeToast(message, duration: 1.5, position: .bottom)
+            }
+            .disposed(by: disposeBag)
+        
     }
     
     // Notification
@@ -192,15 +154,7 @@ final class LibraryViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(favoriteButtonDidSave), name: NSNotification.Name("FavoriteButtonDidSave"), object: nil)
     }
     
-    @objc func favoriteButtonDidSave(_ notification: Notification) {
-        guard let message = notification.userInfo?["message"] as? String else {
-            print("Failed to get saving message")
-            return
-        }
-        
-        favoriteButtonDidSaveRalay.accept(Void())
-        self.view.makeToast(message, duration: 1.5, position: .bottom)
-    }
+    @objc func favoriteButtonDidSave(_ notification: Notification) { }
 }
 
 //MARK: - Configuration
@@ -258,7 +212,7 @@ private extension LibraryViewController {
     
     func categoryLayout() -> UICollectionViewLayout {
         let spacing: CGFloat = 8
-        let height: CGFloat = 34
+        let height: CGFloat = 30
         
         let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .fractionalHeight(1.0))
         let groupSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .absolute(height))
@@ -357,8 +311,8 @@ private extension LibraryViewController {
     }
 }
 
-//MARK: - CollectionView DataSource
-private extension LibraryViewController {
+//MARK: - Type
+extension LibraryViewController {
     
     typealias CategoryDataSource = UICollectionViewDiffableDataSource<CategorySection, CategoryItem>
     typealias CategorySnapshot = NSDiffableDataSourceSnapshot<CategorySection, CategoryItem>
@@ -400,6 +354,10 @@ private extension LibraryViewController {
         case archive([Archive])
         case empty(String)
     }
+}
+
+//MARK: - CollectionView DataSource
+private extension LibraryViewController {
     
     func configureCategoryDataSource() {
         
@@ -411,6 +369,8 @@ private extension LibraryViewController {
         
         createSnapshotForCategory()
         categoryCollectionView.dataSource = categoryDataSource
+        
+        categoryCollectionView.selectItem(at: IndexPath(item: 0, section: 0), animated: false, scrollPosition: .top)
     }
     
     func configureDataSource() {
@@ -433,14 +393,12 @@ private extension LibraryViewController {
             }
         })
         
-        let books = favoriteRepository.fetchFavorites()
-        createSnapshotForToRead(books)
+        createSnapshotForToRead([])
         collectionView.dataSource = dataSource
     }
     
     func catergoryCellRegistrationHandler(cell: CategoryCollectionViewCell, indexPath: IndexPath, item: String) {
-        cell.configure(with: (item, indexPath.item == 0))
-        cell.isCategorySelected = indexPath.item == 0
+        cell.configure(with: item)
     }
     
     func toReadCellRegistrationHandler(cell: LibraryThumbnailCollectionViewCell, indexPath: IndexPath, item: Book) {
@@ -461,7 +419,7 @@ private extension LibraryViewController {
                 return CalendarDetailViewController(viewModel: calendarDetailViewModel)
             }
             .bind(to: rx.pushViewController)
-            .disposed(by: disposeBag)
+            .disposed(by: cell.calendarView.disposeBag)
         
     }
     
@@ -523,23 +481,13 @@ extension Reactive where Base: LibraryViewController {
     
     var createSnapshotForToRead: Binder<[Book]> {
         return Binder(base) { base, list in
-            
-            if base.lastestSection == .toRead {
-                base.createSnapshotForToRead(list)
-            } else {
-                return
-            }
+            base.createSnapshotForToRead(list)
         }
     }
     
     var createSnapshotForReading: Binder<[Reading]> {
         return Binder(base) { base, list in
-            
-            if base.lastestSection == .reading {
-                base.createSnapshotForReading(list)
-            } else {
-                return
-            }
+            base.createSnapshotForReading(list)
         }
     }
     
@@ -553,5 +501,21 @@ extension Reactive where Base: LibraryViewController {
         return Binder(base) { base, value in
             base.createSnapshotForEmpty(value)
         }
+    }
+    
+    var didFavoriteButtonMessageSent: ControlEvent<String> {
+        let source: Observable<String> = self
+            .methodInvoked(#selector(base.favoriteButtonDidSave))
+            .compactMap{ arguments in
+                guard let notification = arguments.first as? Notification,
+                      let message = notification.userInfo?["message"] as? String else {
+                    print("Failed to get saving message")
+                    return nil
+                }
+                
+                return message
+            }
+        
+        return ControlEvent(events: source)
     }
 }
