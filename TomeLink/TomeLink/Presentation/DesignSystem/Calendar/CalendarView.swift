@@ -24,7 +24,7 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
     private var dates: [Date] = []
     private var currentMonth: Date!
     
-    private let disposeBag = DisposeBag()
+    var disposeBag: DisposeBag!
     fileprivate var selectedBooks = PublishRelay<(Date, [Book])>()
     
     init() {
@@ -42,6 +42,8 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
     
     // Binding
     func bind(_ viewModel: CalendarViewModel) {
+        disposeBag = DisposeBag()
+        
         let input = CalendarViewModel.Input()
         let output = viewModel.transform(input: input)
         
@@ -62,6 +64,8 @@ final class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDe
             .take(1)
             .do { _ in
                 print("CalendarView - collectionView.rx.itemSelected: next")
+            } onSubscribed: {
+                print("CalendarView - collectionView.rx.itemSelected: subscribed")
             } onDispose: {
                 print("CalendarView - collectionView.rx.itemSelected: dispose")
             }
@@ -271,6 +275,8 @@ extension Reactive where Base: CalendarView {
             .take(1)
             .do { _ in
                 print("CalendarView - selectedBooks: next")
+            } onSubscribed: {
+                print("CalendarView - selectedBooks: subscribed")
             } onDispose: {
                 print("CalendarView - selectedBooks: dispose")
             }

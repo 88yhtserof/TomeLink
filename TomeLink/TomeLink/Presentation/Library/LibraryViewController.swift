@@ -58,8 +58,10 @@ final class LibraryViewController: UIViewController {
         let tapToReadCategory = PublishRelay<Void>()
         let tapReadingCategory = PublishRelay<Void>()
         let tapArchiveCategory = PublishRelay<Void>()
+        let latestCategory = BehaviorRelay<Section>(value: .toRead)
         
-        let input = LibraryViewModel.Input(viewWillAppear: rx.viewWillAppear,
+        let input = LibraryViewModel.Input(latestCategory: latestCategory.asObservable(),
+                                           viewWillAppear: rx.viewWillAppear,
                                            tapToReadCategory: tapToReadCategory,
                                            tapReadingCategory: tapReadingCategory,
                                            tapArchiveCategory: tapArchiveCategory,
@@ -90,10 +92,13 @@ final class LibraryViewController: UIViewController {
                 
                 switch category {
                 case .toRead:
+                    latestCategory.accept(.toRead)
                     tapToReadCategory.accept(Void())
                 case .reading:
+                    latestCategory.accept(.reading)
                     tapReadingCategory.accept(Void())
                 case .archive:
+                    latestCategory.accept(.archive)
                     tapArchiveCategory.accept(Void())
                 }
             }
@@ -306,8 +311,8 @@ private extension LibraryViewController {
     }
 }
 
-//MARK: - CollectionView DataSource
-private extension LibraryViewController {
+//MARK: - Type
+extension LibraryViewController {
     
     typealias CategoryDataSource = UICollectionViewDiffableDataSource<CategorySection, CategoryItem>
     typealias CategorySnapshot = NSDiffableDataSourceSnapshot<CategorySection, CategoryItem>
@@ -349,6 +354,10 @@ private extension LibraryViewController {
         case archive([Archive])
         case empty(String)
     }
+}
+
+//MARK: - CollectionView DataSource
+private extension LibraryViewController {
     
     func configureCategoryDataSource() {
         
@@ -410,7 +419,7 @@ private extension LibraryViewController {
                 return CalendarDetailViewController(viewModel: calendarDetailViewModel)
             }
             .bind(to: rx.pushViewController)
-            .disposed(by: disposeBag)
+            .disposed(by: cell.calendarView.disposeBag)
         
     }
     
