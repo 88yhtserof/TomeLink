@@ -111,12 +111,7 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
         .merge()
             .bind(with: self) { owner, _ in
                 let list = owner.archiveRepository.fetchAllArchives()
-                
-                if list.isEmpty {
-                    emptyList.accept("아직 저장된 도서가 없습니다.")
-                } else {
-                    listArchive.accept(list)
-                }
+                listArchive.accept(list)
             }
             .disposed(by: disposeBag)
         
