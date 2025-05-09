@@ -13,7 +13,7 @@ import RxCocoa
 final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
     
     var disposeBag = DisposeBag()
-    var outputEvent = PublishRelay<OutputEvent>()
+    var outputEvent = PublishRelay<OutputEvent>() // trigger from reading edit done button
     
     struct Input {
         let latestCategory: Observable<LibraryViewController.Section>
@@ -92,7 +92,8 @@ final class LibraryViewModel: BaseViewModel, OutputEventEmittable {
             .disposed(by: disposeBag)
         
         Observable.of(readingWillAppear.asObservable(),
-                      input.tapReadingCategory.asObservable())
+                      input.tapReadingCategory.asObservable(),
+                      outputEvent.map{ _ in Void() }.asObservable())
             .merge()
             .withUnretained(self)
             .map { owner, _ in owner.readingRepository.fetchAllReadings() }
