@@ -15,6 +15,7 @@
 		149D783E2D9A7D4000A42C7F /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = 149D783D2D9A7D4000A42C7F /* Toast */; };
 		14A3F49D2DB907AB00C72323 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 14A3F49C2DB907AB00C72323 /* FirebaseAnalytics */; };
 		14A3F49F2DB907AB00C72323 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 14A3F49E2DB907AB00C72323 /* FirebaseCrashlytics */; };
+		14D0E8C22E1273BA00567E55 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 14D0E8C12E1273BA00567E55 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +48,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				14D0E8C22E1273BA00567E55 /* FirebaseMessaging in Frameworks */,
 				14A3F49D2DB907AB00C72323 /* FirebaseAnalytics in Frameworks */,
 				148982692DA68C110024892B /* XMLCoder in Frameworks */,
 				149D759D2D97E0B700A42C7F /* RxCocoa in Frameworks */,
@@ -106,6 +108,7 @@
 				148982682DA68C110024892B /* XMLCoder */,
 				14A3F49C2DB907AB00C72323 /* FirebaseAnalytics */,
 				14A3F49E2DB907AB00C72323 /* FirebaseCrashlytics */,
+				14D0E8C12E1273BA00567E55 /* FirebaseMessaging */,
 			);
 			productName = TomeLink;
 			productReference = 149D75442D97811200A42C7F /* TomeLink.app */;
@@ -206,6 +209,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TomeLink/TomeLink.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZQV4ZDQNW5;
@@ -217,6 +221,7 @@
 				INFOPLIST_KEY_UIStatusBarStyle = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -242,6 +247,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TomeLink/TomeLink.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZQV4ZDQNW5;
@@ -253,6 +259,7 @@
 				INFOPLIST_KEY_UIStatusBarStyle = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -504,6 +511,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 14A3F49B2DB907AB00C72323 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCrashlytics;
+		};
+		14D0E8C12E1273BA00567E55 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 14A3F49B2DB907AB00C72323 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
