@@ -31,7 +31,7 @@ extension BookDTO {
         return Book(
             authors: authors,
             contents: contents,
-            publicationDate: TomeLinkDataFormatter.iso8601Formatter.date(from: datetime),
+            publicationDate: TLDateFormatter.iso8601.date(from: datetime),
             isbn: isbn,
             publisher: publisher,
             thumbnailURL: thumbnail,

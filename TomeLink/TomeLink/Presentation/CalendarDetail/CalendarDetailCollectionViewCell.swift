@@ -48,7 +48,7 @@ final class CalendarDetailCollectionViewCell: UICollectionViewCell, BaseCollecti
         titleLabel.text = book.title
         authorLabel.text = book.authors.joined(separator: ", ")
         publisherLabel.text = book.publisher
-        archivedAtLabel.text = TomeLinkDataFormatter.startedAt.string(from: date)
+        archivedAtLabel.text = TLDateFormatter.startedAt.string(from: date)
         
         if let imageURL = URL(string: book.thumbnailURL) {
             thumnailImageView.kf.setImage(with: imageURL)
