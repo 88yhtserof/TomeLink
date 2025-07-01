@@ -11,3 +11,10 @@ protocol BaseCollectionViewCell: AnyObject, ConfigurableView {
     
     static var identifier: String { get }
 }
+
+extension BaseCollectionViewCell {
+    
+    static var identifier: String {
+        String(describing: self)
+    }
+}
