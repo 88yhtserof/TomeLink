@@ -38,14 +38,16 @@ final class SearchViewModel: BaseViewModel, OutputEventEmittable {
     }
     
     private let networkStatusUseCase: ObserveNetworkStatusUseCase
+    private let searchUseCase: SearchUseCase
     
     private var searchKeyword: String?
     private var page: Int = 1
     private var isEnd: Bool = true
     private var searchResults: [Book] = []
     
-    init(networkStatusUseCase: ObserveNetworkStatusUseCase) {
+    init(networkStatusUseCase: ObserveNetworkStatusUseCase, searchUseCase: SearchUseCase) {
         self.networkStatusUseCase = networkStatusUseCase
+        self.searchUseCase = searchUseCase
     }
     
     func transform(input: Input) -> Output {
@@ -116,7 +118,7 @@ final class SearchViewModel: BaseViewModel, OutputEventEmittable {
             .flatMap { owner, keyword in
                 owner.searchKeyword = keyword
                 isLoading.accept(true)
-                return owner.requestSearch(keyword: keyword, isConnectedToNetwork: isConnectedToNetwork, isLoading: isLoading)
+                return owner.searchUseCase.search(keyword: keyword, page: owner.page, isConnectedToNetwork: isConnectedToNetwork, isLoading: isLoading)
             }
             .share()
         
@@ -126,7 +128,7 @@ final class SearchViewModel: BaseViewModel, OutputEventEmittable {
                 isLoading.accept(false)
                 owner.isEnd = response.meta.isEnd
                 
-                let books = response.toDomain().books
+                let books = response.books
                 owner.searchResults.append(contentsOf: books)
                 return owner.searchResults
             }
@@ -160,16 +162,17 @@ final class SearchViewModel: BaseViewModel, OutputEventEmittable {
             .withUnretained(self)
             .flatMap { owner, keyword in
                 owner.searchKeyword = keyword
+                owner.page = 1
                 isLoading.accept(true)
                 RecentResultsManager.save(keyword)
-                return owner.requestSearch(keyword: keyword, isConnectedToNetwork: isConnectedToNetwork, isLoading: isLoading)
+                return owner.searchUseCase.search(keyword: keyword, page: owner.page, isConnectedToNetwork: isConnectedToNetwork, isLoading: isLoading)
             }
             .withUnretained(self)
             .map { owner, response in
                 isLoading.accept(false)
                 owner.isEnd = response.meta.isEnd
                 
-                let books = response.toDomain().books
+                let books = response.books
                 owner.searchResults.append(contentsOf: books)
                 
                 return owner.searchResults
@@ -196,39 +199,5 @@ final class SearchViewModel: BaseViewModel, OutputEventEmittable {
                       paginationBookSearches: paginationBookSearches.asDriver(onErrorJustReturn: []),
                       isLoading: isLoading.asDriver(onErrorJustReturn: false),
                       switchingSeletedTabBarIndex: switchingSeletedTabBarIndex.asDriver(onErrorJustReturn: 0))
-    }
-}
-
-//MARK: - Feature
-private extension SearchViewModel {
-    
-    /// Requests search to Kakao Book API
-    func requestSearch(keyword: String,
-                       isConnectedToNetwork: BehaviorRelay<Bool>,
-                       isLoading: PublishRelay<Bool>) -> Observable<BookSearchResponseDTO> {
-        return Observable.just(keyword)
-            .distinctUntilChanged()
-            .withUnretained(self)
-            .flatMap { owner, text in
-                return NetworkRequestingManager.shared
-                    .request(api: KakaoNetworkAPI.searchBook(query: text, sort: nil, page: owner.page, size: 20, target: nil))
-                    .catch { error in
-                        print("Error", error)
-                        
-                        if let rxError = error as? RxError {
-                            switch rxError {
-                            case .timeout:
-                                isConnectedToNetwork.accept(false)
-                                isLoading.accept(false)
-                            default:
-                                break
-                            }
-                            
-                        }
-                        
-                        return Single<BookSearchResponseDTO?>.just(nil)
-                    }
-            }
-            .compactMap{ $0 }
     }
 }
