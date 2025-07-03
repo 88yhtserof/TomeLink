@@ -87,7 +87,44 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        
+        let userInfo = notification.request.content.userInfo
+        print("Foreground notification: \(userInfo)")
+        
+        if let isbn = userInfo["isbn"] as? String {
+            print("Notification type: \(isbn)")
+            
+            // 알림 저장
+          }
+        
         completionHandler([.banner, .list, .sound])
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        print("Background: User tapped notification: \(userInfo)")
+        
+        if let isbn = userInfo["isbn"] as? String {
+            print("isbn: \(isbn)")
+            let networkMonitor = NetworkMonitorManager.shared
+            let networkStatusUseCase = DefaultObserveNetworkStatusUseCase(monitor: networkMonitor)
+            let searchUseCase = SearchUseCase(searchRepository: LiveSearchRepository())
+            let notiListViewModel = NotiListViewModel(isbn: isbn, networkStatusUseCase: networkStatusUseCase, searchUseCase: searchUseCase)
+            let notiListViewController = NotiListViewController(viewModel: notiListViewModel)
+            
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first,
+               let rootVC = window.rootViewController,
+               let tabBarVC = rootVC as? TabBarController,
+               let mainVC =  tabBarVC.viewControllers?.first,
+               let naviVC = mainVC as? UINavigationController {
+                naviVC.pushViewController(notiListViewController, animated: true)
+            }
+            
+        }
+        completionHandler()
     }
 }
 

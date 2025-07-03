@@ -7,14 +7,30 @@
 
 import UIKit
 
+import RxSwift
+import RxCocoa
+
 final class NotiListViewController: UIViewController {
     
     // view
+    private let emptyLabel = UILabel()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: listLayout())
     
     // property
+    private let viewModel: NotiListViewModel
     private var dataSource: DataSource!
-    private let notiList: [Item] = [Item(item: "오만과 편견")]
+    
+    private let disposeBag = DisposeBag()
+    
+    // initializer
+    init(viewModel: NotiListViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // life cycle
     override func viewDidLoad() {
@@ -24,6 +40,42 @@ final class NotiListViewController: UIViewController {
         configureConstraints()
         configureView()
         configureDataSource()
+        
+        bind()
+    }
+    
+    // bind
+    func bind() {
+        
+        let input = NotiListViewModel.Input(viewWillAppear: rx.viewWillAppear)
+        let output = viewModel.transform(input: input)
+        
+        output.book
+            .compactMap{ $0 }
+            .drive(with: self) { owner, book in
+                
+                let networkMonitor = NetworkMonitorManager.shared
+                let networkStatusUseCase = DefaultObserveNetworkStatusUseCase(monitor: networkMonitor)
+                let bookDetailViewModel = BookDetailViewModel(book: book, networkStatusUseCase: networkStatusUseCase)
+                let vc = BookDetailViewController(viewModel: bookDetailViewModel)
+                
+                owner.rx.pushViewController.onNext(vc)
+            }
+            .disposed(by: disposeBag)
+        
+        output.notiList
+            .drive(with: self) { owner, items in
+                owner.updateSnapshot(with: items)
+            }
+            .disposed(by: disposeBag)
+        
+        output.emptySearchResult
+            .drive(with: self) { owner, message in
+                owner.emptyLabel.rx.isHidden.onNext(false)
+                owner.emptyLabel.rx.text.onNext(message)
+                owner.collectionView.rx.isHidden.onNext(true)
+            }
+            .disposed(by: disposeBag)
     }
 }
 
@@ -33,15 +85,24 @@ private extension NotiListViewController {
     func configureView() {
         view.backgroundColor = TomeLinkColor.background
         
+        emptyLabel.font = TomeLinkFont.title
+        emptyLabel.textColor = .tomelinkGray
+        emptyLabel.isHidden = true
+        
         collectionView.backgroundColor = .clear
         collectionView.bounces = false
     }
     
     func configureHierarchy() {
-        view.addSubviews(collectionView)
+        view.addSubviews(emptyLabel, collectionView)
     }
     
     func configureConstraints() {
+        
+        emptyLabel.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).inset(26)
+            make.centerX.equalToSuperview()
+        }
         
         collectionView.snp.makeConstraints { make in
             make.edges.equalTo(view.safeAreaLayoutGuide)
@@ -58,8 +119,8 @@ private extension NotiListViewController {
     }
 }
 
-//MARK: - CollectionView DataSource
-private extension NotiListViewController {
+//MARK: - Type
+extension NotiListViewController {
     
     typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
@@ -69,6 +130,10 @@ private extension NotiListViewController {
     }
     
     typealias Item = IdentifiableItem<String>
+}
+
+//MARK: - CollectionView DataSource
+private extension NotiListViewController {
     
     func configureDataSource() {
         
@@ -78,7 +143,7 @@ private extension NotiListViewController {
             return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: itemIdentifier)
         }
         
-        updateSnapshot()
+        updateSnapshot(with: [])
         collectionView.dataSource = dataSource
     }
     
@@ -86,10 +151,10 @@ private extension NotiListViewController {
         cell.configure(with: item.item)
     }
     
-    func updateSnapshot() {
+    func updateSnapshot(with items: [Item]) {
         var snapshot = Snapshot()
         snapshot.appendSections([.notifications])
-        snapshot.appendItems(notiList)
+        snapshot.appendItems(items)
         dataSource.applySnapshotUsingReloadData(snapshot)
     }
 }
