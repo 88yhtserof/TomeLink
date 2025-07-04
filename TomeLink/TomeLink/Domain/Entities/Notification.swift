@@ -6,3 +6,11 @@
 //
 
 import Foundation
+
+struct Notification: Identifiable {
+    let id: UUID
+    let isbn: String
+    let notifiedAt: Date
+    let title: String
+    let type: String
+}

@@ -12,4 +12,13 @@ import CoreData
 @objc(NotificationEntity)
 public class NotificationEntity: NSManagedObject {
 
+    func toDomain() -> Notification {
+        return Notification(
+            id: self.id,
+            isbn: self.isbn,
+            notifiedAt: self.notifiedAt,
+            title: self.title,
+            type: self.type
+        )
+    }
 }
