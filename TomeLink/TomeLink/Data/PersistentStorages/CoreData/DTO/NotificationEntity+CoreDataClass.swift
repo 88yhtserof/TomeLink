@@ -18,6 +18,7 @@ public class NotificationEntity: NSManagedObject {
             isbn: self.isbn,
             notifiedAt: self.notifiedAt,
             title: self.title,
+            content: self.content,
             type: self.type
         )
     }

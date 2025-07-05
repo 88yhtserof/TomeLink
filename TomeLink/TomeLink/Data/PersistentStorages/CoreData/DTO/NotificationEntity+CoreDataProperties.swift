@@ -18,6 +18,7 @@ extension NotificationEntity {
 
     @NSManaged public var type: String
     @NSManaged public var title: String
+    @NSManaged public var content: String
     @NSManaged public var isbn: String
     @NSManaged public var notifiedAt: Date
     @NSManaged public var id: UUID

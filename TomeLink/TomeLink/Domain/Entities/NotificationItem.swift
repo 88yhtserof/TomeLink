@@ -7,10 +7,11 @@
 
 import Foundation
 
-struct NotificationItem: Identifiable {
+struct NotificationItem: Hashable, Identifiable {
     let id: UUID
     let isbn: String
     let notifiedAt: Date
     let title: String
+    let content: String
     let type: String
 }

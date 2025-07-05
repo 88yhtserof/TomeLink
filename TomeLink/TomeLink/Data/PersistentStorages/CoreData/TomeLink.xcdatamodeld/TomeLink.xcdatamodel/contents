@@ -27,6 +27,7 @@
         <relationship name="book" maxCount="1" deletionRule="Nullify" destinationEntity="BookEntity" inverseName="favorite" inverseEntity="BookEntity"/>
     </entity>
     <entity name="NotificationEntity" representedClassName="NotificationEntity" syncable="YES">
+        <attribute name="content" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isbn" optional="YES" attributeType="String"/>
         <attribute name="notifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
