@@ -111,7 +111,8 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             let networkMonitor = NetworkMonitorManager.shared
             let networkStatusUseCase = DefaultObserveNetworkStatusUseCase(monitor: networkMonitor)
             let searchUseCase = SearchUseCase(searchRepository: LiveSearchRepository())
-            let notiListViewModel = NotiListViewModel(isbn: isbn, networkStatusUseCase: networkStatusUseCase, searchUseCase: searchUseCase)
+            let notificationUseCase = NotificationUseCase(notificationRepository: LiveNotificationRepository(), notificationTopicsSubscribe: NotificationTopicsSubscribeManager())
+            let notiListViewModel = NotiListViewModel(isbn: isbn, networkStatusUseCase: networkStatusUseCase, searchUseCase: searchUseCase, notificationUseCase: notificationUseCase)
             let notiListViewController = NotiListViewController(viewModel: notiListViewModel)
             
             if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
