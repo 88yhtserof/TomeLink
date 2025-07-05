@@ -119,7 +119,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             notificationUseCase.saveNotification(isbn: isbn, title: content.title, content: content.body, type: topic)
           }
         
-        completionHandler([.banner, .list, .sound])
+        completionHandler([.sound])
     }
     
     func userNotificationCenter(_ center: UNUserNotificationCenter,
