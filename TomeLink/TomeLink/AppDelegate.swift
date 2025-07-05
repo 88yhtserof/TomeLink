@@ -37,6 +37,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
+    
+    // feature
+    @discardableResult
+    func switchRootViewController(with viewController: UIViewController, animated: Bool = false) -> UIViewController? {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else {
+            print("Could not find a window scene.")
+            return nil
+        }
+        
+        if animated {
+            UIView.transition(with: window, duration: 0.5, animations: { window.rootViewController = viewController })
+        } else {
+            window.rootViewController = viewController
+            window.makeKeyAndVisible()
+        }
+        
+        return window.rootViewController
+    }
 }
 
 //MARK: - Appearance
@@ -115,12 +134,12 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             let notiListViewModel = NotiListViewModel(isbn: isbn, networkStatusUseCase: networkStatusUseCase, searchUseCase: searchUseCase, notificationUseCase: notificationUseCase)
             let notiListViewController = NotiListViewController(viewModel: notiListViewModel)
             
-            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = scene.windows.first,
-               let rootVC = window.rootViewController,
+            if let rootVC = switchRootViewController(with: TabBarController()),
                let tabBarVC = rootVC as? TabBarController,
                let mainVC =  tabBarVC.viewControllers?.first,
                let naviVC = mainVC as? UINavigationController {
+                
+                
                 naviVC.pushViewController(notiListViewController, animated: true)
             }
             
