@@ -15,7 +15,7 @@ final class LibraryViewController: UIViewController {
     // Views
     private let iconImageView = UIImageView()
     private let iconBarButtonItem = UIBarButtonItem()
-    private let searchBarButtonItem = UIBarButtonItem()
+    private let notificationBarButtonItem = UIBarButtonItem()
     private lazy var categoryCollectionView = UICollectionView(frame: .zero, collectionViewLayout: categoryLayout())
     private let separatorView = SeparatorView()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
@@ -155,6 +155,17 @@ final class LibraryViewController: UIViewController {
     }
     
     @objc func favoriteButtonDidSave(_ notification: Notification) { }
+    
+    @objc func didNotificationButtonTapped() {
+        let networkMonitor = NetworkMonitorManager.shared
+        let networkStatusUseCase = DefaultObserveNetworkStatusUseCase(monitor: networkMonitor)
+        let searchUseCase = SearchUseCase(searchRepository: LiveSearchRepository())
+        let notificationUseCase = NotificationUseCase(notificationRepository: LiveNotificationRepository(), notificationTopicsSubscribe: NotificationTopicsSubscribeManager())
+        let notiListViewModel = NotiListViewModel(networkStatusUseCase: networkStatusUseCase, searchUseCase: searchUseCase, notificationUseCase: notificationUseCase)
+        let notiListViewController = NotiListViewController(viewModel: notiListViewModel)
+        
+        self.navigationController?.pushViewController(notiListViewController, animated: true)
+    }
 }
 
 //MARK: - Configuration
@@ -168,8 +179,10 @@ private extension LibraryViewController {
         iconBarButtonItem.customView = iconImageView
         navigationItem.leftBarButtonItem = iconBarButtonItem
         
-        searchBarButtonItem.image = UIImage(systemName: "line.3.horizontal")
-//        navigationItem.rightBarButtonItem = searchBarButtonItem
+        notificationBarButtonItem.image = UIImage(systemName: "bell")
+        notificationBarButtonItem.target = self
+        notificationBarButtonItem.action = #selector(didNotificationButtonTapped)
+        navigationItem.rightBarButtonItem = notificationBarButtonItem
         
         categoryCollectionView.backgroundColor = TomeLinkColor.background
         categoryCollectionView.isScrollEnabled = false
