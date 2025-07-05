@@ -105,6 +105,7 @@ final class NotiListViewModel: BaseViewModel {
         
         // notifications setting view
         input.didAllNotiToggle
+            .skip(1)
             .bind(with: self) { owner, isSubscribed in
                 
                 if isSubscribed {
@@ -116,6 +117,7 @@ final class NotiListViewModel: BaseViewModel {
             .disposed(by: disposeBag)
         
         input.didRecommendNotiToggle
+            .skip(1)
             .bind(with: self) { owner, isSubscribed in
                 
                 if isSubscribed {
