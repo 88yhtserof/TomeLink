@@ -107,13 +107,16 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         
+        let content = notification.request.content
         let userInfo = notification.request.content.userInfo
         print("Foreground notification: \(userInfo)")
         
-        if let isbn = userInfo["isbn"] as? String {
-            print("Notification type: \(isbn)")
+        if let isbn = userInfo["isbn"] as? String,
+           let topic = userInfo["topic"] as? String {
+            print("Notification type: \(topic)")
             
-            // 알림 저장
+            let notificationUseCase = NotificationUseCase(notificationRepository: LiveNotificationRepository(), notificationTopicsSubscribe: NotificationTopicsSubscribeManager())
+            notificationUseCase.saveNotification(isbn: isbn, title: content.title, content: content.body, type: topic)
           }
         
         completionHandler([.banner, .list, .sound])
@@ -122,11 +125,15 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
+        
+        let content = response.notification.request.content
         let userInfo = response.notification.request.content.userInfo
         print("Background: User tapped notification: \(userInfo)")
         
-        if let isbn = userInfo["isbn"] as? String {
-            print("isbn: \(isbn)")
+        if let isbn = userInfo["isbn"] as? String,
+           let topic = userInfo["topic"] as? String {
+            print("Notification type: \(topic)")
+            
             let networkMonitor = NetworkMonitorManager.shared
             let networkStatusUseCase = DefaultObserveNetworkStatusUseCase(monitor: networkMonitor)
             let searchUseCase = SearchUseCase(searchRepository: LiveSearchRepository())
@@ -134,6 +141,10 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             let notiListViewModel = NotiListViewModel(isbn: isbn, networkStatusUseCase: networkStatusUseCase, searchUseCase: searchUseCase, notificationUseCase: notificationUseCase)
             let notiListViewController = NotiListViewController(viewModel: notiListViewModel)
             
+            // save
+            notificationUseCase.saveNotification(isbn: isbn, title: content.title, content: content.body, type: topic)
+            
+            // switch root view controller
             if let rootVC = switchRootViewController(with: TabBarController()),
                let tabBarVC = rootVC as? TabBarController,
                let mainVC =  tabBarVC.viewControllers?.first,

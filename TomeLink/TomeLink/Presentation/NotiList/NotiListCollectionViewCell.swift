@@ -12,9 +12,10 @@ final class NotiListCollectionViewCell: UICollectionViewCell, BaseCollectionView
     // view
     private let imageView = UIImageView()
     private let titleLabel = UILabel()
+    private let contentLabel = UILabel()
     private let dateLabel = UILabel()
     
-    private lazy var labelStackView = UIStackView(arrangedSubviews: [titleLabel, dateLabel])
+    private lazy var labelStackView = UIStackView(arrangedSubviews: [titleLabel, contentLabel, dateLabel])
     
     // life cycle
     override init(frame: CGRect) {
@@ -31,9 +32,14 @@ final class NotiListCollectionViewCell: UICollectionViewCell, BaseCollectionView
     }
     
     // item configuration
-    func configure(with item: String) {
-        titleLabel.text = item
-        dateLabel.text = TLDateFormatter.notifiedAt.string(from: Date())
+    func configure(with item: NotificationItem) {
+        titleLabel.text = item.title
+        contentLabel.text = item.content
+        dateLabel.text = TLDateFormatter.notifiedAt.string(from: item.notifiedAt)
+        
+        if let type = NotificationUseCase.NotiTopic(rawValue: item.type) {
+            imageView.image = UIImage(systemName: type.imageName)
+        }
     }
 }
 
@@ -46,6 +52,10 @@ extension NotiListCollectionViewCell {
         
         titleLabel.font = TomeLinkFont.title
         titleLabel.textColor = .tomelinkBlack
+        
+        contentLabel.font = TomeLinkFont.subtitle
+        titleLabel.textColor = .tomelinkBlack
+        
         dateLabel.font = TomeLinkFont.subtitle
         dateLabel.textColor = .tomelinkGray
         
@@ -67,7 +77,7 @@ extension NotiListCollectionViewCell {
         imageView.snp.makeConstraints { make in
             make.size.equalTo(30)
             make.leading.equalToSuperview().inset(hInstet)
-            make.centerY.equalToSuperview()
+            make.top.equalToSuperview().inset(vInstet)
         }
         
         labelStackView.snp.makeConstraints { make in

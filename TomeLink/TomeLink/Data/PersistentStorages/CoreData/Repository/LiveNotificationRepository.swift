@@ -15,6 +15,19 @@ struct LiveNotificationRepository: NotificationRepository {
     func fetchAll() -> [NotificationItem] {
         return fetchAll().map{ $0.toDomain() }
     }
+    
+    func save(_ item: NotificationItem) {
+        
+        let entity = NotificationEntity(context: context)
+        entity.id = item.id
+        entity.isbn = item.isbn
+        entity.notifiedAt = item.notifiedAt
+        entity.title = item.title
+        entity.content = item.content
+        entity.type = item.type
+        
+        CoreDataStack.shared.save()
+    }
 }
 
 //MARK: - Entity method
@@ -61,7 +74,8 @@ private extension LiveNotificationRepository {
             for notification in oldNotifications {
                 context.delete(notification)
             }
-            try context.save()
+            
+            CoreDataStack.shared.save()
             LastNotificationCleanUpDate.update()
             print("Successfully deleted old notifications")
             

@@ -128,7 +128,7 @@ private extension NotiListViewController {
         }
         
         emptyLabel.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).inset(26)
+            make.top.equalTo(settingStackView.snp.bottom).offset(40)
             make.centerX.equalToSuperview()
         }
         
@@ -159,7 +159,7 @@ extension NotiListViewController {
         case notifications
     }
     
-    typealias Item = IdentifiableItem<String>
+    typealias Item = IdentifiableItem<NotificationItem>
 }
 
 //MARK: - CollectionView DataSource

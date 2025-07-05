@@ -61,6 +61,11 @@ struct NotificationUseCase {
     func fetchNotifications() -> [NotificationItem] {
         notificationRepository.fetchAll()
     }
+    
+    func saveNotification(isbn: String, title: String, content: String, type: String) {
+        let item = NotificationItem(id: UUID(), isbn: isbn, notifiedAt: Date(), title: title, content: content, type: type)
+        notificationRepository.save(item)
+    }
 }
 
 extension NotificationUseCase {

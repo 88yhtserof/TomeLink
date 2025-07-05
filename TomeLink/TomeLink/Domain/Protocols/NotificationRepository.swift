@@ -10,4 +10,5 @@ import Foundation
 protocol NotificationRepository {
     
     func fetchAll() -> [NotificationItem]
+    func save(_ item: NotificationItem)
 }

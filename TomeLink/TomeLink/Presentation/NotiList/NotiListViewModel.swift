@@ -39,7 +39,6 @@ final class NotiListViewModel: BaseViewModel {
     
     
     private let isbn: String?
-    private let notiList: [Item] = [Item(item: "오만과 편견")]
     
     // initializer
     init(isbn: String?, networkStatusUseCase: ObserveNetworkStatusUseCase, searchUseCase: SearchUseCase, notificationUseCase: NotificationUseCase) {
@@ -76,7 +75,14 @@ final class NotiListViewModel: BaseViewModel {
         // load noti list
         input.viewWillAppear
             .bind(with: self) { owner, _ in
-                notiList.accept(owner.notiList)
+                let list = owner.notificationUseCase.fetchNotifications().map{ Item(item: $0) }
+                
+                if list.isEmpty {
+                    emptySearchResult.accept("알림이 없습니다.")
+                } else {
+                    notiList.accept(list)
+                }
+                
                 isAllNotiOn.accept(owner.notificationUseCase.isSubscribed(to: .all))
                 isRecommendNotiOn.accept(owner.notificationUseCase.isSubscribed(to: .recommend))
             }
