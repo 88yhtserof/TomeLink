@@ -17,11 +17,16 @@ final class NotiListViewModel: BaseViewModel {
     
     struct Input {
         let viewWillAppear: ControlEvent<Void>
+        let didAllNotiToggle: ControlProperty<Bool>
+        let didRecommendNotiToggle: ControlProperty<Bool>
     }
     
     struct Output {
         let isConnectedToNetwork: Driver<Bool>
         let isLoading: Driver<Bool>
+        
+        let isAllNotiOn: Driver<Bool>
+        let isRecommendNotiOn: Driver<Bool>
         
         let book: Driver<Book?>
         let notiList: Driver<[Item]>
@@ -30,25 +35,31 @@ final class NotiListViewModel: BaseViewModel {
     
     private let networkStatusUseCase: ObserveNetworkStatusUseCase
     private let searchUseCase: SearchUseCase
+    private let notificationUseCase: NotificationUseCase
+    
     
     private let isbn: String?
     private let notiList: [Item] = [Item(item: "오만과 편견")]
     
     // initializer
-    init(isbn: String?, networkStatusUseCase: ObserveNetworkStatusUseCase, searchUseCase: SearchUseCase) {
+    init(isbn: String?, networkStatusUseCase: ObserveNetworkStatusUseCase, searchUseCase: SearchUseCase, notificationUseCase: NotificationUseCase) {
         self.isbn = isbn
         self.networkStatusUseCase = networkStatusUseCase
         self.searchUseCase = searchUseCase
+        self.notificationUseCase = notificationUseCase
     }
     
-    convenience init(networkStatusUseCase: ObserveNetworkStatusUseCase, searchUseCase: SearchUseCase) {
-        self.init(isbn: nil, networkStatusUseCase: networkStatusUseCase, searchUseCase: searchUseCase)
+    convenience init(networkStatusUseCase: ObserveNetworkStatusUseCase, searchUseCase: SearchUseCase, notificationUseCase: NotificationUseCase) {
+        self.init(isbn: nil, networkStatusUseCase: networkStatusUseCase, searchUseCase: searchUseCase, notificationUseCase: notificationUseCase)
     }
     
     func transform(input: Input) -> Output {
         
         let isLoading = PublishRelay<Bool>()
         let isConnectedToNetwork = BehaviorRelay<Bool>(value: true)
+        
+        let isAllNotiOn = BehaviorRelay<Bool>(value: true)
+        let isRecommendNotiOn = BehaviorRelay<Bool>(value: true)
         
         let isbn = BehaviorRelay(value: isbn)
         let notiList = BehaviorRelay<[Item]>(value: [])
@@ -66,6 +77,8 @@ final class NotiListViewModel: BaseViewModel {
         input.viewWillAppear
             .bind(with: self) { owner, _ in
                 notiList.accept(owner.notiList)
+                isAllNotiOn.accept(owner.notificationUseCase.isSubscribed(to: .all))
+                isRecommendNotiOn.accept(owner.notificationUseCase.isSubscribed(to: .recommend))
             }
             .disposed(by: disposeBag)
         
@@ -90,9 +103,34 @@ final class NotiListViewModel: BaseViewModel {
             }
             .disposed(by: disposeBag)
         
+        // notifications setting view
+        input.didAllNotiToggle
+            .bind(with: self) { owner, isSubscribed in
+                
+                if isSubscribed {
+                    owner.notificationUseCase.subscribe(to: .all)
+                } else {
+                    owner.notificationUseCase.unsubscribe(from: .all)
+                }
+            }
+            .disposed(by: disposeBag)
+        
+        input.didRecommendNotiToggle
+            .bind(with: self) { owner, isSubscribed in
+                
+                if isSubscribed {
+                    owner.notificationUseCase.subscribe(to: .recommend)
+                } else {
+                    owner.notificationUseCase.unsubscribe(from: .recommend)
+                }
+            }
+            .disposed(by: disposeBag)
+        
         return NotiListViewModel.Output(
             isConnectedToNetwork: isConnectedToNetwork.asDriver(),
             isLoading: isLoading.asDriver(onErrorJustReturn: false),
+            isAllNotiOn: isAllNotiOn.asDriver(),
+            isRecommendNotiOn: isRecommendNotiOn.asDriver(),
             book: book.asDriver(),
             notiList: notiList.asDriver(),
             emptySearchResult: emptySearchResult.asDriver(onErrorJustReturn: "")

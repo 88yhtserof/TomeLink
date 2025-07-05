@@ -9,5 +9,5 @@ import Foundation
 
 protocol NotificationRepository {
     
-    func fetchAll() -> [Notification]
+    func fetchAll() -> [NotificationItem]
 }

@@ -13,6 +13,10 @@ import RxCocoa
 final class NotiListViewController: UIViewController {
     
     // view
+    private let allNotiSettingView = NotificationSettingView()
+    private let recommendNotiSettingView = NotificationSettingView()
+    private lazy var settingStackView = UIStackView(arrangedSubviews: [allNotiSettingView, recommendNotiSettingView])
+    
     private let emptyLabel = UILabel()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: listLayout())
     
@@ -47,7 +51,9 @@ final class NotiListViewController: UIViewController {
     // bind
     func bind() {
         
-        let input = NotiListViewModel.Input(viewWillAppear: rx.viewWillAppear)
+        let input = NotiListViewModel.Input(viewWillAppear: rx.viewWillAppear,
+                                            didAllNotiToggle: allNotiSettingView.rx.isOn,
+                                            didRecommendNotiToggle: recommendNotiSettingView.rx.isOn)
         let output = viewModel.transform(input: input)
         
         output.book
@@ -76,6 +82,14 @@ final class NotiListViewController: UIViewController {
                 owner.collectionView.rx.isHidden.onNext(true)
             }
             .disposed(by: disposeBag)
+        
+        output.isAllNotiOn
+            .drive(allNotiSettingView.rx.isOn)
+            .disposed(by: disposeBag)
+        
+        output.isRecommendNotiOn
+            .drive(recommendNotiSettingView.rx.isOn)
+            .disposed(by: disposeBag)
     }
 }
 
@@ -84,20 +98,34 @@ private extension NotiListViewController {
     
     func configureView() {
         view.backgroundColor = TomeLinkColor.background
+        navigationItem.title = "알림"
+        
+        allNotiSettingView.title = "전체 공지 알림"
+        recommendNotiSettingView.title = "도서 추천 알림"
+        
+        settingStackView.axis = .vertical
+        settingStackView.distribution = .fillEqually
+        settingStackView.spacing = 8
+        settingStackView.backgroundColor = .tomelinkWhite
         
         emptyLabel.font = TomeLinkFont.title
         emptyLabel.textColor = .tomelinkGray
         emptyLabel.isHidden = true
         
-        collectionView.backgroundColor = .clear
+        collectionView.backgroundColor = .white
         collectionView.bounces = false
     }
     
     func configureHierarchy() {
-        view.addSubviews(emptyLabel, collectionView)
+        view.addSubviews(settingStackView, emptyLabel, collectionView)
     }
     
     func configureConstraints() {
+        
+        settingStackView.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide).inset(8)
+        }
         
         emptyLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).inset(26)
@@ -105,7 +133,8 @@ private extension NotiListViewController {
         }
         
         collectionView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalTo(settingStackView.snp.bottom).offset(8)
+            make.bottom.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
         }
     }
 }
@@ -114,7 +143,8 @@ private extension NotiListViewController {
 private extension NotiListViewController {
     
     func listLayout() -> UICollectionViewLayout {
-        let config = UICollectionLayoutListConfiguration(appearance: .plain)
+        var config = UICollectionLayoutListConfiguration(appearance: .plain)
+        config.backgroundColor = .clear
         return UICollectionViewCompositionalLayout.list(using: config)
     }
 }

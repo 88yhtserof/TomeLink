@@ -12,8 +12,8 @@ import CoreData
 @objc(NotificationEntity)
 public class NotificationEntity: NSManagedObject {
 
-    func toDomain() -> Notification {
-        return Notification(
+    func toDomain() -> NotificationItem {
+        return NotificationItem(
             id: self.id,
             isbn: self.isbn,
             notifiedAt: self.notifiedAt,

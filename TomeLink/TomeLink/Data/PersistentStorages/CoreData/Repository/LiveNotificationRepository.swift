@@ -12,7 +12,7 @@ struct LiveNotificationRepository: NotificationRepository {
     
     private let context = CoreDataStack.shared.persistentContainer.viewContext
     
-    func fetchAll() -> [Notification] {
+    func fetchAll() -> [NotificationItem] {
         return fetchAll().map{ $0.toDomain() }
     }
 }
