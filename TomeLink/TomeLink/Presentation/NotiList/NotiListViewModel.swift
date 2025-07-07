@@ -19,6 +19,7 @@ final class NotiListViewModel: BaseViewModel {
         let viewWillAppear: ControlEvent<Void>
         let didAllNotiToggle: ControlProperty<Bool>
         let didRecommendNotiToggle: ControlProperty<Bool>
+        let didItemSelect: ControlEvent<IndexPath>
     }
     
     struct Output {
@@ -88,9 +89,17 @@ final class NotiListViewModel: BaseViewModel {
             }
             .disposed(by: disposeBag)
         
-        // push noti isbn
-        isbn
-            .compactMap{ $0 }
+        
+        // push noti isb
+        let initIsbn = isbn.compactMap{ $0 }
+        let selectedIsbn = input.didItemSelect
+            .withLatestFrom(notiList) { indexPath, list in
+                list[indexPath.item].item.isbn
+            }
+            .asObservable()
+        
+        Observable
+            .merge(initIsbn, selectedIsbn)
             .withUnretained(self)
             .flatMap { owner, keyword in
                 isLoading.accept(true)

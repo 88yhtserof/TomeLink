@@ -53,7 +53,8 @@ final class NotiListViewController: UIViewController {
         
         let input = NotiListViewModel.Input(viewWillAppear: rx.viewWillAppear,
                                             didAllNotiToggle: allNotiSettingView.rx.isOn,
-                                            didRecommendNotiToggle: recommendNotiSettingView.rx.isOn)
+                                            didRecommendNotiToggle: recommendNotiSettingView.rx.isOn,
+                                            didItemSelect: collectionView.rx.itemSelected)
         let output = viewModel.transform(input: input)
         
         output.book
