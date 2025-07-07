@@ -9,10 +9,10 @@ import Foundation
 
 struct NotificationTopicsSubscribeManager: NotificationTopicsSubscribe {
     
-    @UserDefaultsWrapper(key: "all_topic_subscriptions", defaultValue: true)
+    @UserDefaultsWrapper(key: "all_topic_subscriptions", defaultValue: false)
     static var allTopicSubscriptions: Bool
     
-    @UserDefaultsWrapper(key: "recommend_topic_subscriptions", defaultValue: true)
+    @UserDefaultsWrapper(key: "recommend_topic_subscriptions", defaultValue: false)
     static var recommendTopicSubscriptions: Bool
     
     var isAllTopicSubscribed: Bool {

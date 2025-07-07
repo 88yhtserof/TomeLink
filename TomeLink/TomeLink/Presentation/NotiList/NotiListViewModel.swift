@@ -58,8 +58,8 @@ final class NotiListViewModel: BaseViewModel {
         let isLoading = PublishRelay<Bool>()
         let isConnectedToNetwork = BehaviorRelay<Bool>(value: true)
         
-        let isAllNotiOn = BehaviorRelay<Bool>(value: true)
-        let isRecommendNotiOn = BehaviorRelay<Bool>(value: true)
+        let isAllNotiOn = BehaviorRelay<Bool>(value: false)
+        let isRecommendNotiOn = BehaviorRelay<Bool>(value: false)
         
         let isbn = BehaviorRelay(value: isbn)
         let notiList = BehaviorRelay<[Item]>(value: [])
@@ -86,6 +86,8 @@ final class NotiListViewModel: BaseViewModel {
                 
                 isAllNotiOn.accept(owner.notificationUseCase.isSubscribed(to: .all))
                 isRecommendNotiOn.accept(owner.notificationUseCase.isSubscribed(to: .recommend))
+                print(owner.notificationUseCase.isSubscribed(to: .all))
+                print(owner.notificationUseCase.isSubscribed(to: .recommend))
             }
             .disposed(by: disposeBag)
         
