@@ -65,8 +65,10 @@ private extension TabBarController {
         let libraryViewController = LibraryViewController(viewModel: libraryViewModel)
         
         let nertworMonitor = NetworkMonitorManager.shared
-        let useCase = DefaultObserveNetworkStatusUseCase(monitor: nertworMonitor)
-        let searchViewModel =  SearchViewModel(networkStatusUseCase: useCase)
+        let searchResitory = LiveSearchRepository()
+        let networkStatusUseCase = DefaultObserveNetworkStatusUseCase(monitor: nertworMonitor)
+        let searchUseCase = SearchUseCase(searchRepository: searchResitory)
+        let searchViewModel =  SearchViewModel(networkStatusUseCase:networkStatusUseCase, searchUseCase: searchUseCase)
         let searchViewController = SearchViewController(viewModel: searchViewModel)
         
         let viewControllers = [

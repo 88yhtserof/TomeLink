@@ -16,6 +16,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         NetworkMonitorManager.shared.startMonitoring()
         let rootViewController = TabBarController()
+//        let rootViewController = NotiListViewController()
         
         self.window = UIWindow(windowScene: windowScene)
         self.window?.rootViewController = rootViewController
